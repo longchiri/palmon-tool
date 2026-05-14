@@ -21,7 +21,19 @@ const SETTINGS_LEVEL_KEYS = {
   "캠프": "camp", "분대": "squad", "연구대": "research_lab",
   "병원": "hospital", "아미고 기지": "amigo_base",
 };
-const RESOURCE_LABELS = { gold: "골드", wood: "목재", steel: "강철" };
+// 자원 이모지 — 사이트 전체에서 고정으로 사용
+const RESOURCE_EMOJI = {
+  gold: "💰",
+  wood: "🪵",
+  steel: "🧱",
+  power: "⚡",
+  palmon_xp: "🥚",
+};
+const RESOURCE_LABELS = {
+  gold: "💰 골드",
+  wood: "🪵 목재",
+  steel: "🧱 강철",
+};
 const RESOURCE_KEYS = ["gold", "wood", "steel"];
 const BOX_TIERS = ["SR", "SSR", "UR"];
 const POSITION_NAMES = ["총독", "수석 건축사", "과학자", "왕비"];
@@ -39,11 +51,11 @@ const DEFAULT_SPEEDUPS = { "8h": 28800, "3h": 10800, "1h": 3600, "5m": 300, "1m"
 
 const PALMON_RESOURCE_ORDER = ["palmon_xp", "power", "gold", "steel", "wood"];
 const PALMON_RESOURCE_LABELS = {
-  palmon_xp: "팰몬 경험치",
-  power: "전력",
-  gold: "골드",
-  steel: "강철",
-  wood: "목재",
+  palmon_xp: "🥚 팰몬 경험치",
+  power: "⚡ 전력",
+  gold: "💰 골드",
+  steel: "🧱 강철",
+  wood: "🪵 목재",
 };
 
 const BEAD_PER_WEAPON = 150;
@@ -1175,9 +1187,9 @@ function updateEssence() {
   // 분리 슬롯에 렌더 (각 행의 결과 칸으로)
   if ($("promo-result-slot")) $("promo-result-slot").innerHTML = promoCard;
   if ($("evo-result-slot")) $("evo-result-slot").innerHTML = evoCard;
-  if ($("fullset-result-slot")) $("fullset-result-slot").innerHTML = fullCard;
+  if ($("fullset-result-slot")) $("fullset-result-slot").innerHTML = "";   // 풀세팅 카드 제거
   // 폴백 (구 버전 호환)
-  if ($("essence-result")) $("essence-result").innerHTML = promoCard + evoCard + fullCard;
+  if ($("essence-result")) $("essence-result").innerHTML = promoCard + evoCard;
 
   // 원하는 진화 필터 결과
   updateEvoTargetResult(evoTotal);

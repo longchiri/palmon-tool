@@ -445,6 +445,32 @@ body { overflow-x: hidden; }
   .bead-reset-item > .reset-label { font-size: 11.5px; }
 }
 
+/* 걸작구슬 / 팰몬진화 탭 — 3컬럼 상하정렬 (결과/기준값이 중앙에 위치) */
+#t-bead .grid-3,
+#t-essence .grid-3 {
+  align-items: stretch;
+}
+#bead-result,
+#promo-result-slot,
+#evo-result-slot {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+#bead-result > .result-card,
+#promo-result-slot > .result-card,
+#evo-result-slot > .result-card {
+  margin-bottom: 0;
+}
+/* 기준값 카드도 세로 가운데 정렬 (col 3) */
+#t-bead .grid-3 > .group:last-child,
+#t-essence .grid-3 > .group:last-child {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
 /* 라벨 안에 들어가는 hint 텍스트
    데스크탑: 라벨 텍스트 바로 아래로 줄바꿈 (블록)
    모바일: 라벨/i버튼 옆에 인라인 */
