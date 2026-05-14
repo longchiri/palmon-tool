@@ -1,0 +1,1408 @@
+{
+  "meta": {
+    "game": "Palmon Survival",
+    "version": 1,
+    "source_workbook": "palmon_building_data_converted.xlsx"
+  },
+  "buildings": {
+    "캠프": {
+      "21": {
+        "cost": {
+          "gold": 120,
+          "wood": 104,
+          "steel": 104
+        },
+        "base_time_minutes": 175,
+        "requirements": [
+          {
+            "building": "분대",
+            "level": 20
+          },
+          {
+            "building": "연구대",
+            "level": 20
+          }
+        ],
+        "notes": [
+          "분대20",
+          "연구대20"
+        ]
+      },
+      "22": {
+        "cost": {
+          "gold": 167,
+          "wood": 144.7,
+          "steel": 144.7
+        },
+        "base_time_minutes": 245,
+        "requirements": [
+          {
+            "building": "아미고 기지",
+            "level": 21
+          },
+          {
+            "building": "연구대",
+            "level": 21
+          }
+        ],
+        "notes": [
+          "아미고 기지21",
+          "연구대21"
+        ]
+      },
+      "23": {
+        "cost": {
+          "gold": 232,
+          "wood": 201.3,
+          "steel": 201.3
+        },
+        "base_time_minutes": 343,
+        "requirements": [
+          {
+            "building": "병원",
+            "level": 22
+          },
+          {
+            "building": "연구대",
+            "level": 22
+          }
+        ],
+        "notes": [
+          "병원22",
+          "연구대22"
+        ]
+      },
+      "24": {
+        "cost": {
+          "gold": 323,
+          "wood": 280.1,
+          "steel": 280.1
+        },
+        "base_time_minutes": 480.2,
+        "requirements": [
+          {
+            "building": "분대",
+            "level": 23
+          },
+          {
+            "building": "연구대",
+            "level": 23
+          }
+        ],
+        "notes": [
+          "분대23",
+          "연구대23"
+        ]
+      },
+      "25": {
+        "cost": {
+          "gold": 450,
+          "wood": 381,
+          "steel": 381
+        },
+        "base_time_minutes": 555.6,
+        "requirements": [
+          {
+            "building": "아미고 기지",
+            "level": 24
+          },
+          {
+            "building": "연구대",
+            "level": 24
+          }
+        ],
+        "notes": [
+          "아미고 기지24",
+          "연구대24"
+        ]
+      },
+      "26": {
+        "cost": {
+          "gold": 630,
+          "wood": 525,
+          "steel": 525
+        },
+        "base_time_minutes": 791.7,
+        "requirements": [
+          {
+            "building": "병원",
+            "level": 25
+          },
+          {
+            "building": "연구대",
+            "level": 25
+          }
+        ],
+        "notes": [
+          "병원25",
+          "연구대25"
+        ]
+      },
+      "27": {
+        "cost": {
+          "gold": 700,
+          "wood": 605,
+          "steel": 605
+        },
+        "base_time_minutes": 972.2,
+        "requirements": [
+          {
+            "building": "분대",
+            "level": 26
+          },
+          {
+            "building": "연구대",
+            "level": 26
+          }
+        ],
+        "notes": [
+          "분대26",
+          "연구대26"
+        ]
+      },
+      "28": {
+        "cost": {
+          "gold": 860,
+          "wood": 745,
+          "steel": 745
+        },
+        "base_time_minutes": 1444.4,
+        "requirements": [
+          {
+            "building": "아미고 기지",
+            "level": 27
+          },
+          {
+            "building": "연구대",
+            "level": 27
+          }
+        ],
+        "notes": [
+          "아미고 기지27",
+          "연구대27"
+        ]
+      },
+      "29": {
+        "cost": {
+          "gold": 1140,
+          "wood": 986,
+          "steel": 986
+        },
+        "base_time_minutes": 1880.3,
+        "requirements": [
+          {
+            "building": "병원",
+            "level": 28
+          },
+          {
+            "building": "연구대",
+            "level": 28
+          }
+        ],
+        "notes": [
+          "병원28",
+          "연구대28"
+        ]
+      },
+      "30": {
+        "cost": {
+          "gold": 1500,
+          "wood": 1300,
+          "steel": 1300
+        },
+        "base_time_minutes": 2444.4,
+        "requirements": [
+          {
+            "building": "분대",
+            "level": 29
+          },
+          {
+            "building": "연구대",
+            "level": 29
+          }
+        ],
+        "notes": [
+          "분대29",
+          "연구대29"
+        ]
+      }
+    },
+    "연구대": {
+      "21": {
+        "cost": {
+          "gold": 120,
+          "wood": 100,
+          "steel": 100
+        },
+        "base_time_minutes": 161.9,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "22": {
+        "cost": {
+          "gold": 160,
+          "wood": 100,
+          "steel": 100
+        },
+        "base_time_minutes": 224.9,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "23": {
+        "cost": {
+          "gold": 170,
+          "wood": 150,
+          "steel": 150
+        },
+        "base_time_minutes": 295.5,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "24": {
+        "cost": {
+          "gold": 250,
+          "wood": 270,
+          "steel": 270
+        },
+        "base_time_minutes": 385.5,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "25": {
+        "cost": {
+          "gold": 450,
+          "wood": 380,
+          "steel": 380
+        },
+        "base_time_minutes": 513.9,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "26": {
+        "cost": {
+          "gold": 630,
+          "wood": 430,
+          "steel": 430
+        },
+        "base_time_minutes": 732.3,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "27": {
+        "cost": {
+          "gold": 720,
+          "wood": 540,
+          "steel": 540
+        },
+        "base_time_minutes": 899.4,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "28": {
+        "cost": {
+          "gold": 890,
+          "wood": 710,
+          "steel": 710
+        },
+        "base_time_minutes": 1336.2,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "29": {
+        "cost": {
+          "gold": 1100,
+          "wood": 960,
+          "steel": 960
+        },
+        "base_time_minutes": 1739.4,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      },
+      "30": {
+        "cost": {
+          "gold": 1500,
+          "wood": 1200,
+          "steel": 1200
+        },
+        "base_time_minutes": 2261.2,
+        "requirements": [],
+        "notes": [
+          "연구속도증가+0.5%"
+        ]
+      }
+    },
+    "분대": {
+      "21": {
+        "cost": {
+          "gold": 62.1,
+          "wood": 55.2,
+          "steel": 96.6
+        },
+        "base_time_minutes": 159.3,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "22": {
+        "cost": {
+          "gold": 64.6,
+          "wood": 57.4,
+          "steel": 100
+        },
+        "base_time_minutes": 221.2,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "23": {
+        "cost": {
+          "gold": 95.9,
+          "wood": 85.2,
+          "steel": 140
+        },
+        "base_time_minutes": 290.7,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "24": {
+        "cost": {
+          "gold": 170,
+          "wood": 150,
+          "steel": 260
+        },
+        "base_time_minutes": 379.2,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "25": {
+        "cost": {
+          "gold": 236,
+          "wood": 210,
+          "steel": 368
+        },
+        "base_time_minutes": 505.6,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "26": {
+        "cost": {
+          "gold": 270,
+          "wood": 240,
+          "steel": 420
+        },
+        "base_time_minutes": 720.5,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "27": {
+        "cost": {
+          "gold": 330,
+          "wood": 290,
+          "steel": 520
+        },
+        "base_time_minutes": 884.8,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "28": {
+        "cost": {
+          "gold": 440,
+          "wood": 390,
+          "steel": 690
+        },
+        "base_time_minutes": 1314.5,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "29": {
+        "cost": {
+          "gold": 590,
+          "wood": 530,
+          "steel": 930
+        },
+        "base_time_minutes": 1711.2,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      },
+      "30": {
+        "cost": {
+          "gold": 770,
+          "wood": 690,
+          "steel": 1200
+        },
+        "base_time_minutes": 2224.5,
+        "requirements": [],
+        "notes": [
+          "출정 규모 증가 +15"
+        ]
+      }
+    },
+    "병원": {
+      "21": {
+        "cost": {
+          "gold": 55.2,
+          "wood": 100,
+          "steel": 62.1
+        },
+        "base_time_minutes": 157.5,
+        "requirements": [],
+        "notes": [
+          "수용량+200"
+        ]
+      },
+      "22": {
+        "cost": {
+          "gold": 57.4,
+          "wood": 100,
+          "steel": 64.6
+        },
+        "base_time_minutes": 218.8,
+        "requirements": [],
+        "notes": [
+          "수용량+200"
+        ]
+      },
+      "23": {
+        "cost": {
+          "gold": 85.2,
+          "wood": 150,
+          "steel": 95.9
+        },
+        "base_time_minutes": 287.5,
+        "requirements": [],
+        "notes": [
+          "수용량+200"
+        ]
+      },
+      "24": {
+        "cost": {
+          "gold": 140,
+          "wood": 260,
+          "steel": 160
+        },
+        "base_time_minutes": 375,
+        "requirements": [],
+        "notes": [
+          "수용량+300"
+        ]
+      },
+      "25": {
+        "cost": {
+          "gold": 210,
+          "wood": 380,
+          "steel": 236
+        },
+        "base_time_minutes": 500,
+        "requirements": [],
+        "notes": [
+          "수용량+300"
+        ]
+      },
+      "26": {
+        "cost": {
+          "gold": 240,
+          "wood": 430,
+          "steel": 270
+        },
+        "base_time_minutes": 712.5,
+        "requirements": [],
+        "notes": [
+          "수용량+300"
+        ]
+      },
+      "27": {
+        "cost": {
+          "gold": 290,
+          "wood": 540,
+          "steel": 330
+        },
+        "base_time_minutes": 875,
+        "requirements": [],
+        "notes": [
+          "수용량+300",
+          "예상값"
+        ]
+      },
+      "28": {
+        "cost": {
+          "gold": 390,
+          "wood": 710,
+          "steel": 440
+        },
+        "base_time_minutes": 1300,
+        "requirements": [],
+        "notes": [
+          "수용량+300"
+        ]
+      },
+      "29": {
+        "cost": {
+          "gold": 530,
+          "wood": 960,
+          "steel": 590
+        },
+        "base_time_minutes": 1692.4,
+        "requirements": [],
+        "notes": [
+          "수용량+300"
+        ]
+      },
+      "30": {
+        "cost": {
+          "gold": 690,
+          "wood": 1200,
+          "steel": 770
+        },
+        "base_time_minutes": 2200,
+        "requirements": [],
+        "notes": [
+          "수용량+300",
+          "예상값"
+        ]
+      }
+    },
+    "아미고 기지": {
+      "21": {
+        "cost": {
+          "gold": 41.4,
+          "wood": 34.5,
+          "steel": 34.5
+        },
+        "base_time_minutes": 148.8,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%",
+          "아미고 레벨업"
+        ]
+      },
+      "22": {
+        "cost": {
+          "gold": 43.1,
+          "wood": 35.9,
+          "steel": 35.9
+        },
+        "base_time_minutes": 206.6,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "23": {
+        "cost": {
+          "gold": 63.9,
+          "wood": 53.2,
+          "steel": 53.2
+        },
+        "base_time_minutes": 271.6,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "24": {
+        "cost": {
+          "gold": 114,
+          "wood": 95.3,
+          "steel": 95.3
+        },
+        "base_time_minutes": 354.2,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%",
+          "아미고 레벨업"
+        ]
+      },
+      "25": {
+        "cost": {
+          "gold": 157,
+          "wood": 131,
+          "steel": 131
+        },
+        "base_time_minutes": 472.3,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "26": {
+        "cost": {
+          "gold": 180,
+          "wood": 150,
+          "steel": 150
+        },
+        "base_time_minutes": 673,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "27": {
+        "cost": {
+          "gold": 220,
+          "wood": 180,
+          "steel": 180
+        },
+        "base_time_minutes": 826.4,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%",
+          "아미고 레벨업"
+        ]
+      },
+      "28": {
+        "cost": {
+          "gold": 290,
+          "wood": 240,
+          "steel": 240
+        },
+        "base_time_minutes": 1227.8,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "29": {
+        "cost": {
+          "gold": 390,
+          "wood": 330,
+          "steel": 330
+        },
+        "base_time_minutes": 1598.3,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%"
+        ]
+      },
+      "30": {
+        "cost": {
+          "gold": 520,
+          "wood": 450,
+          "steel": 450
+        },
+        "base_time_minutes": 2077.8,
+        "requirements": [],
+        "notes": [
+          "훈련상한+10 수용상한+500 훈련속도+1%",
+          "예상값"
+        ]
+      }
+    }
+  },
+  "buffs": [
+    {
+      "group": "VIP",
+      "name": "VIP",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.0
+        },
+        "LV2": {
+          "rate": 0.0
+        },
+        "LV3": {
+          "rate": 0.05
+        },
+        "LV4": {
+          "rate": 0.05
+        },
+        "LV5": {
+          "rate": 0.1
+        },
+        "LV6": {
+          "rate": 0.2
+        },
+        "LV7": {
+          "rate": 0.2
+        },
+        "LV8": {
+          "rate": 0.3
+        },
+        "LV9": {
+          "rate": 0.5
+        },
+        "LV10": {
+          "rate": 0.5
+        },
+        "LV11": {
+          "rate": 0.5
+        },
+        "LV12": {
+          "rate": 0.5
+        },
+        "LV13": {
+          "rate": 0.5
+        },
+        "LV14": {
+          "rate": 0.5
+        },
+        "LV15": {
+          "rate": 0.5
+        },
+        "LV16": {
+          "rate": 0.5
+        },
+        "LV17": {
+          "rate": 0.5
+        },
+        "LV18": {
+          "rate": 0.5
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "연구",
+      "name": "정교한 공예",
+      "effect_kind": "resource_reduction",
+      "values": {
+        "LV1": {
+          "rate": -0.005
+        },
+        "LV2": {
+          "rate": -0.01
+        },
+        "LV3": {
+          "rate": -0.015
+        },
+        "LV4": {
+          "rate": -0.02
+        },
+        "LV5": {
+          "rate": -0.025
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "연구",
+      "name": "고효율 건축 I",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        },
+        "LV3": {
+          "rate": 0.03
+        },
+        "LV4": {
+          "rate": 0.04
+        },
+        "LV5": {
+          "rate": 0.05
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "연구",
+      "name": "고효율 건축 II",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        },
+        "LV3": {
+          "rate": 0.03
+        },
+        "LV4": {
+          "rate": 0.04
+        },
+        "LV5": {
+          "rate": 0.05
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "연구",
+      "name": "고효율 건축 III",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        },
+        "LV3": {
+          "rate": 0.03
+        },
+        "LV4": {
+          "rate": 0.04
+        },
+        "LV5": {
+          "rate": 0.05
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "연구",
+      "name": "고효율 건축 IV",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        },
+        "LV3": {
+          "rate": 0.03
+        },
+        "LV4": {
+          "rate": 0.04
+        },
+        "LV5": {
+          "rate": 0.05
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "길드",
+      "name": "초기기술",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "길드",
+      "name": "소생기술",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        },
+        "LV2": {
+          "rate": 0.02
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "시즌1",
+      "name": "비용 절감",
+      "effect_kind": "resource_reduction",
+      "values": {
+        "LV1": {
+          "rate": -0.01
+        },
+        "LV2": {
+          "rate": -0.02
+        },
+        "LV3": {
+          "rate": -0.03
+        },
+        "LV4": {
+          "rate": -0.04
+        },
+        "LV5": {
+          "rate": -0.05
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "시즌1",
+      "name": "건설자의 열정",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "fixed_minutes": 36
+        },
+        "LV2": {
+          "fixed_minutes": 72
+        },
+        "LV3": {
+          "fixed_minutes": 108
+        },
+        "LV4": {
+          "fixed_minutes": 144
+        },
+        "LV5": {
+          "fixed_minutes": 180
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "시즌1",
+      "name": "건설 지원",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.1
+        },
+        "LV2": {
+          "rate": 0.2
+        }
+      },
+      "notes": "60분지속, 쿨타임 23시간 30분"
+    },
+    {
+      "group": "직위",
+      "name": "총독",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.6
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "직위",
+      "name": "수석 건축사",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.5
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "직위",
+      "name": "과학자",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.25
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "직위",
+      "name": "왕비",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.2
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "결제",
+      "name": "영구혜택",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.3
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "결제",
+      "name": "월간혜택",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.1
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "LV6 성전 건설 성지 보유",
+      "name": "LV6 성전 건설 성지 보유",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.2
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "LV6 성전 건설 참모",
+      "name": "LV6 성전 건설 참모",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.02
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "LV6 성전 건설 지휘관",
+      "name": "LV6 성전 건설 지휘관",
+      "effect_kind": "build_speed",
+      "values": {
+        "LV1": {
+          "rate": 0.01
+        }
+      },
+      "notes": null
+    },
+    {
+      "group": "작업파견 가속",
+      "name": "작업파견 가속",
+      "effect_kind": "build_speed",
+      "values": {},
+      "notes": null
+    },
+    {
+      "group": "관리자",
+      "name": "관리자",
+      "effect_kind": "build_speed",
+      "values": {
+        "장인": {
+          "rate": 0.02
+        }
+      },
+      "notes": "장인 선택 시 건설속도 +2%"
+    }
+  ],
+  "resource_boxes": {
+    "20": {
+      "UR": {
+        "palmon_xp": 3358000,
+        "power": 685000,
+        "gold": 2740000,
+        "steel": 2740000,
+        "wood": 2740000
+      },
+      "SSR": {
+        "palmon_xp": 1111000,
+        "power": 228000,
+        "gold": 912000,
+        "steel": 912000,
+        "wood": 912000
+      },
+      "SR": {
+        "palmon_xp": 140000,
+        "power": 28000,
+        "gold": 114000,
+        "steel": 114000,
+        "wood": 114000
+      }
+    },
+    "21": {
+      "UR": {
+        "palmon_xp": 3650000,
+        "power": 730000,
+        "gold": 2920000,
+        "steel": 2920000,
+        "wood": 2920000
+      },
+      "SSR": {
+        "palmon_xp": 1210000,
+        "power": 243000,
+        "gold": 974000,
+        "steel": 974000,
+        "wood": 974000
+      },
+      "SR": {
+        "palmon_xp": 152000,
+        "power": 30000,
+        "gold": 121000,
+        "steel": 121000,
+        "wood": 121000
+      }
+    },
+    "22": {
+      "UR": {
+        "palmon_xp": 3860000,
+        "power": 780000,
+        "gold": 3110000,
+        "steel": 3110000,
+        "wood": 3110000
+      },
+      "SSR": {
+        "palmon_xp": 1280000,
+        "power": 250000,
+        "gold": 1030000,
+        "steel": 1030000,
+        "wood": 1030000
+      },
+      "SR": {
+        "palmon_xp": 161000,
+        "power": 32000,
+        "gold": 129000,
+        "steel": 129000,
+        "wood": 129000
+      }
+    },
+    "23": {
+      "UR": {
+        "palmon_xp": 4100000,
+        "power": 820000,
+        "gold": 3280000,
+        "steel": 3280000,
+        "wood": 3280000
+      },
+      "SSR": {
+        "palmon_xp": 1360000,
+        "power": 270000,
+        "gold": 1090000,
+        "steel": 1090000,
+        "wood": 1090000
+      },
+      "SR": {
+        "palmon_xp": 171000,
+        "power": 34000,
+        "gold": 136000,
+        "steel": 136000,
+        "wood": 136000
+      }
+    },
+    "24": {
+      "UR": {
+        "palmon_xp": 4300000,
+        "power": 860000,
+        "gold": 3450000,
+        "steel": 3450000,
+        "wood": 3450000
+      },
+      "SSR": {
+        "palmon_xp": 1430000,
+        "power": 280000,
+        "gold": 1150000,
+        "steel": 1150000,
+        "wood": 1150000
+      },
+      "SR": {
+        "palmon_xp": 179000,
+        "power": 35000,
+        "gold": 143000,
+        "steel": 143000,
+        "wood": 143000
+      }
+    },
+    "25": {
+      "UR": {
+        "palmon_xp": 4510000,
+        "power": 900000,
+        "gold": 3600000,
+        "steel": 3600000,
+        "wood": 3600000
+      },
+      "SSR": {
+        "palmon_xp": 1500000,
+        "power": 300000,
+        "gold": 1200000,
+        "steel": 1200000,
+        "wood": 1200000
+      },
+      "SR": {
+        "palmon_xp": 188000,
+        "power": 37000,
+        "gold": 150000,
+        "steel": 150000,
+        "wood": 150000
+      }
+    },
+    "26": {
+      "UR": {
+        "palmon_xp": 4680000,
+        "power": 940000,
+        "gold": 3760000,
+        "steel": 3760000,
+        "wood": 3760000
+      },
+      "SSR": {
+        "palmon_xp": 1560000,
+        "power": 310000,
+        "gold": 1250000,
+        "steel": 1250000,
+        "wood": 1250000
+      },
+      "SR": {
+        "palmon_xp": 195000,
+        "power": 39000,
+        "gold": 156000,
+        "steel": 156000,
+        "wood": 156000
+      }
+    },
+    "27": {
+      "UR": {
+        "palmon_xp": 4850000,
+        "power": 970000,
+        "gold": 3890000,
+        "steel": 3890000,
+        "wood": 3890000
+      },
+      "SSR": {
+        "palmon_xp": 1610000,
+        "power": 320000,
+        "gold": 1290000,
+        "steel": 1290000,
+        "wood": 1290000
+      },
+      "SR": {
+        "palmon_xp": 202000,
+        "power": 40000,
+        "gold": 162000,
+        "steel": 162000,
+        "wood": 162000
+      }
+    },
+    "28": {
+      "UR": {
+        "palmon_xp": 5090000,
+        "power": 1000000,
+        "gold": 4010000,
+        "steel": 4010000,
+        "wood": 4010000
+      },
+      "SSR": {
+        "palmon_xp": 1690000,
+        "power": 330000,
+        "gold": 1330000,
+        "steel": 1330000,
+        "wood": 1330000
+      },
+      "SR": {
+        "palmon_xp": 212000,
+        "power": 41000,
+        "gold": 167000,
+        "steel": 167000,
+        "wood": 167000
+      }
+    },
+    "29": {
+      "UR": {
+        "palmon_xp": 5230000,
+        "power": 1030000,
+        "gold": 4120000,
+        "steel": 4120000,
+        "wood": 4120000
+      },
+      "SSR": {
+        "palmon_xp": 1740000,
+        "power": 340000,
+        "gold": 1370000,
+        "steel": 1370000,
+        "wood": 1370000
+      },
+      "SR": {
+        "palmon_xp": 218000,
+        "power": 42000,
+        "gold": 171000,
+        "steel": 171000,
+        "wood": 171000
+      }
+    },
+    "30": {
+      "UR": {
+        "palmon_xp": 5400000,
+        "power": 1050000,
+        "gold": 4200000,
+        "steel": 4200000,
+        "wood": 4200000
+      },
+      "SSR": {
+        "palmon_xp": 1800000,
+        "power": 350000,
+        "gold": 1400000,
+        "steel": 1400000,
+        "wood": 1400000
+      },
+      "SR": {
+        "palmon_xp": 225000,
+        "power": 43000,
+        "gold": 175000,
+        "steel": 175000,
+        "wood": 175000
+      }
+    }
+  },
+  "speedups": {
+    "build_speedups": {
+      "8h": {
+        "seconds": 28800
+      },
+      "3h": {
+        "seconds": 10800
+      },
+      "1h": {
+        "seconds": 3600
+      },
+      "5m": {
+        "seconds": 300
+      },
+      "1m": {
+        "seconds": 60
+      }
+    },
+    "general_speedups": {
+      "8h": {
+        "seconds": 28800
+      },
+      "3h": {
+        "seconds": 10800
+      },
+      "1h": {
+        "seconds": 3600
+      },
+      "5m": {
+        "seconds": 300
+      },
+      "1m": {
+        "seconds": 60
+      }
+    },
+    "consumption_priority": [
+      "build_speedups",
+      "general_speedups"
+    ],
+    "optimization_rule": {
+      "primary": "minimize_overage_seconds",
+      "secondary": "minimize_ticket_count"
+    }
+  }
+}

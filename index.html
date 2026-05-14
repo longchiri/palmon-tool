@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Palmon Tool</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Palmon Tool</h1>
+      <button class="btn btn-primary" id="btn-calc">계산</button>
+      <button class="btn" id="btn-save">설정 저장</button>
+      <button class="btn" id="btn-load">설정 불러오기</button>
+      <input type="file" id="file-load" accept=".json" hidden />
+      <button class="btn btn-ghost" id="btn-reset">초기화</button>
+    </div>
+
+    <div class="tabs" id="tab-bar">
+      <button class="tab active" data-tab="t-levels">레벨 / 버프</button>
+      <button class="tab" data-tab="t-inventory">보유 자원 / 상자 / 가속권</button>
+      <button class="tab" data-tab="t-bead">걸작 구슬</button>
+      <button class="tab" data-tab="t-essence">팰몬 진화</button>
+      <button class="tab" data-tab="t-palmon">팰몬 XP / 자원 합산</button>
+      <button class="tab" data-tab="t-result">결과</button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 레벨 / 버프                                       -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="t-levels">
+
+      <div class="group">
+        <div class="group-title">건물 레벨 / 목표</div>
+        <div class="grid-3" id="building-levels"></div>
+        <div class="form-row" style="margin-top:8px;">
+          <label>목표 캠프</label>
+          <select id="target-camp"></select>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="group">
+          <div class="group-title">시간 버프</div>
+
+          <div class="grid-2">
+            <div>
+              <div class="form-row">
+                <label>VIP 레벨</label>
+                <select id="b-vip"></select>
+              </div>
+              <div id="b-research"></div>
+              <div id="b-guild"></div>
+              <div id="b-season1"></div>
+            </div>
+
+            <div>
+              <div class="form-row">
+                <label>직위</label>
+                <select id="b-position"></select>
+              </div>
+              <div class="form-row">
+                <label>관리자</label>
+                <select id="b-administrator"></select>
+              </div>
+              <div class="form-row">
+                <label>결제 혜택</label>
+                <div>
+                  <label class="check-row"><input type="checkbox" id="b-pay-perm"> 영구혜택</label>
+                  <label class="check-row"><input type="checkbox" id="b-pay-month"> 월간혜택</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>LV6 점령</label>
+                <div>
+                  <label class="check-row"><input type="checkbox" id="b-temple"> 성전 건설 (20%)</label>
+                  <label class="check-row"><input type="checkbox" id="b-coal"> 석탄 광산 (20%)</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>참모 / 지휘관</label>
+                <select id="b-temple-role"></select>
+              </div>
+              <div class="form-row">
+                <label>작업파견 가속</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+                  <input type="number" id="b-dispatch-h" placeholder="시" min="0" value="0">
+                  <input type="number" id="b-dispatch-m" placeholder="분" min="0" max="59" value="0">
+                  <input type="number" id="b-dispatch-s" placeholder="초" min="0" max="59" value="0">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">자원 감소 버프</div>
+          <div id="b-resource"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 보유 자원 / 상자 / 가속권                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-inventory">
+
+      <div class="group">
+        <div class="group-title">보유 자원</div>
+        <div class="grid-3" id="owned-resources"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">자원 상자</div>
+        <div id="owned-boxes"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">건설 가속</div>
+        <div class="grid-5" id="build-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">일반 가속</div>
+        <div class="grid-5" id="general-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">요약</div>
+        <div id="inventory-summary"></div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 걸작 구슬                                         -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-bead">
+      <p class="txt-dim" style="margin:0 0 12px;">내가 가진 구슬을 입력하면, 완성 가능한 무기 수를 보여줍니다. (무기 1개당 구슬 150 필요)</p>
+
+      <div class="grid-2">
+        <div class="group">
+          <div class="group-title">보유 구슬</div>
+          <div class="form-row">
+            <label>보유 구슬</label>
+            <input type="number" id="bead-total" min="0" value="0">
+          </div>
+          <div class="hint">예) 보유 구슬 600 → 무기 4개 완성 (무기 1개당 150 필요)</div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.7;">
+            <b>무기 1개당 필요</b>: 구슬 150<br>
+            <b>구슬 환산 값</b><br>
+            • 5성 = 50<br>• 4성 = 40<br>• 3성 = 30<br>• 2성 = 20<br>• 1성 = 10
+          </div>
+        </div>
+      </div>
+
+      <div id="bead-result"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 팰몬 진화                                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-essence">
+      <p class="txt-dim" style="margin:0 0 12px;">내가 가진 양을 넣으면, 몇 명까지 승급 / 진화 완성 가능한지 보여줍니다. 진화는 초기화할 팰몬(단계+수량)도 함께 넣어주세요.</p>
+
+      <div class="grid-3">
+        <div class="group">
+          <div class="group-title">승급 정수 (Promotion)</div>
+          <div class="form-row">
+            <label>보유 승급 정수</label>
+            <input type="number" id="promo-total" min="0" value="0">
+          </div>
+          <div class="hint">예) 승급 정수 1950 → 2명 승급 완성 (1명당 975 필요)</div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">진화 정수 (Evolution)</div>
+          <div class="form-row">
+            <label>보유 진화 정수</label>
+            <input type="number" id="evo-total" min="0" value="0">
+          </div>
+          <div class="form-row">
+            <label>초기화할 팰몬</label>
+            <div class="inline-2">
+              <select id="evo-reset-stage">
+                <option value="4진화">4진화 (160)</option>
+                <option value="3진화">3진화 (80)</option>
+                <option value="2진화">2진화 (40)</option>
+                <option value="1진화">1진화 (20)</option>
+              </select>
+              <input type="number" id="evo-reset-count" min="0" value="0">
+            </div>
+          </div>
+          <div class="hint">예) 진화 정수 300 + 4진화 1마리 초기화 → 1명 진화 완성 (1명당 300 필요)</div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.6;">
+            <b>승급 1명 완성</b>: 975<br><br>
+            <b>진화 1명 완성</b>: 300<br>
+            • 초기화 환급<br>
+            &nbsp;&nbsp;1진화 20 · 2진화 40<br>
+            &nbsp;&nbsp;3진화 80 · 4진화 160
+          </div>
+        </div>
+      </div>
+
+      <div id="essence-result"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 팰몬 XP / 자원 합산                                -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-palmon">
+      <p class="txt-dim" style="margin:0 0 12px;">UR / SSR / SR 수량을 각 자원별로 입력하면 선택한 캠프 레벨 기준 합산과, 같은 수량을 30레벨에서 개봉했을 때 증가치를 비교합니다.</p>
+
+      <div class="group">
+        <div class="group-title">캠프 레벨</div>
+        <div class="form-row">
+          <label>비교 기준</label>
+          <select id="palmon-camp"></select>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">보유 상자 수량</div>
+        <div id="palmon-boxes"></div>
+      </div>
+
+      <div id="palmon-result"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 결과                                              -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-result">
+      <div id="result-output">
+        <p class="txt-mute" style="text-align:center;padding:40px 0;">상단의 [계산] 버튼을 눌러주세요.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
