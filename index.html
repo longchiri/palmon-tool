@@ -23,12 +23,12 @@
     </div>
 
     <div class="tabs" id="tab-bar">
-      <button class="tab" data-tab="t-help">📖 사용법</button>
-      <button class="tab active" data-tab="t-result">🎯 목표캠프계산기</button>
-      <button class="tab" data-tab="t-inventory">보유자원/가속 계산하기</button>
-      <button class="tab" data-tab="t-bead">걸작 구슬</button>
-      <button class="tab" data-tab="t-essence">팰몬 진화</button>
-      <button class="tab" data-tab="t-palmon">캠프별 자원상자 비교</button>
+      <button class="tab active" data-tab="t-help">📖 사용법</button>
+      <button class="tab" data-tab="t-result">🎯 목표캠프계산기</button>
+      <button class="tab" data-tab="t-inventory">📦 보유자원/가속 계산하기</button>
+      <button class="tab" data-tab="t-bead">💎 걸작 구슬</button>
+      <button class="tab" data-tab="t-essence">✨ 팰몬 진화</button>
+      <button class="tab" data-tab="t-palmon">📊 캠프별 자원상자 비교</button>
     </div>
 
 
@@ -153,8 +153,9 @@
     <div class="tab-panel" id="t-essence">
       <p class="txt-dim" style="margin:0 0 12px;">내가 가진 양을 넣으면, 몇 명까지 승급 / 진화 완성 가능한지 보여줍니다. 진화는 초기화할 팰몬(단계+수량)도 함께 넣어주세요.</p>
 
+      <!-- Row 1: UR 만능 팰몬조각 (승급) -->
       <div class="grid-3">
-        <div class="group">
+        <div class="group essence-img-card">
           <div class="group-title">UR 만능 팰몬조각</div>
           <img src="promo.png" alt="UR 만능 팰몬조각" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
@@ -164,7 +165,20 @@
           <div class="hint">예) 1950 → 2명 승급 완성 (1명당 975 필요)</div>
         </div>
 
+        <div id="promo-result-slot"></div>
+
         <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.6;">
+            <b>승급 1명 완성</b>: 975<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">UR 만능 팰몬조각 975개 = 팰몬 1명 승급 완료</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: 진화 정수 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
           <div class="group-title">진화 정수 (Evolution)</div>
           <img src="evo.png" alt="진화 정수" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
@@ -191,19 +205,22 @@
           <div class="hint">예) 진화 정수 100 + 4진화 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)</div>
         </div>
 
+        <div id="evo-result-slot"></div>
+
         <div class="group">
           <div class="group-title">기준값</div>
           <div style="font-size:13px;line-height:1.6;">
-            <b>승급 1명 완성</b>: 975<br><br>
-            <b>진화 1명 완성</b>: 300<br>
-            • 초기화 환급 (누적)<br>
-            &nbsp;&nbsp;1진화 +20 · 2진화 +60<br>
-            &nbsp;&nbsp;3진화 +140 · 4진화 +300
+            <b>진화 1명 완성</b>: 300<br><br>
+            <b>초기화 환급 (누적)</b><br>
+            • 1진화 +20  · 2진화 +60<br>
+            • 3진화 +140  · 4진화 +300<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">진화 정수 300개 = 팰몬 1명 4진화 완료</p>
           </div>
         </div>
       </div>
 
-      <div id="essence-result"></div>
+      <!-- 풀세팅 카드 슬롯 -->
+      <div id="fullset-result-slot"></div>
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
@@ -238,7 +255,7 @@
     <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 사용법                                            -->
     <!-- ════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="t-help">
+    <div class="tab-panel active" id="t-help">
 
       <div class="group">
         <div class="group-title">📖 사용법</div>
@@ -305,7 +322,7 @@
 
     </div>
 
-    <div class="tab-panel active" id="t-result">
+    <div class="tab-panel" id="t-result">
 
       <div class="group" style="background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.4);">
         <button class="btn btn-primary" id="btn-import-inv" style="width:100%;font-size:14px;">

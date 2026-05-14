@@ -1172,7 +1172,12 @@ function updateEssence() {
       <div style="margin-top:6px;">풀세팅 완성: <b style="color:${fullColor};font-size:24px;margin-left:6px;">${fmt(fullSet)}명</b></div>
     </div>`;
 
-  $("essence-result").innerHTML = promoCard + evoCard + fullCard;
+  // 분리 슬롯에 렌더 (각 행의 결과 칸으로)
+  if ($("promo-result-slot")) $("promo-result-slot").innerHTML = promoCard;
+  if ($("evo-result-slot")) $("evo-result-slot").innerHTML = evoCard;
+  if ($("fullset-result-slot")) $("fullset-result-slot").innerHTML = fullCard;
+  // 폴백 (구 버전 호환)
+  if ($("essence-result")) $("essence-result").innerHTML = promoCard + evoCard + fullCard;
 
   // 원하는 진화 필터 결과
   updateEvoTargetResult(evoTotal);
