@@ -445,23 +445,30 @@ body { overflow-x: hidden; }
   .bead-reset-item > .reset-label { font-size: 11.5px; }
 }
 
-/* 걸작구슬 / 팰몬진화 탭 — 3컬럼 상하정렬 (결과/기준값이 중앙에 위치) */
+/* 걸작구슬 / 팰몬진화 탭 — 3컬럼 상하정렬 (결과 카드가 좌우 카드와 같은 높이로 늘어남) */
 #t-bead .grid-3,
 #t-essence .grid-3 {
   align-items: stretch;
 }
+/* 결과 슬롯 — 그리드 셀 전체를 차지 (좌우 카드와 동일 높이) */
 #bead-result,
 #promo-result-slot,
 #evo-result-slot {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: 100%;
 }
+/* 결과 카드 — 슬롯을 꽉 채우면서 내용은 세로 가운데로 */
 #bead-result > .result-card,
 #promo-result-slot > .result-card,
 #evo-result-slot > .result-card {
-  margin-bottom: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 100%;
 }
 /* 기준값 카드도 세로 가운데 정렬 (col 3) */
 #t-bead .grid-3 > .group:last-child,
