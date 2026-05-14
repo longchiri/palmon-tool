@@ -694,6 +694,21 @@ input[type="checkbox"] {
 /* ── 결과 탭 ─────────────────────────────────────── */
 #result-output { padding: 6px 0; }
 
+.result-section {
+  margin-bottom: 18px;
+}
+.result-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.4px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  background: rgba(251,191,36,0.06);
+  border-left: 4px solid var(--amber);
+  border-radius: 0 6px 6px 0;
+}
+
 /* ── modal / toast ───────────────────────────────── */
 .toast {
   position: fixed;
