@@ -514,10 +514,16 @@
 
       <div class="group">
         <div class="group-title">건물 레벨 / 목표</div>
-        <div class="grid-3" id="building-levels"></div>
-        <div class="form-row" style="margin-top:8px;">
-          <label>목표 캠프</label>
-          <select id="target-camp"></select>
+        <div class="bld-cols">
+          <!-- 1번째 컬럼: 목표 캠프 (강조 박스) -->
+          <div class="col-target">
+            <div class="col-target-label">🎯 목표 캠프</div>
+            <select id="target-camp" class="col-target-select"></select>
+          </div>
+          <!-- 2번째 컬럼: 캠프 / 병원 / 연구대 (세로 3) -->
+          <div class="col-stack" id="building-col-1"></div>
+          <!-- 3번째 컬럼: 분대 / 아미고 기지 (세로 2) -->
+          <div class="col-stack" id="building-col-2"></div>
         </div>
       </div>
 

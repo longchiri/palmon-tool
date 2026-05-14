@@ -465,18 +465,33 @@ function makeSelect(id, values, includeNone, defaultValue) {
 }
 
 function buildLevelsTab() {
-  // 건물 레벨
-  const wrap = $("building-levels");
-  wrap.innerHTML = "";
-  for (const b of BUILDING_ORDER) {
+  // 건물 레벨 — 컬럼별로 분리 렌더 (col-1: 캠프/병원/연구대, col-2: 분대/아미고 기지)
+  const COL_1_BUILDINGS = ["캠프", "병원", "연구대"];
+  const COL_2_BUILDINGS = ["분대", "아미고 기지"];
+  const col1 = $("building-col-1");
+  const col2 = $("building-col-2");
+  // 호환: 옛 #building-levels 요소가 남아있다면 거기에도 작성
+  const legacy = $("building-levels");
+  if (col1) col1.innerHTML = "";
+  if (col2) col2.innerHTML = "";
+  if (legacy) legacy.innerHTML = "";
+
+  const makeRow = (b) => {
     const max = Math.max(...Object.keys(DB.buildings[b] || {}).map((x) => parseInt(x)));
     const min = Math.min(...Object.keys(DB.buildings[b] || {}).map((x) => parseInt(x))) - 1;
     const range = [];
     for (let v = min; v <= max; v++) range.push(v);
     const sel = el("select", { id: `lv-${SETTINGS_LEVEL_KEYS[b]}` });
     sel.innerHTML = range.map((v) => `<option value="${v}" ${v === min ? "selected" : ""}>${v}</option>`).join("");
-    const row = el("div", { class: "form-row" }, el("label", {}, LEVEL_LABELS[b]), sel);
-    wrap.appendChild(row);
+    return el("div", { class: "form-row" }, el("label", {}, LEVEL_LABELS[b]), sel);
+  };
+
+  if (col1 && col2) {
+    for (const b of COL_1_BUILDINGS) col1.appendChild(makeRow(b));
+    for (const b of COL_2_BUILDINGS) col2.appendChild(makeRow(b));
+  } else if (legacy) {
+    // 옛 레이아웃 fallback
+    for (const b of BUILDING_ORDER) legacy.appendChild(makeRow(b));
   }
 
   // 목표 캠프
