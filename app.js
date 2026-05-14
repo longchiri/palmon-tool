@@ -1338,6 +1338,8 @@ function updateInventorySummary() {
 function activateTab(tabId) {
   $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tabId));
   $$(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === tabId));
+  // 마지막으로 본 탭 기억 → 새로고침해도 같은 탭 유지
+  try { localStorage.setItem("palmon_last_tab", tabId); } catch (_) {}
 }
 
 // ===== 저장 / 불러오기 (JSON 다운로드 / 업로드) =====
@@ -1667,6 +1669,13 @@ async function bootstrap() {
     updatePalmon();
     updateInventorySummary();
     autoCalculate();
+    // 새로고침 시 마지막으로 본 탭 복원 (로고 클릭은 별도 핸들러로 사용법 탭 이동)
+    try {
+      const lastTab = localStorage.getItem("palmon_last_tab");
+      if (lastTab && document.getElementById(lastTab)) {
+        activateTab(lastTab);
+      }
+    } catch (_) {}
   } catch (err) {
     console.error(err);
     document.querySelector(".container").innerHTML = `
