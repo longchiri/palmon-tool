@@ -265,6 +265,24 @@ body { overflow-x: hidden; }
 
 .tbl th.tier { font-size: 12px; opacity: 1; }
 
+/* 작업파견 가속 예시 이미지 */
+.dispatch-img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+  margin: 10px auto 4px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.dispatch-img-caption {
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+@media (max-width: 639px) { .dispatch-img { max-width: 100%; } }
+
 /* 아이콘 이미지 (걸작 구슬 / 진화 정수 / UR 만능 팰몬조각) */
 .bead-img {
   display: block;

@@ -77,6 +77,7 @@ const TOOLTIPS = {
   "참모 / 지휘관": "성전건설 참모 / 지휘관",
   "정교한 공예": "연구대 → 발전",
   "비용 절감": "시즌 스킬",
+  "작업파견 가속": "캠프평점 / 아래 예시사진 확인",
 };
 
 // ===== 전역 상태 =====
@@ -902,7 +903,7 @@ function updateBeadTargetResult(total) {
   const cost = BEAD_RESET_REFUND[target];
   const count = cost > 0 ? Math.floor(total / cost) : 0;
   const remain = total - count * cost;
-  out.textContent = `${target} 무기 ${fmt(count)}개 완성 가능 (남은 ${fmt(remain)})`;
+  out.textContent = `${target} 무기 ${fmt(count)}개 완성 가능 (남은 갯수 ${fmt(remain)})`;
   out.classList.toggle("zero", count === 0);
 }
 
@@ -997,7 +998,7 @@ function updateEvoTargetResult(total) {
   const cost = EVO_RESET_REFUND[target];
   const count = cost > 0 ? Math.floor(total / cost) : 0;
   const remain = total - count * cost;
-  out.textContent = `${target} ${fmt(count)}마리 완성 가능 (남은 ${fmt(remain)})`;
+  out.textContent = `${target} ${fmt(count)}마리 완성 가능 (남은 갯수 ${fmt(remain)})`;
   out.classList.toggle("zero", count === 0);
 }
 
