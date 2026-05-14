@@ -503,40 +503,45 @@ function nameToId(name) {
   return "buff-" + Array.from(name).map((c) => c.charCodeAt(0).toString(16)).join("");
 }
 
-function buildInventoryTab() {
+function buildInventoryTab(opts) {
+  opts = opts || {};
+  const prefix = opts.prefix || "";   // e.g. "tg-" for target tab
+
   // 보유 자원
-  const ores = $("owned-resources");
-  ores.innerHTML = "";
-  for (const rk of RESOURCE_KEYS) {
-    ores.appendChild(el("div", { class: "form-row" },
-      el("label", {}, RESOURCE_LABELS[rk]),
-      el("input", { type: "number", id: `res-${rk}`, min: "0", value: "0", inputmode: "numeric" }),
-    ));
+  const ores = $(`${prefix}owned-resources`);
+  if (ores) {
+    ores.innerHTML = "";
+    for (const rk of RESOURCE_KEYS) {
+      ores.appendChild(el("div", { class: "form-row" },
+        el("label", {}, RESOURCE_LABELS[rk]),
+        el("input", { type: "number", id: `${prefix}res-${rk}`, min: "0", value: "0", inputmode: "numeric" }),
+      ));
+    }
   }
 
   // 자원 상자 — 4열 grid (라벨 + SR + SSR + UR)
-  const boxes = $("owned-boxes");
-  boxes.innerHTML = "";
-  // 헤더
-  const hdr = el("div", { class: "inv-box-grid" },
-    el("div", {}),
-    ...BOX_TIERS.map((t) => el("div", { class: `h tier tier-${t.toLowerCase()}`}, t))
-  );
-  boxes.appendChild(hdr);
-  for (const rk of RESOURCE_KEYS) {
-    const row = el("div", { class: "inv-box-grid" }, el("div", { class: "rk-label" }, RESOURCE_LABELS[rk]));
-    for (const tier of BOX_TIERS) {
-      row.appendChild(el("input", { type: "number", id: `box-${rk}-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
+  const boxes = $(`${prefix}owned-boxes`);
+  if (boxes) {
+    boxes.innerHTML = "";
+    const hdr = el("div", { class: "inv-box-grid" },
+      el("div", {}),
+      ...BOX_TIERS.map((t) => el("div", { class: `h tier tier-${t.toLowerCase()}`}, t))
+    );
+    boxes.appendChild(hdr);
+    for (const rk of RESOURCE_KEYS) {
+      const row = el("div", { class: "inv-box-grid" }, el("div", { class: "rk-label" }, RESOURCE_LABELS[rk]));
+      for (const tier of BOX_TIERS) {
+        row.appendChild(el("input", { type: "number", id: `${prefix}box-${rk}-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
+      }
+      boxes.appendChild(row);
     }
-    boxes.appendChild(row);
   }
 
   // 가속권 — 컴팩트한 spd-grid 레이아웃
   const sg = getSpeedupGroupMap();
-  // 표시 순서: 8h → 3h → 1h → 5m → 1m (큰 단위부터)
   const SPD_ORDER = ["8h", "3h", "1h", "5m", "1m"];
   for (const grp of SPEEDUP_GROUPS) {
-    const containerId = grp.key.replace(/_speedups$/, "-speedups");
+    const containerId = prefix + grp.key.replace(/_speedups$/, "-speedups");
     const cont = $(containerId);
     if (!cont) continue;
     cont.innerHTML = "";
@@ -545,7 +550,7 @@ function buildInventoryTab() {
     for (const k of sortedKeys) {
       const item = el("div", { class: "spd-item" },
         el("span", { class: "spd-label" }, k),
-        el("input", { type: "number", id: `spd-${grp.key}-${k}`, min: "0", value: "0", inputmode: "numeric" }),
+        el("input", { type: "number", id: `${prefix}spd-${grp.key}-${k}`, min: "0", value: "0", inputmode: "numeric" }),
       );
       cont.appendChild(item);
     }
@@ -612,31 +617,37 @@ function getTimeBuffsSelection() {
 function getResourceBuffsSelection() {
   return Object.fromEntries(["정교한 공예", "비용 절감"].map((n) => [n, $(`b-${nameToId(n)}`).value]));
 }
-function getOwnedResources() {
-  return Object.fromEntries(RESOURCE_KEYS.map((k) => [k, parseInt($(`res-${k}`).value || 0)]));
+function getOwnedResources(prefix) {
+  prefix = prefix || "";
+  return Object.fromEntries(RESOURCE_KEYS.map((k) => [k, parseInt($(`${prefix}res-${k}`)?.value || 0)]));
 }
-function getOwnedBoxes() {
+function getOwnedBoxes(prefix) {
+  prefix = prefix || "";
   const out = {};
   for (const rk of RESOURCE_KEYS) {
     out[rk] = {};
-    for (const t of BOX_TIERS) out[rk][t] = parseInt($(`box-${rk}-${t}`).value || 0);
+    for (const t of BOX_TIERS) out[rk][t] = parseInt($(`${prefix}box-${rk}-${t}`)?.value || 0);
   }
   return out;
 }
-function getOwnedSpeedups() {
+function getOwnedSpeedups(prefix) {
+  prefix = prefix || "";
   const sg = getSpeedupGroupMap();
   const out = {};
   for (const grp of SPEEDUP_GROUPS) {
     out[grp.key] = {};
     for (const k of Object.keys(sg[grp.key])) {
-      out[grp.key][k] = parseInt($(`spd-${grp.key}-${k}`)?.value || 0);
+      out[grp.key][k] = parseInt($(`${prefix}spd-${grp.key}-${k}`)?.value || 0);
     }
   }
   return out;
 }
 
 // ===== 계산 결과 =====
-function calculate() {
+function calculate(opts) {
+  opts = opts || {};
+  const silent = opts.silent === true;          // 자동 트리거 시 alert 안 띄움
+  const skipTabSwitch = opts.skipTabSwitch === true;  // 자동 트리거 시 탭 전환 안 함
   try {
     const currentLevels = getCurrentLevels();
     const targetCamp = parseInt($("target-camp").value);
@@ -677,8 +688,8 @@ function calculate() {
       totalFinalSec += buffedTime;
     }
 
-    const ownedResources = getOwnedResources();
-    const ownedBoxes = getOwnedBoxes();
+    const ownedResources = getOwnedResources("tg-");
+    const ownedBoxes = getOwnedBoxes("tg-");
     const totalOwnedWithBoxes = calcTotalResourcesWithBoxes(currentLevels["캠프"], ownedResources, ownedBoxes);
     const shortages = {};
     for (const k of RESOURCE_KEYS) shortages[k] = Math.max(0, totalFinal[k] - (totalOwnedWithBoxes[k] || 0));
@@ -692,7 +703,7 @@ function calculate() {
       }
     }
 
-    const ownedSpeedups = getOwnedSpeedups();
+    const ownedSpeedups = getOwnedSpeedups("tg-");
     const sp = optimizeSpeedups(totalFinalSec, ownedSpeedups, dispatchSeconds);
     const speedGroups = getSpeedupGroupMap();
     const usedBuildSec = Object.keys(sp.usedBuild || {}).reduce((s, k) => s + (speedGroups.build_speedups[k] || 0) * (sp.usedBuild[k] || 0), 0);
@@ -717,11 +728,49 @@ function calculate() {
       usedBuildSec, usedGeneralSec, remainBuild, remainGeneral,
       buildSpeedSum, fixedSecondsSum, dispatchSeconds, resourceRateSum,
     });
-    activateTab("t-result");
+    if (!skipTabSwitch) activateTab("t-result");
   } catch (e) {
     console.error(e);
-    alert(e.message || String(e));
+    if (!silent) alert(e.message || String(e));
   }
+}
+
+// 자동 계산 (입력값 변경 시 — alert 안 띄우고 탭 전환도 안 함)
+let _autoCalcTimer = null;
+// 보유자원/가속 탭의 입력값을 목표캠프계산기 탭의 tg-* 입력으로 복사
+function importInventoryToTarget() {
+  // 자원
+  for (const k of RESOURCE_KEYS) {
+    const src = $(`res-${k}`);
+    const dst = $(`tg-res-${k}`);
+    if (src && dst) dst.value = src.value || 0;
+  }
+  // 상자
+  for (const rk of RESOURCE_KEYS) {
+    for (const t of BOX_TIERS) {
+      const src = $(`box-${rk}-${t}`);
+      const dst = $(`tg-box-${rk}-${t}`);
+      if (src && dst) dst.value = src.value || 0;
+    }
+  }
+  // 가속권 5종
+  const sg = getSpeedupGroupMap();
+  for (const grp of SPEEDUP_GROUPS) {
+    for (const k of Object.keys(sg[grp.key])) {
+      const src = $(`spd-${grp.key}-${k}`);
+      const dst = $(`tg-spd-${grp.key}-${k}`);
+      if (src && dst) dst.value = src.value || 0;
+    }
+  }
+  autoCalculate();
+  toast("보유자원/가속 데이터를 불러왔습니다");
+}
+
+function autoCalculate() {
+  if (_autoCalcTimer) clearTimeout(_autoCalcTimer);
+  _autoCalcTimer = setTimeout(() => {
+    calculate({ silent: true, skipTabSwitch: true });
+  }, 120);
 }
 
 function renderResult(r) {
@@ -867,6 +916,12 @@ function updateBead() {
     resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(resetRefund)}</b></td></tr>`;
   }
 
+  // 목표한 성급 (원하는 성급 드롭다운 기반)
+  const beadTarget = $("bead-target")?.value || "5성";
+  const beadTargetCost = BEAD_RESET_REFUND[beadTarget] || BEAD_PER_WEAPON;
+  const beadTargetCount = beadTargetCost > 0 ? Math.floor(total / beadTargetCost) : 0;
+  const beadTargetRemain = total - beadTargetCount * beadTargetCost;
+
   $("bead-result").innerHTML = `
     <div class="result-card strong" style="border-color:${color};text-align:center;">
       <div class="card-title" style="color:${color};">◆ 완성 가능 무기 (5성 기준)</div>
@@ -879,10 +934,12 @@ function updateBead() {
         <tr><td class="label">합계</td><td class="value amber"><b>${fmt(total)}</b></td></tr>
         <tr><td class="label">무기 1개당 필요</td><td class="value">${fmt(BEAD_PER_WEAPON)}</td></tr>
         <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>
+        <tr><td colspan="2" style="padding:4px 10px;"><hr style="border:none;border-top:1px solid var(--border);margin:2px 0;"></td></tr>
+        <tr><td class="label" style="color:var(--amber);font-weight:700;">🎯 목표한 성급 (${beadTarget})</td><td class="value" style="color:var(--amber);font-weight:800;">${fmt(beadTargetCount)}개 완성 (남은 ${fmt(beadTargetRemain)})</td></tr>
       </table></div>
     </div>`;
 
-  // 원하는 성급 필터 결과
+  // 입력 탭의 원하는 성급 박스도 갱신
   updateBeadTargetResult(total);
 }
 
@@ -959,13 +1016,21 @@ function updateEssence() {
     resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(evoReset)}</b></td></tr>`;
   }
 
+  // 목표한 진화 (원하는 진화 드롭다운 기반)
+  const evoTarget = $("evo-target")?.value || "4진화";
+  const evoTargetCost = EVO_RESET_REFUND[evoTarget] || EVO_PER_PALMON;
+  const evoTargetCount = evoTargetCost > 0 ? Math.floor(evoTotal / evoTargetCost) : 0;
+  const evoTargetRemain = evoTotal - evoTargetCount * evoTargetCost;
+
   const evoColor = evoPeople > 0 ? "var(--green)" : "var(--red)";
   const evoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
     ${resetRows}
     <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
     <tr><td class="label">1명 진화 필요</td><td class="value">${fmt(EVO_PER_PALMON)}</td></tr>
-    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoRemain)}</td></tr>`;
+    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoRemain)}</td></tr>
+    <tr><td colspan="2" style="padding:4px 10px;"><hr style="border:none;border-top:1px solid var(--border);margin:2px 0;"></td></tr>
+    <tr><td class="label" style="color:var(--amber);font-weight:700;">🎯 목표한 진화 (${evoTarget})</td><td class="value" style="color:var(--amber);font-weight:800;">${fmt(evoTargetCount)}마리 완성 (남은 ${fmt(evoTargetRemain)})</td></tr>`;
   const evoCard = bigCard("진화 가능 팰몬", evoPeople, evoColor, evoRows);
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
@@ -1144,6 +1209,9 @@ function buildSettingsPayload() {
     owned_resources: getOwnedResources(),
     owned_resource_boxes: getOwnedBoxes(),
     owned_speedups: getOwnedSpeedups(),
+    target_owned_resources: getOwnedResources("tg-"),
+    target_owned_resource_boxes: getOwnedBoxes("tg-"),
+    target_owned_speedups: getOwnedSpeedups("tg-"),
     time_buffs_selection: getTimeBuffsSelection(),
     resource_buffs_selection: getResourceBuffsSelection(),
     bead_total: parseInt($("bead-total").value || 0),
@@ -1180,6 +1248,20 @@ function applySettingsPayload(p) {
   for (const grp of SPEEDUP_GROUPS) for (const k in (p.owned_speedups?.[grp.key] || {})) {
     const id = `spd-${grp.key}-${k}`;
     if ($(id)) $(id).value = p.owned_speedups[grp.key][k];
+  }
+  // 목표캠프계산기 탭의 자체 인벤토리 (tg- prefix) 복원
+  // (이전 포맷 호환: target_* 키가 없으면 owned_*에서 가져옴 — 기존 저장 파일은 자동 동일 적용)
+  const tgRes = p.target_owned_resources || p.owned_resources || {};
+  const tgBoxes = p.target_owned_resource_boxes || p.owned_resource_boxes || {};
+  const tgSpd = p.target_owned_speedups || p.owned_speedups || {};
+  for (const k of RESOURCE_KEYS) if (tgRes[k] != null && $(`tg-res-${k}`)) $(`tg-res-${k}`).value = tgRes[k];
+  for (const rk of RESOURCE_KEYS) for (const t of BOX_TIERS) {
+    const v = tgBoxes[rk]?.[t];
+    if (v != null && $(`tg-box-${rk}-${t}`)) $(`tg-box-${rk}-${t}`).value = v;
+  }
+  for (const grp of SPEEDUP_GROUPS) for (const k in (tgSpd[grp.key] || {})) {
+    const id = `tg-spd-${grp.key}-${k}`;
+    if ($(id)) $(id).value = tgSpd[grp.key][k];
   }
   const ts = p.time_buffs_selection || {};
   if (ts.vip_level) $("b-vip").value = ts.vip_level;
@@ -1338,18 +1420,19 @@ async function bootstrap() {
     if (BUFF_MAP["LV6 성전 건설 참모"]) BUFF_MAP["LV6 성전 건설 참모"].values = { "LV1": { rate: 0.02 } };
     if (BUFF_MAP["LV6 성전 건설 지휘관"]) BUFF_MAP["LV6 성전 건설 지휘관"].values = { "LV1": { rate: 0.01 } };
 
-    buildLevelsTab();
-    buildInventoryTab();
+    buildLevelsTab();              // 레벨/버프는 이제 t-result 안에 있음
+    buildInventoryTab();           // 보유자원/가속 계산하기 탭 (#t-inventory)
+    buildInventoryTab({ prefix: "tg-" });  // 목표캠프계산기 탭의 자체 인벤토리 (#t-result)
     buildPalmonTab();
     applyTooltips();
 
     // 이벤트 바인딩
     $$(".tab").forEach((t) => t.addEventListener("click", () => activateTab(t.dataset.tab)));
-    $("btn-calc").addEventListener("click", calculate);
     $("btn-save").addEventListener("click", saveSettings);
     $("btn-load").addEventListener("click", () => $("file-load").click());
     $("file-load").addEventListener("change", (e) => { if (e.target.files[0]) loadSettings(e.target.files[0]); });
     $("btn-reset").addEventListener("click", resetAll);
+    $("btn-import-inv")?.addEventListener("click", importInventoryToTarget);
 
     // 자동 업데이트 (구슬/진화/팰몬자원/요약)
     $("bead-total").addEventListener("input", updateBead);
@@ -1357,9 +1440,9 @@ async function bootstrap() {
       const el = $(`bead-reset-${i}`);
       if (el) el.addEventListener("input", updateBead);
     }
-    // 원하는 성급/진화 필터
-    $("bead-target")?.addEventListener("change", () => updateBeadTargetResult());
-    $("evo-target")?.addEventListener("change", () => updateEvoTargetResult());
+    // 원하는 성급/진화 필터 — 결과 카드까지 함께 갱신
+    $("bead-target")?.addEventListener("change", () => updateBead());
+    $("evo-target")?.addEventListener("change", () => updateEssence());
     ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));
@@ -1372,12 +1455,23 @@ async function bootstrap() {
     invIds.forEach((id) => $(id) && $(id).addEventListener("input", updateInventorySummary));
     $("lv-camp").addEventListener("change", updateInventorySummary);
 
+    // 목표캠프계산기 탭의 모든 입력 변경 시 자동 계산
+    ["input", "change"].forEach((evt) => {
+      document.addEventListener(evt, (e) => {
+        if (!e.target.closest) return;
+        if (e.target.closest("#t-result")) {
+          autoCalculate();
+        }
+      });
+    });
+
     // 자동 로드 + 초기 렌더
     autoLoadFromLocalStorage();
     updateBead();
     updateEssence();
     updatePalmon();
     updateInventorySummary();
+    autoCalculate();
   } catch (err) {
     console.error(err);
     document.querySelector(".container").innerHTML = `
