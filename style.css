@@ -947,6 +947,41 @@ input[type="checkbox"] {
   min-height: 100px;
 }
 
+/* 글쓰기 / 댓글 폼 — 입력칸 컨테이너 너비에 맞게 늘림 */
+#board-write-view .form-row,
+.comment-form .form-row {
+  grid-template-columns: var(--label-w) 1fr;
+}
+#board-write-view .form-row > input[type="text"],
+#board-write-view .form-row > textarea,
+.comment-form .form-row > input[type="text"],
+.comment-form .form-row > textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  background: #111827;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+#board-write-view .form-row > textarea,
+.comment-form .form-row > textarea {
+  resize: vertical;
+}
+#board-content { min-height: 200px; }
+#comment-content { min-height: 90px; }
+
+@media (max-width: 720px) {
+  #board-write-view .form-row,
+  .comment-form .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 댓글 */
 .board-comment {
   padding: 10px 12px;
