@@ -16,7 +16,6 @@
   <div class="container">
     <div class="header">
       <h1>Palmon Tool</h1>
-      <button class="btn btn-primary" id="btn-calc">계산</button>
       <button class="btn" id="btn-save">설정 저장</button>
       <button class="btn" id="btn-load">설정 불러오기</button>
       <input type="file" id="file-load" accept=".json" hidden />
@@ -24,93 +23,13 @@
     </div>
 
     <div class="tabs" id="tab-bar">
-      <button class="tab active" data-tab="t-levels">레벨 / 버프</button>
-      <button class="tab" data-tab="t-inventory">보유 자원 / 상자 / 가속권</button>
+      <button class="tab active" data-tab="t-result">🎯 목표캠프계산기</button>
+      <button class="tab" data-tab="t-inventory">보유자원/가속 계산하기</button>
       <button class="tab" data-tab="t-bead">걸작 구슬</button>
       <button class="tab" data-tab="t-essence">팰몬 진화</button>
       <button class="tab" data-tab="t-palmon">팰몬 XP / 자원 합산</button>
-      <button class="tab" data-tab="t-result">결과</button>
     </div>
 
-    <!-- ════════════════════════════════════════════════════ -->
-    <!-- TAB: 레벨 / 버프                                       -->
-    <!-- ════════════════════════════════════════════════════ -->
-    <div class="tab-panel active" id="t-levels">
-
-      <div class="group">
-        <div class="group-title">건물 레벨 / 목표</div>
-        <div class="grid-3" id="building-levels"></div>
-        <div class="form-row" style="margin-top:8px;">
-          <label>목표 캠프</label>
-          <select id="target-camp"></select>
-        </div>
-      </div>
-
-      <div class="grid-2">
-        <div class="group">
-          <div class="group-title">시간 버프</div>
-
-          <div class="grid-2">
-            <div>
-              <div class="form-row">
-                <label>VIP 레벨</label>
-                <select id="b-vip"></select>
-              </div>
-              <div id="b-research"></div>
-              <div id="b-guild"></div>
-              <div id="b-season1"></div>
-            </div>
-
-            <div>
-              <div class="form-row">
-                <label>직위</label>
-                <select id="b-position"></select>
-              </div>
-              <div class="form-row">
-                <label>관리자</label>
-                <div class="check-group">
-                  <label class="check-row"><input type="checkbox" id="b-administrator"> 장인</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <label>결제 혜택</label>
-                <div class="check-group">
-                  <label class="check-row"><input type="checkbox" id="b-pay-perm"> 영구혜택</label>
-                  <label class="check-row"><input type="checkbox" id="b-pay-month"> 월간혜택</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <label>LV6 점령</label>
-                <div class="check-group">
-                  <label class="check-row"><input type="checkbox" id="b-temple"> 성전 건설</label>
-                  <label class="check-row"><input type="checkbox" id="b-coal"> 석탄 광산</label>
-                </div>
-              </div>
-              <div class="form-row">
-                <label>참모 / 지휘관</label>
-                <select id="b-temple-role"></select>
-              </div>
-              <div class="form-row">
-                <label>작업파견 가속</label>
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-                  <input type="number" id="b-dispatch-h" placeholder="시" min="0" value="0" inputmode="numeric">
-                  <input type="number" id="b-dispatch-m" placeholder="분" min="0" max="59" value="0" inputmode="numeric">
-                  <input type="number" id="b-dispatch-s" placeholder="초" min="0" max="59" value="0" inputmode="numeric">
-                </div>
-              </div>
-              <img src="dispatch_example.jpg" alt="작업파견 가속 예시" class="dispatch-img" onerror="this.onerror=null;this.src='dispatch_example.jpeg';">
-              <div class="dispatch-img-caption">↑ 캠프 평점 화면 예시</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="group">
-          <div class="group-title">자원 감소 버프</div>
-          <div id="b-resource"></div>
-        </div>
-      </div>
-
-    </div>
 
     <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 보유 자원 / 상자 / 가속권                          -->
@@ -174,6 +93,7 @@
             <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="hint">예) 보유 100 + 5성 무기 1개 초기화 → 100 + 150 = 250 → 무기 1개 완성 (남은 100)</div>
+          <div id="bead-result"></div>
         </div>
 
         <div class="group">
@@ -282,6 +202,7 @@
         </div>
       </div>
 
+      <div id="essence-result"></div>
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
@@ -309,23 +230,129 @@
     <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 결과                                              -->
     <!-- ════════════════════════════════════════════════════ -->
-    <div class="tab-panel" id="t-result">
-      <div class="result-section">
-        <div class="result-section-title">⚒️ 캠프 빌드 (시간 / 자원 / 가속권)</div>
-        <div id="result-output">
-          <p class="txt-mute" style="text-align:center;padding:30px 0;">상단의 [계산] 버튼을 눌러주세요.</p>
+    <div class="tab-panel active" id="t-result">
+
+      <div class="group" style="background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.4);">
+        <button class="btn btn-primary" id="btn-import-inv" style="width:100%;font-size:14px;">
+          📥 보유자원/가속 계산하기에서 데이터 불러오기
+        </button>
+        <p class="hint" style="margin-top:6px;text-align:center;">
+          → 보유자원/가속 계산하기 탭에 입력한 값을 여기로 한 번에 가져옵니다.
+        </p>
+      </div>
+
+      <div class="group">
+        <div class="group-title">건물 레벨 / 목표</div>
+        <div class="grid-3" id="building-levels"></div>
+        <div class="form-row" style="margin-top:8px;">
+          <label>목표 캠프</label>
+          <select id="target-camp"></select>
         </div>
       </div>
 
-      <div class="result-section">
-        <div class="result-section-title">💎 걸작 구슬</div>
-        <div id="bead-result"></div>
+      <div class="grid-2">
+        <div class="group">
+          <div class="group-title">시간 버프</div>
+          <div class="grid-2">
+            <div>
+              <div class="form-row">
+                <label>VIP 레벨</label>
+                <select id="b-vip"></select>
+              </div>
+              <div id="b-research"></div>
+              <div id="b-guild"></div>
+              <div id="b-season1"></div>
+            </div>
+            <div>
+              <div class="form-row">
+                <label>직위</label>
+                <select id="b-position"></select>
+              </div>
+              <div class="form-row">
+                <label>관리자</label>
+                <div class="check-group">
+                  <label class="check-row"><input type="checkbox" id="b-administrator"> 장인</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>결제 혜택</label>
+                <div class="check-group">
+                  <label class="check-row"><input type="checkbox" id="b-pay-perm"> 영구혜택</label>
+                  <label class="check-row"><input type="checkbox" id="b-pay-month"> 월간혜택</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>LV6 점령</label>
+                <div class="check-group">
+                  <label class="check-row"><input type="checkbox" id="b-temple"> 성전 건설</label>
+                  <label class="check-row"><input type="checkbox" id="b-coal"> 석탄 광산</label>
+                </div>
+              </div>
+              <div class="form-row">
+                <label>참모 / 지휘관</label>
+                <select id="b-temple-role"></select>
+              </div>
+              <div class="form-row">
+                <label>작업파견 가속</label>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+                  <input type="number" id="b-dispatch-h" placeholder="시" min="0" value="0" inputmode="numeric">
+                  <input type="number" id="b-dispatch-m" placeholder="분" min="0" max="59" value="0" inputmode="numeric">
+                  <input type="number" id="b-dispatch-s" placeholder="초" min="0" max="59" value="0" inputmode="numeric">
+                </div>
+              </div>
+              <img src="dispatch_example.jpg" alt="작업파견 가속 예시" class="dispatch-img" onerror="this.onerror=null;this.src='dispatch_example.jpeg';">
+              <div class="dispatch-img-caption">↑ 캠프 평점 화면 예시</div>
+            </div>
+          </div>
+        </div>
+        <div class="group">
+          <div class="group-title">자원 감소 버프</div>
+          <div id="b-resource"></div>
+        </div>
       </div>
 
-      <div class="result-section">
-        <div class="result-section-title">✨ 팰몬 진화</div>
-        <div id="essence-result"></div>
+      <div class="group">
+        <div class="group-title">보유 자원</div>
+        <div class="grid-3" id="tg-owned-resources"></div>
       </div>
+
+      <div class="group">
+        <div class="group-title">자원 상자</div>
+        <div id="tg-owned-boxes"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">일반 가속</div>
+        <div class="spd-grid" id="tg-general-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">건설 가속</div>
+        <div class="spd-grid" id="tg-build-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">연구 가속</div>
+        <div class="spd-grid" id="tg-research-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">훈련 가속</div>
+        <div class="spd-grid" id="tg-training-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">의료 가속</div>
+        <div class="spd-grid" id="tg-medical-speedups"></div>
+      </div>
+
+      <div class="group" style="border-color:rgba(52,211,153,0.3);">
+        <div class="group-title" style="background:rgba(52,211,153,0.15);">🎯 자동 계산 결과</div>
+        <div id="result-output">
+          <p class="txt-mute" style="text-align:center;padding:30px 0;">입력값을 변경하면 즉시 자동 계산됩니다.</p>
+        </div>
+      </div>
+
     </div>
 
   </div>
