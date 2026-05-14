@@ -48,6 +48,21 @@ const PROMO_PER_PALMON = 975;
 const EVO_PER_PALMON = 300;
 const EVO_VALUES = { "1진화": 20, "2진화": 40, "3진화": 80, "4진화": 160 };
 
+// ───────── 라벨 툴팁 (i 버튼으로 표시될 in-game 출처) ─────────
+const TOOLTIPS = {
+  "VIP 레벨": "VIP 레벨",
+  "직위": "왕국직위",
+  "고효율 건축 I": "연구대 → 발전",
+  "고효율 건축 II": "연구대 → 발전",
+  "고효율 건축 III": "연구대 → 발전",
+  "고효율 건축 IV": "연구대 → 발전",
+  "초기기술": "길드 스킬",
+  "소생기술": "길드 스킬",
+  "건설자의 열정": "시즌 스킬",
+  "건설 지원": "시즌 스킬",
+  "참모 / 지휘관": "성전건설 참모 / 지휘관",
+};
+
 // ===== 전역 상태 =====
 let DB = null;       // palmonDB.json
 let BUFF_MAP = {};   // name -> buff
@@ -451,8 +466,6 @@ function buildLevelsTab() {
 
   // 직위
   makeSelect("b-position", POSITION_NAMES, true, "미적용");
-  // 관리자
-  makeSelect("b-administrator", ["장인"], true, "미적용");
   // 참모 / 지휘관
   makeSelect("b-temple-role", TEMPLE_ROLE_NAMES, true, "미적용");
 }
@@ -555,7 +568,7 @@ function getTimeBuffsSelection() {
     guild: Object.fromEntries(["초기기술", "소생기술"].map((n) => [n, get(`b-${nameToId(n)}`)])),
     season1: Object.fromEntries(["건설자의 열정", "건설 지원"].map((n) => [n, get(`b-${nameToId(n)}`)])),
     position: get("b-position") === "미적용" ? null : get("b-position"),
-    administrator: get("b-administrator") === "미적용" ? null : get("b-administrator"),
+    administrator: $("b-administrator").checked ? "장인" : null,
     payment: {
       "영구혜택": $("b-pay-perm").checked,
       "월간혜택": $("b-pay-month").checked,
@@ -1047,7 +1060,7 @@ function applySettingsPayload(p) {
   for (const n in (ts.guild || {})) if ($(`b-${nameToId(n)}`)) $(`b-${nameToId(n)}`).value = ts.guild[n];
   for (const n in (ts.season1 || {})) if ($(`b-${nameToId(n)}`)) $(`b-${nameToId(n)}`).value = ts.season1[n];
   $("b-position").value = ts.position || "미적용";
-  $("b-administrator").value = ts.administrator || "미적용";
+  $("b-administrator").checked = ts.administrator === "장인";
   $("b-pay-perm").checked = !!ts.payment?.["영구혜택"];
   $("b-pay-month").checked = !!ts.payment?.["월간혜택"];
   $("b-temple").checked = !!ts.lv6_occupation?.temple_build;
@@ -1137,6 +1150,29 @@ function resetAll() {
   location.reload();
 }
 
+// ===== 라벨 툴팁 적용 =====
+function applyTooltips() {
+  document.querySelectorAll(".form-row > label").forEach((lbl) => {
+    if (lbl.classList.contains("check-row")) return;
+    const text = (lbl.textContent || "").trim();
+    if (!TOOLTIPS[text]) return;
+    // 기존 텍스트 + i 버튼
+    lbl.innerHTML = `${text}<button type="button" class="info" tabindex="0" data-tip="${TOOLTIPS[text]}" aria-label="${text} 정보">i</button>`;
+  });
+  // 모바일에서 탭으로 토글
+  document.addEventListener("click", (e) => {
+    const target = e.target.closest(".info");
+    document.querySelectorAll(".info.active").forEach((el) => {
+      if (el !== target) el.classList.remove("active");
+    });
+    if (target) {
+      e.preventDefault();
+      e.stopPropagation();
+      target.classList.toggle("active");
+    }
+  });
+}
+
 // ===== 초기 적재 =====
 async function bootstrap() {
   try {
@@ -1157,6 +1193,7 @@ async function bootstrap() {
     buildLevelsTab();
     buildInventoryTab();
     buildPalmonTab();
+    applyTooltips();
 
     // 이벤트 바인딩
     $$(".tab").forEach((t) => t.addEventListener("click", () => activateTab(t.dataset.tab)));

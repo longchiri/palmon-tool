@@ -206,6 +206,69 @@ body { overflow-x: hidden; }
 }
 .check-group .check-row { padding: 4px 0; }
 
+/* ── info tooltip (i 버튼) ──────────────────────── */
+.info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  margin: 0 0 0 4px;
+  cursor: help;
+  position: relative;
+  vertical-align: middle;
+  user-select: none;
+  flex-shrink: 0;
+  border: 0;
+  outline: none;
+  padding: 0;
+}
+.info:hover, .info:focus, .info.active { background: #93c5fd; }
+.info::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: -4px;
+  background: #0f1729;
+  border: 1px solid var(--blue);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  font-style: normal;
+  font-family: "Pretendard","Apple SD Gothic Neo","Malgun Gothic","Segoe UI",system-ui,sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s;
+  z-index: 100;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+.info::before {
+  content: "";
+  position: absolute;
+  bottom: calc(100% + 1px);
+  right: 4px;
+  border: 5px solid transparent;
+  border-top-color: var(--blue);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .12s;
+  z-index: 100;
+}
+.info:hover::after, .info:focus::after, .info.active::after,
+.info:hover::before, .info:focus::before, .info.active::before {
+  opacity: 1;
+}
+
 /* ── inputs ──────────────────────────────────────── */
 input[type="number"], select {
   width: 100%;
