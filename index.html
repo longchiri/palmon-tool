@@ -340,57 +340,93 @@
         </p>
       </div>
 
-      <!-- 게시판 선택 / 만들기 -->
-      <div class="group">
-        <div class="group-title">📂 게시판 선택</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <select id="board-select" style="flex:1;min-width:160px;max-width:300px;"></select>
-          <button class="btn" id="btn-board-create">➕ 새 게시판 만들기</button>
-          <button class="btn btn-ghost" id="btn-board-delete-cat" title="현재 게시판 삭제">🗑️ 게시판 삭제</button>
+      <!-- 카테고리 탭 (가로 나열) -->
+      <div class="board-cat-tabs" id="board-cat-tabs"></div>
+
+      <!-- 목록 뷰 -->
+      <div id="board-list-view">
+        <div class="board-toolbar">
+          <button class="btn" id="btn-board-refresh">🔄 새로고침</button>
+          <span class="txt-dim" id="board-status">불러오는 중...</span>
+          <button class="btn btn-ghost" id="btn-board-delete-cat" title="현재 게시판 삭제">🗑️</button>
+          <button class="btn btn-primary" id="btn-write-open" style="margin-left:auto;">✏️ 글쓰기</button>
         </div>
-        <p class="txt-mute" style="font-size:11.5px;margin-top:8px;">
-          ※ 게시판을 새로 만들면 모든 사용자에게 보입니다. 게시판 삭제 시 그 안의 모든 글이 영구 삭제됩니다.
-        </p>
+        <table class="board-list-table">
+          <thead>
+            <tr>
+              <th class="col-num">번호</th>
+              <th class="col-title">제목</th>
+              <th class="col-author">글쓴이</th>
+              <th class="col-server">서버</th>
+              <th class="col-date">날짜</th>
+            </tr>
+          </thead>
+          <tbody id="board-list-body"></tbody>
+        </table>
       </div>
 
-      <div class="group">
-        <div class="group-title">📝 게시글 작성</div>
-        <div class="form-row">
-          <label>서버</label>
-          <input type="text" id="board-server" placeholder="예) 1서버 / 한국1서버" maxlength="20">
-        </div>
-        <div class="form-row">
-          <label>닉네임</label>
-          <input type="text" id="board-nickname" placeholder="인게임닉네임" maxlength="20">
-        </div>
-        <div class="form-row">
-          <label>제목</label>
-          <input type="text" id="board-title" placeholder="제목을 입력하세요" maxlength="100">
-        </div>
-        <div class="form-row">
-          <label>내용</label>
-          <textarea id="board-content" rows="6" maxlength="2000" placeholder="내용을 입력하세요" style="width:100%;background:#111827;border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:14px;font-family:inherit;resize:vertical;min-height:100px;"></textarea>
-        </div>
-        <div class="form-row">
-          <label>이미지</label>
-          <div style="flex:1;">
-            <input type="file" id="board-image" accept="image/*" style="font-size:13px;color:var(--text-dim);">
-            <div id="board-image-preview" style="margin-top:8px;"></div>
+      <!-- 작성 폼 (모달처럼 펼침) -->
+      <div id="board-write-view" style="display:none;">
+        <div class="group">
+          <div class="group-title">📝 글쓰기</div>
+          <div class="form-row">
+            <label>서버</label>
+            <input type="text" id="board-server" placeholder="예) 1서버 / 한국1서버" maxlength="20">
+          </div>
+          <div class="form-row">
+            <label>닉네임</label>
+            <input type="text" id="board-nickname" placeholder="인게임닉네임" maxlength="20">
+          </div>
+          <div class="form-row">
+            <label>제목</label>
+            <input type="text" id="board-title" placeholder="제목을 입력하세요" maxlength="100">
+          </div>
+          <div class="form-row">
+            <label>내용</label>
+            <textarea id="board-content" rows="6" maxlength="2000" placeholder="내용을 입력하세요" style="width:100%;background:#111827;border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:14px;font-family:inherit;resize:vertical;min-height:120px;"></textarea>
+          </div>
+          <div class="form-row">
+            <label>이미지</label>
+            <div style="flex:1;">
+              <input type="file" id="board-image" accept="image/*" style="font-size:13px;color:var(--text-dim);">
+              <div id="board-image-preview" style="margin-top:8px;"></div>
+            </div>
+          </div>
+          <div style="text-align:right;margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn" id="btn-write-cancel">취소</button>
+            <button class="btn btn-primary" id="btn-post-submit">📝 작성</button>
           </div>
         </div>
-        <div style="text-align:right;margin-top:14px;display:flex;gap:8px;justify-content:flex-end;">
-          <button class="btn" id="btn-post-clear">초기화</button>
-          <button class="btn btn-primary" id="btn-post-submit">📝 작성</button>
-        </div>
       </div>
 
-      <div class="group">
-        <div class="group-title">📋 게시글 목록</div>
-        <div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <button class="btn" id="btn-board-refresh">🔄 새로고침</button>
-          <span class="txt-dim" style="font-size:12px;" id="board-status">불러오는 중...</span>
+      <!-- 상세 보기 -->
+      <div id="board-detail-view" style="display:none;">
+        <div style="margin-bottom:10px;">
+          <button class="btn" id="btn-back-list">← 목록으로</button>
         </div>
-        <div id="board-list"></div>
+        <div class="group" id="board-detail-content"></div>
+        <!-- 댓글 -->
+        <div class="group">
+          <div class="group-title">💬 댓글</div>
+          <div id="board-comments-list"></div>
+          <div class="comment-form" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+            <div class="form-row">
+              <label>서버</label>
+              <input type="text" id="comment-server" placeholder="예) 1서버" maxlength="20">
+            </div>
+            <div class="form-row">
+              <label>닉네임</label>
+              <input type="text" id="comment-nickname" placeholder="인게임닉네임" maxlength="20">
+            </div>
+            <div class="form-row">
+              <label>댓글</label>
+              <textarea id="comment-content" rows="3" maxlength="500" placeholder="댓글을 입력하세요" style="width:100%;background:#111827;border:1px solid var(--border);color:var(--text);padding:9px 10px;border-radius:7px;font-size:14px;font-family:inherit;resize:vertical;min-height:60px;"></textarea>
+            </div>
+            <div style="text-align:right;margin-top:8px;">
+              <button class="btn btn-primary" id="btn-comment-submit">💬 댓글 작성</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

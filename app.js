@@ -1765,14 +1765,170 @@ async function boardDeleteCurrent() {
   }
 }
 
-// 게시판 드롭다운 갱신
+// 게시판 카테고리 탭 갱신
 async function boardRefreshList() {
-  const sel = $("board-select");
-  if (!sel) return;
+  const tabs = $("board-cat-tabs");
+  if (!tabs) return;
   const list = (await boardLoadList()) || [];
-  sel.innerHTML = list.map((b) =>
-    `<option value="${escapeHtml(b.id)}" ${b.id === CURRENT_BOARD_ID ? "selected" : ""}>${escapeHtml(b.name)}</option>`
-  ).join("");
+  tabs.innerHTML = list.map((b) =>
+    `<button class="board-cat ${b.id === CURRENT_BOARD_ID ? "active" : ""}" data-id="${escapeHtml(b.id)}">${escapeHtml(b.name)}</button>`
+  ).join("") + `<button class="board-cat board-cat-add" id="btn-board-create-inline">+</button>`;
+  // 클릭 핸들러
+  tabs.querySelectorAll(".board-cat").forEach((btn) => {
+    if (btn.id === "btn-board-create-inline") {
+      btn.addEventListener("click", boardCreateNew);
+    } else {
+      btn.addEventListener("click", () => {
+        CURRENT_BOARD_ID = btn.dataset.id;
+        localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
+        boardShowList();
+      });
+    }
+  });
+}
+
+// 뷰 전환 헬퍼
+function boardShowList() {
+  $("board-list-view").style.display = "";
+  $("board-write-view").style.display = "none";
+  $("board-detail-view").style.display = "none";
+  boardRefreshList();
+  boardRefresh();
+}
+function boardShowWrite() {
+  $("board-list-view").style.display = "none";
+  $("board-write-view").style.display = "";
+  $("board-detail-view").style.display = "none";
+  // 서버/닉네임 자동 채움
+  const ss = localStorage.getItem("palmon_board_server");
+  const sn = localStorage.getItem("palmon_board_nick");
+  if (ss && !$("board-server").value) $("board-server").value = ss;
+  if (sn && !$("board-nickname").value) $("board-nickname").value = sn;
+}
+function boardShowDetail(post) {
+  $("board-list-view").style.display = "none";
+  $("board-write-view").style.display = "none";
+  $("board-detail-view").style.display = "";
+  boardRenderDetail(post);
+  // 댓글 폼 서버/닉네임 자동 채움
+  const ss = localStorage.getItem("palmon_board_server");
+  const sn = localStorage.getItem("palmon_board_nick");
+  if (ss && !$("comment-server").value) $("comment-server").value = ss;
+  if (sn && !$("comment-nickname").value) $("comment-nickname").value = sn;
+}
+
+let CURRENT_POST_ID = null;
+
+function boardRenderDetail(post) {
+  CURRENT_POST_ID = post.id;
+  const myId = boardGetAuthorId();
+  const isMine = post.a === myId;
+  const img = post.img
+    ? `<div style="margin-top:14px;"><img src="${escapeHtml(post.img)}" alt="" style="max-width:100%;max-height:600px;border-radius:8px;display:block;"></div>`
+    : "";
+  $("board-detail-content").innerHTML = `
+    <div class="group-title">📄 게시글</div>
+    <div class="board-detail-head">
+      <span class="board-server">[${escapeHtml(post.server || "?")}]</span>
+      <span class="board-nick">${escapeHtml(post.nick || "익명")}</span>
+      ${isMine ? `<button class="btn btn-ghost board-del" data-id="${escapeHtml(post.id)}" style="padding:4px 10px;font-size:12px;margin-left:auto;">🗑️ 삭제</button>` : ""}
+    </div>
+    <div class="board-detail-title">${escapeHtml(post.title || "")}</div>
+    <div class="board-detail-content-text">${escapeHtml(post.content || "").replace(/\n/g, "<br>")}</div>
+    ${img}
+    <div class="board-time-foot">${formatBoardTime(post.t)}</div>
+  `;
+  // 삭제 버튼 바인딩
+  const delBtn = $("board-detail-content").querySelector(".board-del");
+  if (delBtn) {
+    delBtn.addEventListener("click", () => boardDeletePost(delBtn.dataset.id));
+  }
+  // 댓글 렌더
+  boardRenderComments(post.comments || []);
+}
+
+function boardRenderComments(comments) {
+  const listEl = $("board-comments-list");
+  if (!listEl) return;
+  if (!Array.isArray(comments) || comments.length === 0) {
+    listEl.innerHTML = `<p class="txt-mute" style="text-align:center;padding:20px;font-size:13px;">아직 댓글이 없습니다.</p>`;
+    return;
+  }
+  const myId = boardGetAuthorId();
+  // 시간순 (오래된 → 최신)
+  comments.sort((a, b) => (a.t || 0) - (b.t || 0));
+  listEl.innerHTML = comments.map((c) => {
+    const isMine = c.a === myId;
+    return `
+      <div class="board-comment" data-id="${escapeHtml(c.id || "")}">
+        <div class="board-comment-head">
+          <span class="board-server">[${escapeHtml(c.server || "?")}]</span>
+          <span class="board-nick">${escapeHtml(c.nick || "익명")}</span>
+          <span class="board-time">${formatBoardTime(c.t)}</span>
+          ${isMine ? `<button class="btn btn-ghost comment-del" data-id="${escapeHtml(c.id || "")}" style="padding:2px 8px;font-size:11px;margin-left:auto;">🗑️</button>` : ""}
+        </div>
+        <div class="board-comment-content">${escapeHtml(c.content || "").replace(/\n/g, "<br>")}</div>
+      </div>`;
+  }).join("");
+  // 댓글 삭제 핸들러
+  listEl.querySelectorAll(".comment-del").forEach((btn) => {
+    btn.addEventListener("click", () => boardDeleteComment(btn.dataset.id));
+  });
+}
+
+async function boardCommentSubmit() {
+  if (!boardIsConfigured()) { alert("PANTRY_ID 미설정"); return; }
+  if (!CURRENT_POST_ID) return;
+  const server = $("comment-server").value.trim();
+  const nick = $("comment-nickname").value.trim();
+  const content = $("comment-content").value.trim();
+  if (!server) { alert("서버를 입력해주세요"); return; }
+  if (!nick) { alert("닉네임을 입력해주세요"); return; }
+  if (!content) { alert("댓글 내용을 입력해주세요"); return; }
+
+  const submitBtn = $("btn-comment-submit");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "작성 중...";
+  try {
+    const posts = (await boardLoadPosts()) || [];
+    const idx = posts.findIndex((p) => p.id === CURRENT_POST_ID);
+    if (idx < 0) throw new Error("게시글을 찾을 수 없습니다");
+    if (!Array.isArray(posts[idx].comments)) posts[idx].comments = [];
+    posts[idx].comments.push({
+      id: "c_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+      a: boardGetAuthorId(),
+      server, nick, content,
+      t: Date.now(),
+    });
+    await boardSavePosts(posts);
+    // 서버/닉네임 저장 (다음 댓글 작성 시 자동 채움)
+    localStorage.setItem("palmon_board_server", server);
+    localStorage.setItem("palmon_board_nick", nick);
+    $("comment-content").value = "";
+    toast("댓글 작성됨");
+    boardRenderDetail(posts[idx]);  // 댓글 갱신
+  } catch (e) {
+    alert("댓글 작성 실패: " + (e.message || e));
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "💬 댓글 작성";
+  }
+}
+
+async function boardDeleteComment(commentId) {
+  if (!confirm("이 댓글을 삭제할까요?")) return;
+  try {
+    const posts = (await boardLoadPosts()) || [];
+    const idx = posts.findIndex((p) => p.id === CURRENT_POST_ID);
+    if (idx < 0) return;
+    const myId = boardGetAuthorId();
+    posts[idx].comments = (posts[idx].comments || []).filter((c) => !(c.id === commentId && c.a === myId));
+    await boardSavePosts(posts);
+    toast("댓글 삭제됨");
+    boardRenderDetail(posts[idx]);
+  } catch (e) {
+    alert("삭제 실패: " + (e.message || e));
+  }
 }
 
 // 이미지 리사이즈 (최대 800px, base64 반환)
@@ -1834,12 +1990,12 @@ function formatBoardTime(ts) {
 
 async function boardRefresh() {
   const statusEl = $("board-status");
-  const listEl = $("board-list");
-  if (!listEl) return;
+  const tbody = $("board-list-body");
+  if (!tbody) return;
 
   if (!boardIsConfigured()) {
     $("board-setup-warn").style.display = "";
-    listEl.innerHTML = `<p class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</p>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</td></tr>`;
     statusEl.textContent = "";
     return;
   }
@@ -1847,42 +2003,45 @@ async function boardRefresh() {
   statusEl.textContent = "불러오는 중...";
   const posts = await boardLoadPosts();
   if (posts === null) {
-    statusEl.textContent = "❌ 불러오기 실패 (네트워크 / Pantry ID 확인)";
+    statusEl.textContent = "❌ 불러오기 실패";
     return;
   }
-  // 최신순
+  // 최신순 + 번호 부여
   posts.sort((a, b) => (b.t || 0) - (a.t || 0));
   if (posts.length === 0) {
-    listEl.innerHTML = `<p class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</p>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</td></tr>`;
     statusEl.textContent = `총 0개`;
     return;
   }
-  const myId = boardGetAuthorId();
-  listEl.innerHTML = posts.map((p) => {
-    const isMine = p.a === myId;
-    const img = p.img
-      ? `<div style="margin-top:10px;"><img src="${escapeHtml(p.img)}" alt="" style="max-width:100%;max-height:400px;border-radius:8px;display:block;"></div>`
-      : "";
+  tbody.innerHTML = posts.map((p, i) => {
+    const num = posts.length - i;
+    const imgIcon = p.img ? `<span class="post-icon" title="이미지">🖼️</span>` : "";
+    const cmtCount = (p.comments || []).length;
+    const cmtIcon = cmtCount > 0 ? ` <span class="post-cmt-cnt">[${cmtCount}]</span>` : "";
+    const today = new Date();
+    const postDate = new Date(p.t || 0);
+    const isToday = today.toDateString() === postDate.toDateString();
+    const dateStr = isToday
+      ? `${String(postDate.getHours()).padStart(2,"0")}:${String(postDate.getMinutes()).padStart(2,"0")}`
+      : `${String(postDate.getMonth()+1).padStart(2,"0")}-${String(postDate.getDate()).padStart(2,"0")}`;
     return `
-      <div class="board-post" data-id="${escapeHtml(p.id || "")}">
-        <div class="board-post-head">
-          <div>
-            <span class="board-server">[${escapeHtml(p.server || "?")}]</span>
-            <span class="board-nick">${escapeHtml(p.nick || "익명")}</span>
-          </div>
-          ${isMine ? `<button class="btn btn-ghost board-del" data-id="${escapeHtml(p.id || "")}" style="padding:4px 10px;font-size:12px;">🗑️ 삭제</button>` : ""}
-        </div>
-        <div class="board-title">${escapeHtml(p.title || "")}</div>
-        <div class="board-content">${escapeHtml(p.content || "").replace(/\n/g, "<br>")}</div>
-        ${img}
-        <div class="board-time-foot">${formatBoardTime(p.t)}</div>
-      </div>`;
+      <tr class="board-row" data-id="${escapeHtml(p.id || "")}">
+        <td class="col-num">${num}</td>
+        <td class="col-title">${imgIcon}${escapeHtml(p.title || "")}${cmtIcon}</td>
+        <td class="col-author">${escapeHtml(p.nick || "익명")}</td>
+        <td class="col-server">${escapeHtml(p.server || "?")}</td>
+        <td class="col-date">${dateStr}</td>
+      </tr>`;
   }).join("");
   statusEl.textContent = `총 ${posts.length}개`;
 
-  // 삭제 버튼 바인딩
-  listEl.querySelectorAll(".board-del").forEach((btn) => {
-    btn.addEventListener("click", () => boardDeletePost(btn.dataset.id));
+  // 행 클릭 → 상세 보기
+  tbody.querySelectorAll(".board-row").forEach((row) => {
+    row.addEventListener("click", () => {
+      const id = row.dataset.id;
+      const post = posts.find((p) => p.id === id);
+      if (post) boardShowDetail(post);
+    });
   });
 }
 
@@ -1928,11 +2087,11 @@ async function boardSubmit() {
     $("board-content").value = "";
     if (fileInput) fileInput.value = "";
     $("board-image-preview").innerHTML = "";
-    // 서버/닉네임은 유지 (재입력 편의)
+    // 서버/닉네임은 유지 (재입력 편의) — 한번 적으면 이 브라우저 고정
     localStorage.setItem("palmon_board_server", server);
     localStorage.setItem("palmon_board_nick", nick);
     toast("게시글 작성됨");
-    boardRefresh();
+    boardShowList();   // 목록 뷰로 돌아가기
   } catch (e) {
     console.error(e);
     alert("작성 실패: " + (e.message || e));
@@ -1968,28 +2127,34 @@ function boardClearForm() {
 
 function boardSetupListeners() {
   if (!$("btn-post-submit")) return;
-  // 서버/닉네임 복원
+  // 서버/닉네임 복원 (글쓰기 + 댓글)
   const ss = localStorage.getItem("palmon_board_server");
   const sn = localStorage.getItem("palmon_board_nick");
-  if (ss && $("board-server")) $("board-server").value = ss;
-  if (sn && $("board-nickname")) $("board-nickname").value = sn;
+  if (ss) {
+    if ($("board-server")) $("board-server").value = ss;
+    if ($("comment-server")) $("comment-server").value = ss;
+  }
+  if (sn) {
+    if ($("board-nickname")) $("board-nickname").value = sn;
+    if ($("comment-nickname")) $("comment-nickname").value = sn;
+  }
 
   // 현재 게시판 복원
   const savedBoard = localStorage.getItem("palmon_current_board");
   if (savedBoard) CURRENT_BOARD_ID = savedBoard;
 
+  // 글쓰기 / 작성
   $("btn-post-submit").addEventListener("click", boardSubmit);
-  $("btn-post-clear").addEventListener("click", boardClearForm);
+  $("btn-write-open")?.addEventListener("click", boardShowWrite);
+  $("btn-write-cancel")?.addEventListener("click", boardShowList);
+  $("btn-back-list")?.addEventListener("click", boardShowList);
+
+  // 새로고침 / 게시판 삭제
   $("btn-board-refresh").addEventListener("click", boardRefresh);
-  $("btn-board-create")?.addEventListener("click", boardCreateNew);
   $("btn-board-delete-cat")?.addEventListener("click", boardDeleteCurrent);
 
-  // 게시판 선택 변경
-  $("board-select")?.addEventListener("change", (e) => {
-    CURRENT_BOARD_ID = e.target.value;
-    localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
-    boardRefresh();
-  });
+  // 댓글 작성
+  $("btn-comment-submit")?.addEventListener("click", boardCommentSubmit);
 
   // 이미지 미리보기
   $("board-image")?.addEventListener("change", async (e) => {
@@ -2011,8 +2176,8 @@ function boardSetupListeners() {
       _boardLoaded = true;
       await boardRefreshList();
     }
-    setTimeout(boardRefresh, 50);
-  }, { once: false });
+    boardShowList();
+  });
 }
 
 async function bootstrap() {
