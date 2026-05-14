@@ -660,6 +660,8 @@ input[type="checkbox"] {
   .btn { padding: 7px 11px; font-size: 12.5px; min-height: 36px; }
   .group { padding: 14px 12px 14px; }
   .group-title { left: 10px; padding: 2px 10px; font-size: 12px; }
+  .result-card { padding: 14px 12px 14px; margin-bottom: 22px; }
+  .result-card .card-title { left: 10px; padding: 2px 10px; font-size: 12px; }
   /* 모바일에서는 라벨이 위, 입력이 아래로 — 좁아서 가로 정렬 불가 */
   .form-row {
     grid-template-columns: 1fr;
@@ -716,18 +718,33 @@ input[type="checkbox"] {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 14px 14px;
-  margin-bottom: 10px;
+  padding: 34px var(--pad-x) 18px;   /* group 과 동일 — 상단에 떠있는 제목 자리 확보 */
+  margin-bottom: 28px;
+  position: relative;
 }
 .result-card.strong {
   background: var(--bg-card-strong);
   border-width: 2px;
 }
+/* 떠있는 제목 알약 — .group-title 과 동일 스타일 */
 .result-card .card-title {
-  font-size: 13.5px;
+  position: absolute;
+  top: -14px;
+  left: 16px;
+  background: var(--tab-active);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 4px 14px;
+  font-size: 13px;
   font-weight: 700;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  color: var(--text);
+  letter-spacing: 0.3px;
+  max-width: calc(100% - 32px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin: 0;
 }
 .result-card .big-number {
   font-size: 44px;

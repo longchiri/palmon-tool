@@ -911,11 +911,11 @@ function renderResult(r) {
   const totalRemainBoxes = (cRemain.SR || 0) + (cRemain.SSR || 0) + (cRemain.UR || 0);
   const totalCustomBoxes = totalUsedBoxes + totalRemainBoxes;
 
-  // 결과 자원 카드 — 커스텀 분배 행은 박스 개수로
+  // 결과 자원 카드 — 커스텀 분배 행은 박스 개수로 (순서: 골드 → 목재 → 강철)
   let customRow = "";
   if (totalUsedBoxes > 0) {
     const parts = [];
-    for (const [k, label] of [["gold","골드"],["wood","목재"],["steel","강철"]]) {
+    for (const [k, label] of [["gold","💰 골드"],["wood","🪵 목재"],["steel","🧱 강철"]]) {
       const a = cAlloc[k] || {};
       const used = (a.SR||0)+(a.SSR||0)+(a.UR||0);
       if (used > 0) {
@@ -937,10 +937,10 @@ function renderResult(r) {
   // 커스텀 박스 추천 카드 (별도, 박스 개수로 표시)
   let cardCustom = "";
   if (totalCustomBoxes > 0) {
-    // 추천 행 — 자원별 박스 개수
+    // 추천 행 — 자원별 박스 개수 (순서 고정: 골드 → 목재 → 강철, 이모지 포함)
     let recRows = `<tr><th></th><th class="tier tier-ur">UR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-sr">SR</th></tr>`;
-    const labelMap = { gold: "골드", wood: "목재", steel: "강철" };
-    const sortedRes = ["gold","wood","steel"].sort((a, b) => usedByResource(b) - usedByResource(a));
+    const labelMap = { gold: "💰 골드", wood: "🪵 목재", steel: "🧱 강철" };
+    const sortedRes = ["gold", "wood", "steel"];
     for (const k of sortedRes) {
       const a = cAlloc[k] || { SR: 0, SSR: 0, UR: 0 };
       const used = (a.SR||0)+(a.SSR||0)+(a.UR||0);
