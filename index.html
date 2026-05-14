@@ -16,6 +16,25 @@
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
   <link rel="stylesheet" href="style.css" />
+  <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
+  <script>
+    (function () {
+      try {
+        var lt = localStorage.getItem("palmon_last_tab");
+        if (lt && lt !== "t-help" && /^t-[a-z]+$/.test(lt)) {
+          var s = document.createElement("style");
+          s.id = "__initial-tab-style";
+          s.textContent =
+            "#t-help{display:none!important;}" +
+            "#" + lt + "{display:block!important;}" +
+            ".tab[data-tab='t-help']{background:transparent!important;color:var(--text-dim)!important;}" +
+            ".tab[data-tab='" + lt + "']{background:var(--tab-active)!important;color:var(--text)!important;}";
+          document.head.appendChild(s);
+          window.__INITIAL_TAB = lt;
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body>
   <div class="container">

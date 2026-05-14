@@ -2356,10 +2356,24 @@ async function bootstrap() {
     // 게시판 초기화
     boardSetupListeners();
     // 새로고침 시 마지막으로 본 탭 복원 (로고 클릭은 별도 핸들러로 사용법 탭 이동)
+    // 인라인 스타일(head)이 이미 화면을 바꿔뒀으므로 여기선 실제 active 클래스만 동기화
     try {
-      const lastTab = localStorage.getItem("palmon_last_tab");
-      if (lastTab && document.getElementById(lastTab)) {
-        activateTab(lastTab);
+      const lastTab = window.__INITIAL_TAB || localStorage.getItem("palmon_last_tab");
+      if (lastTab && document.getElementById(lastTab) && lastTab !== "t-help") {
+        // active 클래스 동기화 (애니메이션 없이 즉시)
+        $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === lastTab));
+        $$(".tab-panel").forEach((p) => {
+          p.classList.toggle("active", p.id === lastTab);
+          // 첫 화면 깜빡임 방지를 위해 fade-in 비활성화
+          p.style.animation = "none";
+        });
+        // 인라인 head 스타일 제거 — 이후 탭 클릭 시 정상 동작
+        const initStyle = document.getElementById("__initial-tab-style");
+        if (initStyle) initStyle.remove();
+        // 다음 프레임에 animation 복구 (이후 탭 전환에는 fade-in 유지)
+        requestAnimationFrame(() => {
+          $$(".tab-panel").forEach((p) => { p.style.animation = ""; });
+        });
       }
     } catch (_) {}
   } catch (err) {
