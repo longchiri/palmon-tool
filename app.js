@@ -1479,19 +1479,62 @@ function applySettingsPayload(p) {
   updatePalmon();
 }
 
-function saveSettings() {
-  // localStorage + download
+async function saveSettings() {
+  // 닉네임 — 한번 입력하면 기억됨, 매번 수정만 가능
+  const storedNick = localStorage.getItem("palmon_nickname") || "";
+  const input = prompt(
+    "저장할 닉네임을 입력해주세요\n(파일명: PAL_닉네임_오늘날짜.json)",
+    storedNick
+  );
+  if (input === null) { toast("저장 취소됨"); return; }
+  const nickname = input.trim().replace(/[\s/\\:*?"<>|]+/g, "_");
+  if (!nickname) { toast("닉네임을 입력해주세요"); return; }
+  localStorage.setItem("palmon_nickname", nickname);
+
+  // 데이터 + 파일명
   const payload = buildSettingsPayload();
+  payload._nickname = nickname;
   localStorage.setItem("palmon_settings", JSON.stringify(payload));
 
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const filename = `PAL_${nickname}_${yyyy}-${mm}-${dd}.json`;
+
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+
+  // 1차 시도: File System Access API (Chrome/Edge) — 폴더 핸들을 기억해서 같은 곳에 저장
+  if (window.showSaveFilePicker) {
+    try {
+      // 저장 폴더 핸들 재사용 (IndexedDB 대신 단순 in-memory)
+      window._palmonDirHandle = window._palmonDirHandle || null;
+      const handle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        startIn: window._palmonDirHandle || "downloads",
+        types: [{ description: "Palmon Tool 설정", accept: { "application/json": [".json"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonStr);
+      await writable.close();
+      toast(`저장됨: ${filename}`);
+      return;
+    } catch (e) {
+      // 사용자가 취소했거나 API 실패 시 일반 다운로드로 폴백
+      if (e.name !== "AbortError") console.warn("showSaveFilePicker 실패:", e);
+      else { toast("저장 취소됨"); return; }
+    }
+  }
+
+  // 폴백: 일반 다운로드 (브라우저 기본 다운로드 폴더)
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `palmon_settings_${new Date().toISOString().slice(0,10)}.json`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
-  toast("설정 저장됨 (localStorage + 다운로드)");
+  toast(`저장됨: ${filename}`);
 }
 
 function loadSettings(file) {
