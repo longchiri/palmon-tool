@@ -28,8 +28,11 @@ const POSITION_NAMES = ["총독", "수석 건축사", "과학자", "왕비"];
 const TEMPLE_ROLE_NAMES = ["LV6 성전 건설 참모", "LV6 성전 건설 지휘관"];
 
 const SPEEDUP_GROUPS = [
-  { key: "build_speedups", title: "건설 가속" },
   { key: "general_speedups", title: "일반 가속" },
+  { key: "build_speedups", title: "건설 가속" },
+  { key: "research_speedups", title: "연구 가속" },
+  { key: "training_speedups", title: "훈련 가속" },
+  { key: "medical_speedups", title: "의료 가속" },
 ];
 
 const DEFAULT_SPEEDUPS = { "8h": 28800, "3h": 10800, "1h": 3600, "5m": 300, "1m": 60 };
@@ -61,6 +64,8 @@ const TOOLTIPS = {
   "건설자의 열정": "시즌 스킬",
   "건설 지원": "시즌 스킬",
   "참모 / 지휘관": "성전건설 참모 / 지휘관",
+  "정교한 공예": "연구대 → 발전",
+  "비용 절감": "시즌 스킬",
 };
 
 // ===== 전역 상태 =====
@@ -514,16 +519,23 @@ function buildInventoryTab() {
     boxes.appendChild(row);
   }
 
-  // 가속권
+  // 가속권 — 컴팩트한 spd-grid 레이아웃
   const sg = getSpeedupGroupMap();
+  // 표시 순서: 8h → 3h → 1h → 5m → 1m (큰 단위부터)
+  const SPD_ORDER = ["8h", "3h", "1h", "5m", "1m"];
   for (const grp of SPEEDUP_GROUPS) {
-    const cont = $(grp.key.replace("_", "-"));
+    const containerId = grp.key.replace(/_speedups$/, "-speedups");
+    const cont = $(containerId);
+    if (!cont) continue;
     cont.innerHTML = "";
-    for (const k of Object.keys(sg[grp.key])) {
-      cont.appendChild(el("div", { class: "form-row compact" },
-        el("label", {}, k),
+    const keys = Object.keys(sg[grp.key]);
+    const sortedKeys = SPD_ORDER.filter((k) => keys.includes(k)).concat(keys.filter((k) => !SPD_ORDER.includes(k)));
+    for (const k of sortedKeys) {
+      const item = el("div", { class: "spd-item" },
+        el("span", { class: "spd-label" }, k),
         el("input", { type: "number", id: `spd-${grp.key}-${k}`, min: "0", value: "0", inputmode: "numeric" }),
-      ));
+      );
+      cont.appendChild(item);
     }
   }
 }
@@ -837,10 +849,16 @@ function updateEssence() {
   const promoRemain = promoOwned - promoPeople * PROMO_PER_PALMON;
 
   const evoOwned = parseInt($("evo-total").value || 0);
-  const resetStage = $("evo-reset-stage").value;
-  const resetCount = parseInt($("evo-reset-count").value || 0);
-  const resetValue = EVO_VALUES[resetStage] || 0;
-  const evoReset = resetCount * resetValue;
+
+  // 4단계별 초기화 수량 입력 → 합산
+  const resetCounts = {
+    "1진화": parseInt($("evo-reset-1").value || 0),
+    "2진화": parseInt($("evo-reset-2").value || 0),
+    "3진화": parseInt($("evo-reset-3").value || 0),
+    "4진화": parseInt($("evo-reset-4").value || 0),
+  };
+  let evoReset = 0;
+  for (const stage in resetCounts) evoReset += resetCounts[stage] * EVO_VALUES[stage];
   const evoTotal = evoOwned + evoReset;
   const evoPeople = Math.floor(evoTotal / EVO_PER_PALMON);
   const evoRemain = evoTotal - evoPeople * EVO_PER_PALMON;
@@ -863,10 +881,24 @@ function updateEssence() {
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(promoRemain)}</td></tr>`;
   const promoCard = bigCard("승급 완성 가능 인원", promoPeople, promoColor, promoRows);
 
+  // 4단계 초기화 행 추가
+  let resetRows = "";
+  for (const stage of ["1진화", "2진화", "3진화", "4진화"]) {
+    const cnt = resetCounts[stage];
+    if (cnt > 0) {
+      const sub = cnt * EVO_VALUES[stage];
+      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${EVO_VALUES[stage]} = +${fmt(sub)}</td></tr>`;
+    }
+  }
+  if (evoReset > 0) {
+    resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(evoReset)}</b></td></tr>`;
+  }
+
   const evoColor = evoPeople > 0 ? "var(--green)" : "var(--red)";
   const evoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
-    <tr><td class="label txt-purple">초기화 (${resetStage})</td><td class="value txt-purple">${fmt(resetCount)} × ${resetValue} = +${fmt(evoReset)}</td></tr>
+    ${resetRows}
+    <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
     <tr><td class="label">1명 진화 필요</td><td class="value">${fmt(EVO_PER_PALMON)}</td></tr>
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoRemain)}</td></tr>`;
   const evoCard = bigCard("진화 완성 가능 인원", evoPeople, evoColor, evoRows);
@@ -1028,9 +1060,11 @@ function buildSettingsPayload() {
     bead_total: parseInt($("bead-total").value || 0),
     essence_promo_total: parseInt($("promo-total").value || 0),
     essence_evo_total: parseInt($("evo-total").value || 0),
-    essence_evo_reset_filter: {
-      stage: $("evo-reset-stage").value,
-      count: parseInt($("evo-reset-count").value || 0),
+    essence_evo_resets: {
+      "1진화": parseInt($("evo-reset-1").value || 0),
+      "2진화": parseInt($("evo-reset-2").value || 0),
+      "3진화": parseInt($("evo-reset-3").value || 0),
+      "4진화": parseInt($("evo-reset-4").value || 0),
     },
     palmon_res_camp: parseInt($("palmon-camp").value),
     palmon_res_boxes: Object.fromEntries(PALMON_RESOURCE_ORDER.map((rk) => [rk, Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`pbox-${rk}-${t}`).value || 0)]))])),
@@ -1093,9 +1127,17 @@ function applySettingsPayload(p) {
   }
   $("evo-total").value = et || 0;
 
-  if (p.essence_evo_reset_filter) {
-    if (p.essence_evo_reset_filter.stage) $("evo-reset-stage").value = p.essence_evo_reset_filter.stage;
-    $("evo-reset-count").value = p.essence_evo_reset_filter.count || 0;
+  // 4단계 초기화 수량 복원 (+ 이전 단일-필터 포맷 호환)
+  const RESET_IDS = { "1진화": "evo-reset-1", "2진화": "evo-reset-2", "3진화": "evo-reset-3", "4진화": "evo-reset-4" };
+  if (p.essence_evo_resets) {
+    for (const stage in RESET_IDS) {
+      $(RESET_IDS[stage]).value = parseInt(p.essence_evo_resets[stage] || 0);
+    }
+  } else if (p.essence_evo_reset_filter) {
+    // 이전 포맷: 단일 stage + count → 해당 단계에만 값을 채움
+    const s = p.essence_evo_reset_filter.stage;
+    const c = parseInt(p.essence_evo_reset_filter.count || 0);
+    if (s && RESET_IDS[s]) $(RESET_IDS[s]).value = c;
   }
   if (p.palmon_res_camp != null) $("palmon-camp").value = p.palmon_res_camp;
   for (const rk of PALMON_RESOURCE_ORDER) for (const t of BOX_TIERS) {
@@ -1209,7 +1251,7 @@ async function bootstrap() {
 
     // 자동 업데이트 (구슬/진화/팰몬자원/요약)
     $("bead-total").addEventListener("input", updateBead);
-    ["promo-total","evo-total","evo-reset-stage","evo-reset-count"].forEach((id) => $(id).addEventListener("input", updateEssence));
+    ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));
     // 인벤토리 요약

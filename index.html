@@ -126,13 +126,28 @@
       </div>
 
       <div class="group">
-        <div class="group-title">건설 가속</div>
-        <div class="grid-5" id="build-speedups"></div>
+        <div class="group-title">일반 가속</div>
+        <div class="spd-grid" id="general-speedups"></div>
       </div>
 
       <div class="group">
-        <div class="group-title">일반 가속</div>
-        <div class="grid-5" id="general-speedups"></div>
+        <div class="group-title">건설 가속</div>
+        <div class="spd-grid" id="build-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">연구 가속</div>
+        <div class="spd-grid" id="research-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">훈련 가속</div>
+        <div class="spd-grid" id="training-speedups"></div>
+      </div>
+
+      <div class="group">
+        <div class="group-title">의료 가속</div>
+        <div class="spd-grid" id="medical-speedups"></div>
       </div>
 
       <div class="group">
@@ -179,12 +194,12 @@
 
       <div class="grid-3">
         <div class="group">
-          <div class="group-title">승급 정수 (Promotion)</div>
+          <div class="group-title">UR 만능 팰몬조각</div>
           <div class="form-row">
-            <label>보유 승급 정수</label>
+            <label>보유 수량</label>
             <input type="number" id="promo-total" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="hint">예) 승급 정수 1950 → 2명 승급 완성 (1명당 975 필요)</div>
+          <div class="hint">예) 1950 → 2명 승급 완성 (1명당 975 필요)</div>
         </div>
 
         <div class="group">
@@ -194,18 +209,22 @@
             <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="form-row">
-            <label>초기화할 팰몬</label>
-            <div class="inline-2">
-              <select id="evo-reset-stage">
-                <option value="4진화">4진화 (160)</option>
-                <option value="3진화">3진화 (80)</option>
-                <option value="2진화">2진화 (40)</option>
-                <option value="1진화">1진화 (20)</option>
-              </select>
-              <input type="number" id="evo-reset-count" min="0" value="0" inputmode="numeric">
-            </div>
+            <label>1진화 ×20</label>
+            <input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="hint">예) 진화 정수 300 + 4진화 1마리 초기화 → 1명 진화 완성 (1명당 300 필요)</div>
+          <div class="form-row">
+            <label>2진화 ×40</label>
+            <input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label>3진화 ×80</label>
+            <input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label>4진화 ×160</label>
+            <input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric">
+          </div>
+          <div class="hint">예) 진화 정수 200 + 4진화 1마리 초기화 → 200 + 160 = 360 → 1명 완성 (남은 60)</div>
         </div>
 
         <div class="group">

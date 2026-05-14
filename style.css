@@ -220,6 +220,30 @@ body { overflow-x: hidden; }
 }
 .check-group .check-row { padding: 4px 0; }
 
+/* 가속권 그리드 — 화면 너비에 따라 2~5개씩 자동 배치 */
+.spd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+.spd-item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 6px;
+  align-items: center;
+}
+.spd-item > .spd-label {
+  color: var(--text-dim);
+  font-size: 12px;
+  text-align: right;
+}
+.spd-item > input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  font-size: 15px;
+}
+
 /* 라벨 안에 들어가는 hint 텍스트
    데스크탑: 라벨 텍스트 바로 아래로 줄바꿈 (블록)
    모바일: 라벨/i버튼 옆에 인라인 */
