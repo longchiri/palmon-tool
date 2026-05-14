@@ -535,6 +535,14 @@ function buildInventoryTab(opts) {
       }
       boxes.appendChild(row);
     }
+    // 커스텀 박스 — 깔 때 골드/목재/강철 중 선택 가능 (값은 동일)
+    const customRow = el("div", { class: "inv-box-grid" },
+      el("div", { class: "rk-label", style: "color:var(--amber);font-weight:700;" }, "커스텀")
+    );
+    for (const tier of BOX_TIERS) {
+      customRow.appendChild(el("input", { type: "number", id: `${prefix}box-custom-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
+    }
+    boxes.appendChild(customRow);
   }
 
   // 가속권 — 컴팩트한 spd-grid 레이아웃
@@ -640,6 +648,13 @@ function getOwnedBoxes(prefix) {
   }
   return out;
 }
+// 커스텀 박스 — 깔 때 골드/목재/강철 중 선택 가능 (모두 같은 값)
+function getCustomBoxes(prefix) {
+  prefix = prefix || "";
+  const out = {};
+  for (const t of BOX_TIERS) out[t] = parseInt($(`${prefix}box-custom-${t}`)?.value || 0);
+  return out;
+}
 function getOwnedSpeedups(prefix) {
   prefix = prefix || "";
   const sg = getSpeedupGroupMap();
@@ -700,9 +715,42 @@ function calculate(opts) {
 
     const ownedResources = getOwnedResources("tg-");
     const ownedBoxes = getOwnedBoxes("tg-");
+    const customBoxes = getCustomBoxes("tg-");
     const totalOwnedWithBoxes = calcTotalResourcesWithBoxes(currentLevels["캠프"], ownedResources, ownedBoxes);
     const shortages = {};
     for (const k of RESOURCE_KEYS) shortages[k] = Math.max(0, totalFinal[k] - (totalOwnedWithBoxes[k] || 0));
+
+    // 커스텀 박스 — 부족한 자원(가장 부족한 것부터)에 박스 개수로 그리디 분배
+    // 골드/목재/강철 값이 동일하므로 boxTable[tier].gold 사용
+    const _boxTbl = DB.resource_boxes[String(currentLevels["캠프"])] || {};
+    const _tierVal = {
+      UR: parseInt(_boxTbl.UR?.gold || 0),
+      SSR: parseInt(_boxTbl.SSR?.gold || 0),
+      SR: parseInt(_boxTbl.SR?.gold || 0),
+    };
+    const _remainCustom = { SR: customBoxes.SR || 0, SSR: customBoxes.SSR || 0, UR: customBoxes.UR || 0 };
+    const customAlloc = {};   // resource -> { SR, SSR, UR } 박스 개수
+    const customApplied = { gold: 0, wood: 0, steel: 0 };  // resource -> 더해진 자원량
+    const _sortedShort = [...RESOURCE_KEYS].sort((a, b) => shortages[b] - shortages[a]);
+    for (const k of _sortedShort) {
+      customAlloc[k] = { SR: 0, SSR: 0, UR: 0 };
+      let need = shortages[k];
+      // 큰 박스(UR) 부터 채움 — need 가 박스 값보다 작아질 때까지 사용, 그래도 부족하면 한 개 더 (오버)
+      for (const tier of ["UR", "SSR", "SR"]) {
+        const v = _tierVal[tier];
+        if (v <= 0) continue;
+        while (need > 0 && _remainCustom[tier] > 0) {
+          customAlloc[k][tier]++;
+          _remainCustom[tier]--;
+          customApplied[k] += v;
+          need -= v;
+        }
+        if (need <= 0) break;
+      }
+      shortages[k] = Math.max(0, need);
+      totalOwnedWithBoxes[k] += customApplied[k];
+    }
+    const customRemainBoxes = _remainCustom;  // 잉여 커스텀 박스 개수
 
     const boxRecOnly = {};
     for (const k of RESOURCE_KEYS) boxRecOnly[k] = Math.max(0, totalFinal[k] - (ownedResources[k] || 0));
@@ -737,6 +785,7 @@ function calculate(opts) {
       possible: sp.possible,
       usedBuildSec, usedGeneralSec, remainBuild, remainGeneral,
       buildSpeedSum, fixedSecondsSum, dispatchSeconds, resourceRateSum,
+      customApplied, customAlloc, customRemainBoxes,
     });
     if (!skipTabSwitch) activateTab("t-result");
   } catch (e) {
@@ -829,11 +878,81 @@ function renderResult(r) {
       <td class="value ${cls}">${fmtN(short)}</td>
     </tr>`;
   }
+  // 커스텀 박스 추천 카드 (별도) — 박스 개수로 표시
+  const cAlloc = r.customAlloc || {};
+  const cRemain = r.customRemainBoxes || {};
+  const usedByResource = (k) => (cAlloc[k]?.SR || 0) + (cAlloc[k]?.SSR || 0) + (cAlloc[k]?.UR || 0);
+  const totalUsedBoxes = usedByResource("gold") + usedByResource("wood") + usedByResource("steel");
+  const totalRemainBoxes = (cRemain.SR || 0) + (cRemain.SSR || 0) + (cRemain.UR || 0);
+  const totalCustomBoxes = totalUsedBoxes + totalRemainBoxes;
+
+  // 결과 자원 카드 — 커스텀 분배 행은 박스 개수로
+  let customRow = "";
+  if (totalUsedBoxes > 0) {
+    const parts = [];
+    for (const [k, label] of [["gold","골드"],["wood","목재"],["steel","강철"]]) {
+      const a = cAlloc[k] || {};
+      const used = (a.SR||0)+(a.SSR||0)+(a.UR||0);
+      if (used > 0) {
+        const tierStr = [];
+        if (a.UR) tierStr.push(`UR×${a.UR}`);
+        if (a.SSR) tierStr.push(`SSR×${a.SSR}`);
+        if (a.SR) tierStr.push(`SR×${a.SR}`);
+        parts.push(`${label}: ${tierStr.join(" ")}`);
+      }
+    }
+    customRow = `<tr><td class="label" style="color:var(--amber);">커스텀 박스 분배</td><td colspan="3" class="value" style="color:var(--amber);text-align:left;font-size:12px;">${parts.join(" / ")}</td></tr>`;
+  }
   const cardRes = `
     <div class="result-card" style="border-color:var(--amber);">
       <div class="card-title txt-amber">◆ 총 필요 자원</div>
-      <div class="tbl-wrap"><table class="tbl">${resRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${resRows}${customRow}</table>
     </div>`;
+
+  // 커스텀 박스 추천 카드 (별도, 박스 개수로 표시)
+  let cardCustom = "";
+  if (totalCustomBoxes > 0) {
+    // 추천 행 — 자원별 박스 개수
+    let recRows = `<tr><th></th><th class="tier tier-ur">UR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-sr">SR</th></tr>`;
+    const labelMap = { gold: "골드", wood: "목재", steel: "강철" };
+    const sortedRes = ["gold","wood","steel"].sort((a, b) => usedByResource(b) - usedByResource(a));
+    for (const k of sortedRes) {
+      const a = cAlloc[k] || { SR: 0, SSR: 0, UR: 0 };
+      const used = (a.SR||0)+(a.SSR||0)+(a.UR||0);
+      const isShortageZero = (r.shortages[k] || 0) === 0 && used === 0;
+      if (used > 0) {
+        recRows += `<tr>
+          <td class="label" style="color:var(--amber);">→ ${labelMap[k]}</td>
+          <td class="value amber">${a.UR ? a.UR + "개" : "-"}</td>
+          <td class="value amber">${a.SSR ? a.SSR + "개" : "-"}</td>
+          <td class="value amber">${a.SR ? a.SR + "개" : "-"}</td>
+        </tr>`;
+      } else if (isShortageZero) {
+        recRows += `<tr><td class="label txt-dim">${labelMap[k]}</td><td colspan="3" class="value txt-dim">충분함</td></tr>`;
+      }
+    }
+    // 잉여 박스
+    if (totalRemainBoxes > 0) {
+      recRows += `<tr><td class="label txt-dim">잉여 (안 쓴 박스)</td>
+        <td class="value txt-dim">${cRemain.UR ? cRemain.UR + "개" : "-"}</td>
+        <td class="value txt-dim">${cRemain.SSR ? cRemain.SSR + "개" : "-"}</td>
+        <td class="value txt-dim">${cRemain.SR ? cRemain.SR + "개" : "-"}</td>
+      </tr>`;
+    }
+    const noShortage = totalUsedBoxes === 0;
+    cardCustom = `
+      <div class="result-card" style="border-color:var(--amber);background:rgba(251,191,36,0.04);">
+        <div class="card-title txt-amber">💡 커스텀 박스 추천</div>
+        ${noShortage
+          ? `<p class="txt-dim" style="font-size:13px;margin:8px 0;">현재 모든 자원이 충분합니다. 커스텀 상자는 다른 시점에 활용하시면 됩니다.</p>`
+          : `<p class="txt-dim" style="font-size:13px;margin:8px 0 6px;">자원이 부족할 때, 커스텀 상자를 아래처럼 분배해서 사용하시는 걸 추천드려요:</p>
+             <table class="tbl">${recRows}</table>`
+        }
+        <p style="font-size:12.5px;margin:12px 0 2px;padding:8px 10px;background:rgba(251,191,36,0.1);border-left:3px solid var(--amber);border-radius:4px;color:var(--amber);">
+          ※ 커스텀 상자는 부족한 자원에 <b>미리 사용하는 것을 추천드립니다.</b>
+        </p>
+      </div>`;
+  }
 
   // 4. 자원상자
   let boxRows = `<tr><th></th><th class="tier tier-sr">SR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-ur">UR</th><th>초과</th></tr>`;
@@ -890,7 +1009,7 @@ function renderResult(r) {
       </table></div>
     </div>`;
 
-  $("result-output").innerHTML = cardTarget + cardTime + cardRes + cardBox + cardSpd + cardBuff;
+  $("result-output").innerHTML = cardTarget + cardTime + cardRes + cardBox + cardCustom + cardSpd + cardBuff;
 }
 
 // ===== 걸작 구슬 =====
@@ -1225,6 +1344,8 @@ function buildSettingsPayload() {
     target_owned_resources: getOwnedResources("tg-"),
     target_owned_resource_boxes: getOwnedBoxes("tg-"),
     target_owned_speedups: getOwnedSpeedups("tg-"),
+    custom_boxes: getCustomBoxes(""),
+    target_custom_boxes: getCustomBoxes("tg-"),
     time_buffs_selection: getTimeBuffsSelection(),
     resource_buffs_selection: getResourceBuffsSelection(),
     bead_total: parseInt($("bead-total").value || 0),
@@ -1275,6 +1396,13 @@ function applySettingsPayload(p) {
   for (const grp of SPEEDUP_GROUPS) for (const k in (tgSpd[grp.key] || {})) {
     const id = `tg-spd-${grp.key}-${k}`;
     if ($(id)) $(id).value = tgSpd[grp.key][k];
+  }
+  // 커스텀 박스 복원 (양쪽 탭)
+  const cBoxes = p.custom_boxes || {};
+  const tgCBoxes = p.target_custom_boxes || p.custom_boxes || {};
+  for (const t of BOX_TIERS) {
+    if (cBoxes[t] != null && $(`box-custom-${t}`)) $(`box-custom-${t}`).value = cBoxes[t];
+    if (tgCBoxes[t] != null && $(`tg-box-custom-${t}`)) $(`tg-box-custom-${t}`).value = tgCBoxes[t];
   }
   const ts = p.time_buffs_selection || {};
   if (ts.vip_level) $("b-vip").value = ts.vip_level;
