@@ -445,30 +445,35 @@ body { overflow-x: hidden; }
   .bead-reset-item > .reset-label { font-size: 11.5px; }
 }
 
-/* 걸작구슬 / 팰몬진화 탭 — 3컬럼 상하정렬 (결과 카드가 좌우 카드와 같은 높이로 늘어남) */
+/* 걸작구슬 / 팰몬진화 탭 — 3컬럼 모두 동일 높이 (가장 큰 카드 기준) */
 #t-bead .grid-3,
 #t-essence .grid-3 {
   align-items: stretch;
+  grid-auto-rows: minmax(min-content, auto);
 }
-/* 결과 슬롯 — 그리드 셀 전체를 차지 (좌우 카드와 동일 높이) */
+/* 모든 3 카드의 외부 박스를 동일 높이로 강제 */
+#t-bead .grid-3 > *,
+#t-essence .grid-3 > * {
+  margin-bottom: 0;             /* 그리드 안에서는 margin 제거 (행 높이 계산 정확히) */
+  align-self: stretch;
+}
+
+/* 결과 슬롯 — 그리드 셀 전체 채움 */
 #bead-result,
 #promo-result-slot,
 #evo-result-slot {
-  align-self: stretch;
-  display: grid;
-  grid-template-rows: 1fr;
-  min-height: 100%;
+  display: flex;
+  flex-direction: column;
 }
-/* 결과 카드 — 슬롯을 꽉 채우면서 내용은 세로 가운데로 */
 #bead-result > .result-card,
 #promo-result-slot > .result-card,
 #evo-result-slot > .result-card {
+  flex: 1 1 auto;
   margin: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 100%;
 }
 /* 기준값 카드도 세로 가운데 정렬 (col 3) */
 #t-bead .grid-3 > .group:last-child,
@@ -476,6 +481,11 @@ body { overflow-x: hidden; }
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+/* 그리드 행 사이 간격 — 카드 margin 대신 grid row-gap 으로 처리 */
+#t-bead .grid-3,
+#t-essence .grid-3 {
+  row-gap: 28px;
 }
 
 /* 라벨 안에 들어가는 hint 텍스트
