@@ -818,6 +818,69 @@ input[type="checkbox"] {
   }
 }
 
+/* ── 게시판 ──────────────────────────────────────── */
+.board-post {
+  background: var(--bg-card-strong);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.board-post-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.board-server {
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 12.5px;
+  margin-right: 6px;
+}
+.board-nick {
+  color: var(--amber);
+  font-weight: 700;
+  font-size: 13.5px;
+  margin-right: 8px;
+}
+.board-time {
+  color: var(--text-mute);
+  font-size: 11.5px;
+}
+.board-time-foot {
+  color: var(--text-mute);
+  font-size: 11.5px;
+  text-align: right;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-style: italic;
+}
+.board-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+.board-content {
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.6;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.board-del:hover { color: var(--red); }
+
+/* 게시판 폼 textarea */
+#t-board textarea { box-sizing: border-box; }
+#t-board input[type="file"] { width: 100%; }
+
 /* ── modal / toast ───────────────────────────────── */
 .toast {
   position: fixed;

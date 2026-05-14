@@ -1,4 +1,11 @@
 // =====================================================
+// ⚠️ 게시판 설정 — Pantry UUID 를 여기에 붙여넣으세요
+// https://getpantry.cloud/ 에서 무료로 발급 (이메일 입력만, 계정 불필요)
+// =====================================================
+const PANTRY_ID = "d7f3296b-3c53-4aae-aff2-9388a4797dfc";
+const PANTRY_BASKET = "palmon-board";
+
+// =====================================================
 // Palmon Tool — Web Edition
 // =====================================================
 //
@@ -1643,6 +1650,371 @@ function applyTooltips() {
 }
 
 // ===== 초기 적재 =====
+// =====================================================
+// 게시판 (Pantry API) — 다중 게시판 지원
+// =====================================================
+let CURRENT_BOARD_ID = "general";   // 현재 선택된 게시판
+const BOARDS_META_BASKET = "palmon-boards-meta";
+const PANTRY_BASKET_FOR = (boardId) => `palmon-board-${boardId}`;
+const PANTRY_URL = (basket) => `https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${basket}`;
+
+function boardIsConfigured() {
+  return !!(PANTRY_ID && PANTRY_ID.length > 10);
+}
+
+// 게시판 목록 (메타) 로드/저장
+async function boardLoadList() {
+  if (!boardIsConfigured()) return null;
+  try {
+    const res = await fetch(PANTRY_URL(BOARDS_META_BASKET));
+    if (res.status === 400 || res.status === 404) {
+      // 첫 사용 — 기본 게시판 자동 생성
+      const defaults = [{ id: "general", name: "자유 게시판", t: Date.now() }];
+      await boardSaveList(defaults);
+      return defaults;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const boards = Array.isArray(data.boards) ? data.boards : [];
+    return boards.length > 0 ? boards : [{ id: "general", name: "자유 게시판", t: Date.now() }];
+  } catch (e) {
+    console.error("게시판 목록 로드 실패:", e);
+    return null;
+  }
+}
+
+async function boardSaveList(boards) {
+  if (!boardIsConfigured()) throw new Error("PANTRY_ID 미설정");
+  const res = await fetch(PANTRY_URL(BOARDS_META_BASKET), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ boards }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+// 현재 선택된 게시판의 글 로드/저장
+async function boardLoadPosts() {
+  if (!boardIsConfigured()) return null;
+  try {
+    const res = await fetch(PANTRY_URL(PANTRY_BASKET_FOR(CURRENT_BOARD_ID)));
+    if (res.status === 400 || res.status === 404) return [];
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data.posts) ? data.posts : [];
+  } catch (e) {
+    console.error("게시글 로드 실패:", e);
+    return null;
+  }
+}
+
+async function boardSavePosts(posts) {
+  if (!boardIsConfigured()) throw new Error("PANTRY_ID 미설정");
+  const res = await fetch(PANTRY_URL(PANTRY_BASKET_FOR(CURRENT_BOARD_ID)), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ posts }),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+}
+
+// 게시판 생성
+async function boardCreateNew() {
+  const name = prompt("새 게시판 이름을 입력해주세요\n(예: 공략 / 거래 / 길드모집)");
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (trimmed.length > 20) { alert("게시판 이름은 20자 이하"); return; }
+  const id = "b_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  try {
+    const list = (await boardLoadList()) || [];
+    list.push({ id, name: trimmed, t: Date.now() });
+    await boardSaveList(list);
+    CURRENT_BOARD_ID = id;
+    localStorage.setItem("palmon_current_board", id);
+    await boardRefreshList();
+    boardRefresh();
+    toast(`게시판 "${trimmed}" 생성됨`);
+  } catch (e) {
+    alert("생성 실패: " + (e.message || e));
+  }
+}
+
+// 현재 게시판 삭제
+async function boardDeleteCurrent() {
+  const list = (await boardLoadList()) || [];
+  const cur = list.find((b) => b.id === CURRENT_BOARD_ID);
+  if (!cur) return;
+  if (list.length <= 1) { alert("마지막 게시판은 삭제할 수 없습니다"); return; }
+  if (!confirm(`"${cur.name}" 게시판과 그 안의 모든 글을 영구 삭제할까요?`)) return;
+  try {
+    // 메타에서 제거
+    const newList = list.filter((b) => b.id !== CURRENT_BOARD_ID);
+    await boardSaveList(newList);
+    // 글 바스켓 삭제
+    try {
+      await fetch(PANTRY_URL(PANTRY_BASKET_FOR(CURRENT_BOARD_ID)), { method: "DELETE" });
+    } catch (_) {}
+    // 첫번째 게시판으로 전환
+    CURRENT_BOARD_ID = newList[0].id;
+    localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
+    await boardRefreshList();
+    boardRefresh();
+    toast(`"${cur.name}" 게시판 삭제됨`);
+  } catch (e) {
+    alert("삭제 실패: " + (e.message || e));
+  }
+}
+
+// 게시판 드롭다운 갱신
+async function boardRefreshList() {
+  const sel = $("board-select");
+  if (!sel) return;
+  const list = (await boardLoadList()) || [];
+  sel.innerHTML = list.map((b) =>
+    `<option value="${escapeHtml(b.id)}" ${b.id === CURRENT_BOARD_ID ? "selected" : ""}>${escapeHtml(b.name)}</option>`
+  ).join("");
+}
+
+// 이미지 리사이즈 (최대 800px, base64 반환)
+function boardResizeImage(file, maxSize) {
+  maxSize = maxSize || 800;
+  return new Promise((resolve, reject) => {
+    if (!file) return resolve(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxSize || h > maxSize) {
+          const ratio = Math.min(maxSize / w, maxSize / h);
+          w = Math.round(w * ratio);
+          h = Math.round(h * ratio);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, w, h);
+        // JPEG 로 압축 (PNG 보다 훨씬 작음)
+        resolve(canvas.toDataURL("image/jpeg", 0.78));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// 작성자 ID — 같은 브라우저에서만 자기 글 삭제 가능
+function boardGetAuthorId() {
+  let id = localStorage.getItem("palmon_author_id");
+  if (!id) {
+    id = "u_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    localStorage.setItem("palmon_author_id", id);
+  }
+  return id;
+}
+
+// HTML escape (XSS 방지)
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function formatBoardTime(ts) {
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+
+async function boardRefresh() {
+  const statusEl = $("board-status");
+  const listEl = $("board-list");
+  if (!listEl) return;
+
+  if (!boardIsConfigured()) {
+    $("board-setup-warn").style.display = "";
+    listEl.innerHTML = `<p class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</p>`;
+    statusEl.textContent = "";
+    return;
+  }
+  $("board-setup-warn").style.display = "none";
+  statusEl.textContent = "불러오는 중...";
+  const posts = await boardLoadPosts();
+  if (posts === null) {
+    statusEl.textContent = "❌ 불러오기 실패 (네트워크 / Pantry ID 확인)";
+    return;
+  }
+  // 최신순
+  posts.sort((a, b) => (b.t || 0) - (a.t || 0));
+  if (posts.length === 0) {
+    listEl.innerHTML = `<p class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</p>`;
+    statusEl.textContent = `총 0개`;
+    return;
+  }
+  const myId = boardGetAuthorId();
+  listEl.innerHTML = posts.map((p) => {
+    const isMine = p.a === myId;
+    const img = p.img
+      ? `<div style="margin-top:10px;"><img src="${escapeHtml(p.img)}" alt="" style="max-width:100%;max-height:400px;border-radius:8px;display:block;"></div>`
+      : "";
+    return `
+      <div class="board-post" data-id="${escapeHtml(p.id || "")}">
+        <div class="board-post-head">
+          <div>
+            <span class="board-server">[${escapeHtml(p.server || "?")}]</span>
+            <span class="board-nick">${escapeHtml(p.nick || "익명")}</span>
+          </div>
+          ${isMine ? `<button class="btn btn-ghost board-del" data-id="${escapeHtml(p.id || "")}" style="padding:4px 10px;font-size:12px;">🗑️ 삭제</button>` : ""}
+        </div>
+        <div class="board-title">${escapeHtml(p.title || "")}</div>
+        <div class="board-content">${escapeHtml(p.content || "").replace(/\n/g, "<br>")}</div>
+        ${img}
+        <div class="board-time-foot">${formatBoardTime(p.t)}</div>
+      </div>`;
+  }).join("");
+  statusEl.textContent = `총 ${posts.length}개`;
+
+  // 삭제 버튼 바인딩
+  listEl.querySelectorAll(".board-del").forEach((btn) => {
+    btn.addEventListener("click", () => boardDeletePost(btn.dataset.id));
+  });
+}
+
+async function boardSubmit() {
+  if (!boardIsConfigured()) { alert("PANTRY_ID 가 설정되지 않았습니다. app.js 맨 위를 확인해주세요."); return; }
+  const server = $("board-server").value.trim();
+  const nick = $("board-nickname").value.trim();
+  const title = $("board-title").value.trim();
+  const content = $("board-content").value.trim();
+  const fileInput = $("board-image");
+  const file = fileInput?.files?.[0];
+
+  if (!server) { alert("서버를 입력해주세요"); return; }
+  if (!nick) { alert("닉네임을 입력해주세요"); return; }
+  if (!title) { alert("제목을 입력해주세요"); return; }
+  if (!content) { alert("내용을 입력해주세요"); return; }
+
+  const submitBtn = $("btn-post-submit");
+  submitBtn.disabled = true;
+  submitBtn.textContent = "작성 중...";
+
+  try {
+    let img = null;
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) { alert("이미지가 너무 큽니다 (10MB 이하)"); throw new Error("이미지 용량 초과"); }
+      img = await boardResizeImage(file, 800);
+    }
+
+    const posts = (await boardLoadPosts()) || [];
+    const newPost = {
+      id: "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      a: boardGetAuthorId(),
+      server, nick, title, content, img,
+      t: Date.now(),
+    };
+    posts.push(newPost);
+    // 최근 200개만 유지 (용량 관리)
+    if (posts.length > 200) posts.splice(0, posts.length - 200);
+    await boardSavePosts(posts);
+
+    // 폼 초기화
+    $("board-title").value = "";
+    $("board-content").value = "";
+    if (fileInput) fileInput.value = "";
+    $("board-image-preview").innerHTML = "";
+    // 서버/닉네임은 유지 (재입력 편의)
+    localStorage.setItem("palmon_board_server", server);
+    localStorage.setItem("palmon_board_nick", nick);
+    toast("게시글 작성됨");
+    boardRefresh();
+  } catch (e) {
+    console.error(e);
+    alert("작성 실패: " + (e.message || e));
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = "📝 작성";
+  }
+}
+
+async function boardDeletePost(id) {
+  if (!confirm("이 게시글을 삭제할까요?")) return;
+  try {
+    const posts = (await boardLoadPosts()) || [];
+    const myId = boardGetAuthorId();
+    const idx = posts.findIndex((p) => p.id === id && p.a === myId);
+    if (idx < 0) { alert("내 글이 아니거나 이미 삭제됨"); return; }
+    posts.splice(idx, 1);
+    await boardSavePosts(posts);
+    toast("삭제됨");
+    boardRefresh();
+  } catch (e) {
+    alert("삭제 실패: " + (e.message || e));
+  }
+}
+
+function boardClearForm() {
+  $("board-title").value = "";
+  $("board-content").value = "";
+  const fi = $("board-image");
+  if (fi) fi.value = "";
+  $("board-image-preview").innerHTML = "";
+}
+
+function boardSetupListeners() {
+  if (!$("btn-post-submit")) return;
+  // 서버/닉네임 복원
+  const ss = localStorage.getItem("palmon_board_server");
+  const sn = localStorage.getItem("palmon_board_nick");
+  if (ss && $("board-server")) $("board-server").value = ss;
+  if (sn && $("board-nickname")) $("board-nickname").value = sn;
+
+  // 현재 게시판 복원
+  const savedBoard = localStorage.getItem("palmon_current_board");
+  if (savedBoard) CURRENT_BOARD_ID = savedBoard;
+
+  $("btn-post-submit").addEventListener("click", boardSubmit);
+  $("btn-post-clear").addEventListener("click", boardClearForm);
+  $("btn-board-refresh").addEventListener("click", boardRefresh);
+  $("btn-board-create")?.addEventListener("click", boardCreateNew);
+  $("btn-board-delete-cat")?.addEventListener("click", boardDeleteCurrent);
+
+  // 게시판 선택 변경
+  $("board-select")?.addEventListener("change", (e) => {
+    CURRENT_BOARD_ID = e.target.value;
+    localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
+    boardRefresh();
+  });
+
+  // 이미지 미리보기
+  $("board-image")?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    const previewEl = $("board-image-preview");
+    if (!file) { previewEl.innerHTML = ""; return; }
+    try {
+      const dataUrl = await boardResizeImage(file, 800);
+      previewEl.innerHTML = `<img src="${dataUrl}" alt="" style="max-width:200px;max-height:200px;border-radius:6px;border:1px solid var(--border);"><div class="txt-mute" style="font-size:11px;margin-top:4px;">미리보기 (업로드 시 800px 로 자동 축소)</div>`;
+    } catch (err) {
+      previewEl.innerHTML = `<span class="txt-red" style="font-size:12px;">이미지 처리 실패</span>`;
+    }
+  });
+
+  // 게시판 탭 처음 열 때 자동 로드
+  let _boardLoaded = false;
+  document.querySelector('.tab[data-tab="t-board"]')?.addEventListener("click", async () => {
+    if (!_boardLoaded) {
+      _boardLoaded = true;
+      await boardRefreshList();
+    }
+    setTimeout(boardRefresh, 50);
+  }, { once: false });
+}
+
 async function bootstrap() {
   try {
     const res = await fetch("palmonDB.json");
@@ -1714,6 +2086,8 @@ async function bootstrap() {
     updatePalmon();
     updateInventorySummary();
     autoCalculate();
+    // 게시판 초기화
+    boardSetupListeners();
     // 새로고침 시 마지막으로 본 탭 복원 (로고 클릭은 별도 핸들러로 사용법 탭 이동)
     try {
       const lastTab = localStorage.getItem("palmon_last_tab");
