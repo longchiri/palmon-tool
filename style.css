@@ -180,13 +180,28 @@ body { overflow-x: hidden; }
   font-size: 13px;
   white-space: nowrap;
   text-align: right;
+  line-height: 1.35;
   /* overflow: visible — 툴팁(::after)이 잘리지 않도록 */
 }
+/* hint-text 가 있는 라벨은 2줄 (제목줄 + hint줄) */
+.form-row > label:has(.hint-text) { white-space: normal; }
+.form-row > label .label-text { white-space: nowrap; }
+
+/* 콜론(:) 위치
+   - hint 가 없으면: 라벨 전체 뒤
+   - hint 가 있으면: 라벨 제목(label-text) 뒤에만 */
 .form-row > label::after {
   content: " :";
   opacity: 0.55;
   margin-left: 1px;
 }
+.form-row > label:has(.hint-text)::after { content: none; }
+.form-row > label:has(.hint-text) .label-text::after {
+  content: " :";
+  opacity: 0.55;
+  margin-left: 1px;
+}
+.form-row > label.check-row::after { content: none; }
 .form-row > input[type="number"],
 .form-row > select {
   width: 100%;
@@ -205,23 +220,24 @@ body { overflow-x: hidden; }
 }
 .check-group .check-row { padding: 4px 0; }
 
-/* 라벨 아래 인라인 hint — 항상 보이는 작은 보조 텍스트 */
-.row-hint {
-  grid-column: 2 / 3;        /* 입력칸 라인에 정렬 */
+/* 라벨 안에 들어가는 hint 텍스트
+   데스크탑: 라벨 텍스트 바로 아래로 줄바꿈 (블록)
+   모바일: 라벨/i버튼 옆에 인라인 */
+.hint-text {
+  display: block;
   color: var(--blue);
   font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.2px;
-  padding: 0 2px 2px;
-  margin-top: -2px;
-  line-height: 1.3;
   opacity: 0.85;
+  margin-top: 1px;
+  line-height: 1.3;
 }
 @media (max-width: 639px) {
-  .row-hint {
-    grid-column: 1;            /* 모바일은 1열로 변경 */
-    margin-top: 0;
-    padding: 2px 0 0;
+  .hint-text {
+    display: inline;
+    margin: 0 0 0 6px;
+    font-size: 10.5px;
   }
 }
 

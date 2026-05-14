@@ -1156,16 +1156,12 @@ function applyTooltips() {
     if (lbl.classList.contains("check-row")) return;
     const text = (lbl.textContent || "").trim();
     if (!TOOLTIPS[text]) return;
-    // 라벨에 i 버튼 추가
-    lbl.innerHTML = `${text}<button type="button" class="info" tabindex="0" data-tip="${TOOLTIPS[text]}" aria-label="${text} 정보">i</button>`;
-    // 같은 form-row 안에 인라인 hint 추가 (입력칸 아래 작은 텍스트)
-    const row = lbl.parentElement;
-    if (row && !row.querySelector(".row-hint")) {
-      const hint = document.createElement("div");
-      hint.className = "row-hint";
-      hint.textContent = TOOLTIPS[text];
-      row.appendChild(hint);
-    }
+    // 라벨에 i 버튼 + 인라인 hint 추가 (한 덩어리로 라벨 내부에)
+    const tip = TOOLTIPS[text];
+    lbl.innerHTML =
+      `<span class="label-text">${text}</span>` +
+      `<button type="button" class="info" tabindex="0" data-tip="${tip}" aria-label="${text} 정보">i</button>` +
+      `<span class="hint-text">${tip}</span>`;
   });
   // 모바일에서 i 버튼 탭으로 툴팁 토글
   document.addEventListener("click", (e) => {
