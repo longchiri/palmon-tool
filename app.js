@@ -1934,6 +1934,43 @@ function boardShowDetail(post) {
   const sn = localStorage.getItem("palmon_board_nick");
   if (ss && !$("comment-server").value) $("comment-server").value = ss;
   if (sn && !$("comment-nickname").value) $("comment-nickname").value = sn;
+  // 조회수 증가 (이미 본 글은 스킵 — 브라우저 단위 중복 방지)
+  boardIncrementView(post.id);
+}
+
+// 조회수 — 같은 사용자(브라우저)는 한 번만 카운트
+const LS_BOARD_VIEWED = "palmon_board_viewed_posts";
+function boardHasViewed(postId) {
+  try {
+    const arr = JSON.parse(localStorage.getItem(LS_BOARD_VIEWED) || "[]");
+    return Array.isArray(arr) && arr.includes(postId);
+  } catch { return false; }
+}
+function boardMarkViewed(postId) {
+  try {
+    let arr = JSON.parse(localStorage.getItem(LS_BOARD_VIEWED) || "[]");
+    if (!Array.isArray(arr)) arr = [];
+    if (!arr.includes(postId)) {
+      arr.push(postId);
+      // localStorage 크기 제어: 최근 500개만 유지
+      if (arr.length > 500) arr = arr.slice(arr.length - 500);
+      localStorage.setItem(LS_BOARD_VIEWED, JSON.stringify(arr));
+    }
+  } catch {}
+}
+async function boardIncrementView(postId) {
+  if (!postId) return;
+  if (boardHasViewed(postId)) return;       // 같은 사용자 → 무시
+  boardMarkViewed(postId);                  // 먼저 마킹 (네트워크 실패해도 재시도 안 함)
+  try {
+    const posts = (await boardLoadPosts()) || [];
+    const idx = posts.findIndex((p) => p.id === postId);
+    if (idx < 0) return;
+    posts[idx].v = (posts[idx].v || 0) + 1;
+    await boardSavePosts(posts);
+  } catch (e) {
+    console.warn("조회수 증가 실패:", e);
+  }
 }
 
 let CURRENT_POST_ID = null;
@@ -2227,7 +2264,7 @@ function boardRenderPosts(posts) {
   if (!tbody) return;
   posts = posts.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
   if (posts.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</td></tr>`;
     if (statusEl) statusEl.textContent = `총 0개`;
     return;
   }
@@ -2236,6 +2273,7 @@ function boardRenderPosts(posts) {
     const imgIcon = p.img ? `<span class="post-icon" title="이미지">🖼️</span>` : "";
     const cmtCount = (p.comments || []).length;
     const cmtIcon = cmtCount > 0 ? ` <span class="post-cmt-cnt">[${cmtCount}]</span>` : "";
+    const views = p.v || 0;
     const today = new Date();
     const postDate = new Date(p.t || 0);
     const isToday = today.toDateString() === postDate.toDateString();
@@ -2248,6 +2286,7 @@ function boardRenderPosts(posts) {
         <td class="col-title">${imgIcon}${escapeHtml(p.title || "")}${cmtIcon}</td>
         <td class="col-author">${escapeHtml(p.nick || "익명")}</td>
         <td class="col-server">${escapeHtml(p.server || "?")}</td>
+        <td class="col-views">${views}</td>
         <td class="col-date">${dateStr}</td>
       </tr>`;
   }).join("");
@@ -2269,7 +2308,7 @@ async function boardRefresh({ force = false } = {}) {
 
   if (!boardIsConfigured()) {
     $("board-setup-warn").style.display = "";
-    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</td></tr>`;
     if (statusEl) statusEl.textContent = "";
     return;
   }
