@@ -265,6 +265,17 @@ body { overflow-x: hidden; }
 
 .tbl th.tier { font-size: 12px; opacity: 1; }
 
+/* 걸작 구슬 이미지 — 보유 구슬 입력 아래에 표시 */
+.bead-img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 12px auto 4px;
+  border-radius: 10px;
+  background: transparent;
+}
+@media (min-width: 980px) { .bead-img { max-width: 220px; } }
+
 /* 라벨 안에 들어가는 hint 텍스트
    데스크탑: 라벨 텍스트 바로 아래로 줄바꿈 (블록)
    모바일: 라벨/i버튼 옆에 인라인 */
