@@ -1116,11 +1116,14 @@ function updateEssence() {
 
   const fullSet = Math.min(promoPeople, evoPeople);
 
+  // 두 카드 패턴: 큰 숫자 카드 + 디테일 테이블 카드 (걸작구슬과 동일)
   function bigCard(headline, count, color, rows) {
     return `
-      <div class="result-card strong" style="border-color:${color};">
-        <div class="card-title" style="color:${color};text-align:center;">◆ ${headline}</div>
+      <div class="result-card strong" style="border-color:${color};text-align:center;">
+        <div class="card-title" style="color:${color};">◆ ${headline}</div>
         <div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>
+      </div>
+      <div class="result-card">
         <div class="tbl-wrap"><table class="tbl">${rows}</table></div>
       </div>`;
   }
