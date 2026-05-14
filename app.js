@@ -556,7 +556,7 @@ function buildInventoryTab(opts) {
     }
     // 커스텀 박스 — 깔 때 골드/목재/강철 중 선택 가능 (값은 동일)
     const customRow = el("div", { class: "inv-box-grid" },
-      el("div", { class: "rk-label", style: "color:var(--amber);font-weight:700;" }, "커스텀")
+      el("div", { class: "rk-label", style: "color:var(--amber);font-weight:700;" }, "📦 커스텀상자")
     );
     for (const tier of BOX_TIERS) {
       customRow.appendChild(el("input", { type: "number", id: `${prefix}box-custom-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
@@ -831,6 +831,12 @@ function importInventoryToTarget() {
       if (src && dst) dst.value = src.value || 0;
     }
   }
+  // 📦 커스텀상자 (SR/SSR/UR)
+  for (const t of BOX_TIERS) {
+    const src = $(`box-custom-${t}`);
+    const dst = $(`tg-box-custom-${t}`);
+    if (src && dst) dst.value = src.value || 0;
+  }
   // 가속권 5종
   const sg = getSpeedupGroupMap();
   for (const grp of SPEEDUP_GROUPS) {
@@ -920,7 +926,7 @@ function renderResult(r) {
         parts.push(`${label}: ${tierStr.join(" ")}`);
       }
     }
-    customRow = `<tr><td class="label" style="color:var(--amber);">커스텀 박스 분배</td><td colspan="3" class="value" style="color:var(--amber);text-align:left;font-size:12px;">${parts.join(" / ")}</td></tr>`;
+    customRow = `<tr><td class="label" style="color:var(--amber);">📦 커스텀상자 분배</td><td colspan="3" class="value" style="color:var(--amber);text-align:left;font-size:12px;">${parts.join(" / ")}</td></tr>`;
   }
   const cardRes = `
     <div class="result-card" style="border-color:var(--amber);">
@@ -961,14 +967,14 @@ function renderResult(r) {
     const noShortage = totalUsedBoxes === 0;
     cardCustom = `
       <div class="result-card" style="border-color:var(--amber);background:rgba(251,191,36,0.04);">
-        <div class="card-title txt-amber">💡 커스텀 박스 추천</div>
+        <div class="card-title txt-amber">💡 📦 커스텀상자 추천</div>
         ${noShortage
-          ? `<p class="txt-dim" style="font-size:13px;margin:8px 0;">현재 모든 자원이 충분합니다. 커스텀 상자는 다른 시점에 활용하시면 됩니다.</p>`
-          : `<p class="txt-dim" style="font-size:13px;margin:8px 0 6px;">자원이 부족할 때, 커스텀 상자를 아래처럼 분배해서 사용하시는 걸 추천드려요:</p>
+          ? `<p class="txt-dim" style="font-size:13px;margin:8px 0;">현재 모든 자원이 충분합니다. 📦 커스텀상자는 다른 시점에 활용하시면 됩니다.</p>`
+          : `<p class="txt-dim" style="font-size:13px;margin:8px 0 6px;">자원이 부족할 때, 📦 커스텀상자를 아래처럼 분배해서 사용하시는 걸 추천드려요:</p>
              <table class="tbl">${recRows}</table>`
         }
         <p style="font-size:12.5px;margin:12px 0 2px;padding:8px 10px;background:rgba(251,191,36,0.1);border-left:3px solid var(--amber);border-radius:4px;color:var(--amber);">
-          ※ 커스텀 상자는 부족한 자원에 <b>미리 사용하는 것을 추천드립니다.</b>
+          ※ 📦 커스텀상자는 부족한 자원에 <b>미리 사용하는 것을 추천드립니다.</b>
         </p>
       </div>`;
   }
