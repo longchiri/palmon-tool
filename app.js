@@ -1150,16 +1150,24 @@ function resetAll() {
   location.reload();
 }
 
-// ===== 라벨 툴팁 적용 =====
+// ===== 라벨 툴팁 + 인라인 hint 적용 =====
 function applyTooltips() {
   document.querySelectorAll(".form-row > label").forEach((lbl) => {
     if (lbl.classList.contains("check-row")) return;
     const text = (lbl.textContent || "").trim();
     if (!TOOLTIPS[text]) return;
-    // 기존 텍스트 + i 버튼
+    // 라벨에 i 버튼 추가
     lbl.innerHTML = `${text}<button type="button" class="info" tabindex="0" data-tip="${TOOLTIPS[text]}" aria-label="${text} 정보">i</button>`;
+    // 같은 form-row 안에 인라인 hint 추가 (입력칸 아래 작은 텍스트)
+    const row = lbl.parentElement;
+    if (row && !row.querySelector(".row-hint")) {
+      const hint = document.createElement("div");
+      hint.className = "row-hint";
+      hint.textContent = TOOLTIPS[text];
+      row.appendChild(hint);
+    }
   });
-  // 모바일에서 탭으로 토글
+  // 모바일에서 i 버튼 탭으로 툴팁 토글
   document.addEventListener("click", (e) => {
     const target = e.target.closest(".info");
     document.querySelectorAll(".info.active").forEach((el) => {
