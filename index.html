@@ -218,6 +218,7 @@
       <div class="grid-3">
         <div class="group">
           <div class="group-title">UR 만능 팰몬조각</div>
+          <img src="promo.png" alt="UR 만능 팰몬조각" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
             <label>보유 수량</label>
             <input type="number" id="promo-total" min="0" value="0" inputmode="numeric">
@@ -227,25 +228,17 @@
 
         <div class="group">
           <div class="group-title">진화 정수 (Evolution)</div>
+          <img src="evo.png" alt="진화 정수" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
             <label>보유 진화 정수</label>
             <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="form-row">
-            <label>1진화 ×20</label>
-            <input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric">
-          </div>
-          <div class="form-row">
-            <label>2진화 ×40</label>
-            <input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric">
-          </div>
-          <div class="form-row">
-            <label>3진화 ×80</label>
-            <input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric">
-          </div>
-          <div class="form-row">
-            <label>4진화 ×160</label>
-            <input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric">
+          <div class="reset-subtitle">초기화할 팰몬</div>
+          <div class="bead-reset-grid">
+            <div class="bead-reset-item"><span class="reset-label">1진화</span><input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">2진화</span><input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">3진화</span><input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">4진화</span><input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric"></div>
           </div>
           <div class="hint">예) 진화 정수 200 + 4진화 1마리 초기화 → 200 + 160 = 360 → 1명 완성 (남은 60)</div>
         </div>

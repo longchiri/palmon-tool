@@ -265,17 +265,50 @@ body { overflow-x: hidden; }
 
 .tbl th.tier { font-size: 12px; opacity: 1; }
 
-/* 걸작 구슬 이미지 — 그룹 타이틀 바로 아래, 보유 수량 위 */
+/* 아이콘 이미지 (걸작 구슬 / 진화 정수 / UR 만능 팰몬조각) */
 .bead-img {
   display: block;
-  width: 120px;
+  width: 96px;
   max-width: 60%;
   height: auto;
-  margin: 8px auto 12px;
+  margin: 6px auto 10px;
   border-radius: 10px;
   background: transparent;
 }
-@media (max-width: 639px) { .bead-img { width: 100px; } }
+@media (max-width: 639px) { .bead-img { width: 80px; } }
+
+/* 초기화할 팰몬 같은 작은 서브 타이틀 */
+.reset-subtitle {
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  margin: 8px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* 걸작 구슬 / 팰몬 진화 탭 — 좌우 컬럼 폭 줄임 */
+#t-bead > .grid-3,
+#t-essence > .grid-3 {
+  grid-template-columns: minmax(0, 230px) minmax(0, 1fr) minmax(0, 220px);
+}
+@media (max-width: 900px) {
+  #t-bead > .grid-3,
+  #t-essence > .grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  #t-bead > .grid-3 > .group:last-child,
+  #t-essence > .grid-3 > .group:last-child {
+    grid-column: span 2;     /* 기준값 카드는 한 줄 전체 */
+  }
+}
+@media (max-width: 639px) {
+  #t-bead > .grid-3,
+  #t-essence > .grid-3 { grid-template-columns: 1fr; }
+  #t-bead > .grid-3 > .group:last-child,
+  #t-essence > .grid-3 > .group:last-child { grid-column: span 1; }
+}
 
 /* 초기화할 무기 — 컴팩트 2열 그리드 */
 .bead-reset-grid {
