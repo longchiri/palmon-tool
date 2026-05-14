@@ -868,7 +868,7 @@ function updateBead() {
 
   $("bead-result").innerHTML = `
     <div class="result-card strong" style="border-color:${color};text-align:center;">
-      <div class="card-title" style="color:${color};">◆ 완성 가능 무기</div>
+      <div class="card-title" style="color:${color};">◆ 완성 가능 무기 (5성 기준)</div>
       <div class="big-number" style="color:${color};">${fmt(possible)}<span class="unit">개</span></div>
     </div>
     <div class="result-card">
@@ -880,6 +880,30 @@ function updateBead() {
         <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>
       </table></div>
     </div>`;
+
+  // 원하는 성급 필터 결과
+  updateBeadTargetResult(total);
+}
+
+function updateBeadTargetResult(total) {
+  const out = $("bead-target-output");
+  const sel = $("bead-target");
+  if (!out || !sel) return;
+  if (total == null) {
+    const owned = parseInt($("bead-total").value || 0);
+    const stars = ["1성","2성","3성","4성","5성","6성","7성","8성","9성","10성"];
+    let refund = 0;
+    for (let i = 0; i < stars.length; i++) {
+      refund += parseInt($(`bead-reset-${i+1}`)?.value || 0) * BEAD_RESET_REFUND[stars[i]];
+    }
+    total = owned + refund;
+  }
+  const target = sel.value;
+  const cost = BEAD_RESET_REFUND[target];
+  const count = cost > 0 ? Math.floor(total / cost) : 0;
+  const remain = total - count * cost;
+  out.textContent = `${target} 무기 ${fmt(count)}개 완성 가능 (남은 ${fmt(remain)})`;
+  out.classList.toggle("zero", count === 0);
 }
 
 // ===== 팰몬 진화 =====
@@ -951,6 +975,30 @@ function updateEssence() {
     </div>`;
 
   $("essence-result").innerHTML = promoCard + evoCard + fullCard;
+
+  // 원하는 진화 필터 결과
+  updateEvoTargetResult(evoTotal);
+}
+
+function updateEvoTargetResult(total) {
+  const out = $("evo-target-output");
+  const sel = $("evo-target");
+  if (!out || !sel) return;
+  if (total == null) {
+    const owned = parseInt($("evo-total").value || 0);
+    let refund = 0;
+    for (const stage of ["1진화","2진화","3진화","4진화"]) {
+      const idx = stage[0];
+      refund += parseInt($(`evo-reset-${idx}`)?.value || 0) * EVO_RESET_REFUND[stage];
+    }
+    total = owned + refund;
+  }
+  const target = sel.value;
+  const cost = EVO_RESET_REFUND[target];
+  const count = cost > 0 ? Math.floor(total / cost) : 0;
+  const remain = total - count * cost;
+  out.textContent = `${target} ${fmt(count)}마리 완성 가능 (남은 ${fmt(remain)})`;
+  out.classList.toggle("zero", count === 0);
 }
 
 // ===== 팰몬 XP / 자원 합산 =====
@@ -1308,6 +1356,9 @@ async function bootstrap() {
       const el = $(`bead-reset-${i}`);
       if (el) el.addEventListener("input", updateBead);
     }
+    // 원하는 성급/진화 필터
+    $("bead-target")?.addEventListener("change", () => updateBeadTargetResult());
+    $("evo-target")?.addEventListener("change", () => updateEvoTargetResult());
     ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));

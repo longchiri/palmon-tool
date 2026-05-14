@@ -312,6 +312,42 @@ body { overflow-x: hidden; }
   }
 }
 
+/* 원하는 성급/진화 필터 */
+.target-filter {
+  display: grid;
+  grid-template-columns: auto 110px;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 6px;
+}
+.target-filter > label {
+  color: var(--text-dim);
+  font-size: 13px;
+  text-align: right;
+}
+.target-filter > label::after {
+  content: " :";
+  opacity: 0.55;
+}
+.target-filter > select {
+  width: 100%;
+  min-width: 0;
+}
+.target-result {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--green);
+  font-weight: 700;
+  margin: 4px 0 12px;
+  padding: 7px 10px;
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.25);
+  border-radius: 8px;
+}
+.target-result.zero { color: var(--text-dim); background: rgba(255,255,255,0.03); border-color: var(--border); }
+
 /* 초기화할 무기 — 컴팩트 2열 그리드 */
 .bead-reset-grid {
   display: grid;

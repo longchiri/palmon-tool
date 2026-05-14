@@ -176,6 +176,22 @@
 
         <div class="group">
           <div class="group-title">초기화할 무기</div>
+          <div class="target-filter">
+            <label>원하는 성급</label>
+            <select id="bead-target">
+              <option value="1성">1성</option>
+              <option value="2성">2성</option>
+              <option value="3성">3성</option>
+              <option value="4성">4성</option>
+              <option value="5성" selected>5성</option>
+              <option value="6성">6성</option>
+              <option value="7성">7성</option>
+              <option value="8성">8성</option>
+              <option value="9성">9성</option>
+              <option value="10성">10성</option>
+            </select>
+          </div>
+          <div class="target-result" id="bead-target-output">5성 무기 0개 가능</div>
           <div class="bead-reset-grid">
             <div class="bead-reset-item"><span class="reset-label">1성</span><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">2성</span><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
@@ -234,6 +250,16 @@
             <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="reset-subtitle">초기화할 팰몬</div>
+          <div class="target-filter">
+            <label>원하는 진화</label>
+            <select id="evo-target">
+              <option value="1진화">1진화</option>
+              <option value="2진화">2진화</option>
+              <option value="3진화">3진화</option>
+              <option value="4진화" selected>4진화</option>
+            </select>
+          </div>
+          <div class="target-result" id="evo-target-output">4진화 0마리 가능</div>
           <div class="bead-reset-grid">
             <div class="bead-reset-item"><span class="reset-label">1진화</span><input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">2진화</span><input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric"></div>
