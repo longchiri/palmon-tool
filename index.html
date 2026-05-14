@@ -86,7 +86,7 @@
       <p class="txt-dim" style="margin:0 0 12px;">보유 구슬과 초기화할 무기를 입력하면, 완성 가능한 무기 수를 보여줍니다. (무기 1개당 구슬 150 필요)</p>
 
       <div class="grid-3">
-        <div class="group">
+        <div class="group essence-img-card">
           <div class="group-title">걸작 구슬</div>
           <img src="bead.png" alt="걸작 구슬" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
@@ -94,11 +94,7 @@
             <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="hint">예) 보유 100 + 5성 무기 1개 초기화 → 100 + 150 = 250 → 무기 1개 완성 (남은 100)</div>
-          <div id="bead-result"></div>
-        </div>
-
-        <div class="group">
-          <div class="group-title">초기화할 무기</div>
+          <div class="reset-subtitle">초기화할 무기</div>
           <div class="target-filter">
             <label>원하는 성급</label>
             <select id="bead-target">
@@ -129,10 +125,12 @@
           </div>
         </div>
 
+        <div id="bead-result"></div>
+
         <div class="group">
           <div class="group-title">기준값</div>
           <div style="font-size:13px;line-height:1.7;">
-            <b>무기 1개당 필요</b>: 구슬 150<br>
+            <b>무기 1개당 필요</b>: 구슬 150<br><br>
             <b>초기화 환급 (누적)</b><br>
             • 1성 +10  · 2성 +30<br>
             • 3성 +60  · 4성 +100<br>
