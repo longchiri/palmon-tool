@@ -288,26 +288,9 @@ body { overflow-x: hidden; }
   border-top: 1px solid var(--border);
 }
 
-/* 걸작 구슬 / 팰몬 진화 탭 — 좌우 컬럼 폭 줄임 */
-#t-bead > .grid-3,
-#t-essence > .grid-3 {
-  grid-template-columns: minmax(0, 230px) minmax(0, 1fr) minmax(0, 220px);
-}
-@media (max-width: 900px) {
-  #t-bead > .grid-3,
-  #t-essence > .grid-3 {
-    grid-template-columns: 1fr 1fr;
-  }
-  #t-bead > .grid-3 > .group:last-child,
-  #t-essence > .grid-3 > .group:last-child {
-    grid-column: span 2;     /* 기준값 카드는 한 줄 전체 */
-  }
-}
-@media (max-width: 639px) {
-  #t-bead > .grid-3,
-  #t-essence > .grid-3 { grid-template-columns: 1fr; }
-  #t-bead > .grid-3 > .group:last-child,
-  #t-essence > .grid-3 > .group:last-child { grid-column: span 1; }
+/* 보유 수량 입력칸만 좁게 — 라벨 옆에 깔끔히 */
+#bead-total, #promo-total, #evo-total {
+  max-width: 130px;
 }
 
 /* 초기화할 무기 — 컴팩트 2열 그리드 */

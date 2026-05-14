@@ -171,22 +171,22 @@
             <label>보유 수량</label>
             <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="hint">예) 보유 600 + 5성 무기 1개 초기화 → 600 + 50 = 650 → 무기 4개 완성 (남은 50)</div>
+          <div class="hint">예) 보유 100 + 5성 무기 1개 초기화 → 100 + 150 = 250 → 무기 1개 완성 (남은 100)</div>
         </div>
 
         <div class="group">
           <div class="group-title">초기화할 무기</div>
           <div class="bead-reset-grid">
-            <div class="bead-reset-item"><span class="reset-label">1성 ×10</span><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">2성 ×20</span><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">3성 ×30</span><input type="number" id="bead-reset-3" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">4성 ×40</span><input type="number" id="bead-reset-4" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">5성 ×50</span><input type="number" id="bead-reset-5" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">6성 ×75</span><input type="number" id="bead-reset-6" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">7성 ×100</span><input type="number" id="bead-reset-7" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">8성 ×200</span><input type="number" id="bead-reset-8" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">9성 ×300</span><input type="number" id="bead-reset-9" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">10성 ×500</span><input type="number" id="bead-reset-10" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">1성</span><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">2성</span><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">3성</span><input type="number" id="bead-reset-3" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">4성</span><input type="number" id="bead-reset-4" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">5성</span><input type="number" id="bead-reset-5" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">6성</span><input type="number" id="bead-reset-6" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">7성</span><input type="number" id="bead-reset-7" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">8성</span><input type="number" id="bead-reset-8" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">9성</span><input type="number" id="bead-reset-9" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">10성</span><input type="number" id="bead-reset-10" min="0" value="0" inputmode="numeric"></div>
           </div>
         </div>
 
@@ -194,12 +194,12 @@
           <div class="group-title">기준값</div>
           <div style="font-size:13px;line-height:1.7;">
             <b>무기 1개당 필요</b>: 구슬 150<br>
-            <b>구슬 환산 값</b><br>
-            • 1성 = 10  · 2성 = 20<br>
-            • 3성 = 30  · 4성 = 40<br>
-            • 5성 = 50  · 6성 = 75<br>
-            • 7성 = 100  · 8성 = 200<br>
-            • 9성 = 300  · 10성 = 500<br><br>
+            <b>초기화 환급 (누적)</b><br>
+            • 1성 +10  · 2성 +30<br>
+            • 3성 +60  · 4성 +100<br>
+            • 5성 +150  · 6성 +225<br>
+            • 7성 +325  · 8성 +525<br>
+            • 9성 +825  · 10성 +1325<br><br>
             <b>계산 방식</b><br>
             (보유 + 초기화 환급) ÷ 150
           </div>
@@ -240,7 +240,7 @@
             <div class="bead-reset-item"><span class="reset-label">3진화</span><input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">4진화</span><input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric"></div>
           </div>
-          <div class="hint">예) 진화 정수 200 + 4진화 1마리 초기화 → 200 + 160 = 360 → 1명 완성 (남은 60)</div>
+          <div class="hint">예) 진화 정수 100 + 4진화 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)</div>
         </div>
 
         <div class="group">
@@ -248,9 +248,9 @@
           <div style="font-size:13px;line-height:1.6;">
             <b>승급 1명 완성</b>: 975<br><br>
             <b>진화 1명 완성</b>: 300<br>
-            • 초기화 환급<br>
-            &nbsp;&nbsp;1진화 20 · 2진화 40<br>
-            &nbsp;&nbsp;3진화 80 · 4진화 160
+            • 초기화 환급 (누적)<br>
+            &nbsp;&nbsp;1진화 +20 · 2진화 +60<br>
+            &nbsp;&nbsp;3진화 +140 · 4진화 +300
           </div>
         </div>
       </div>

@@ -51,9 +51,16 @@ const BEAD_VALUES = {
   "1성": 10, "2성": 20, "3성": 30, "4성": 40, "5성": 50,
   "6성": 75, "7성": 100, "8성": 200, "9성": 300, "10성": 500,
 };
+// 초기화 환급 = 그 등급까지 만드는 데 들어간 누적 비용
+const BEAD_RESET_REFUND = {
+  "1성": 10, "2성": 30, "3성": 60, "4성": 100, "5성": 150,
+  "6성": 225, "7성": 325, "8성": 525, "9성": 825, "10성": 1325,
+};
 const PROMO_PER_PALMON = 975;
 const EVO_PER_PALMON = 300;
 const EVO_VALUES = { "1진화": 20, "2진화": 40, "3진화": 80, "4진화": 160 };
+// 초기화 환급 = 그 단계까지의 누적 비용 (해당 팰몬을 그 단계까지 만드는 데 들어간 정수 합)
+const EVO_RESET_REFUND = { "1진화": 20, "2진화": 60, "3진화": 140, "4진화": 300 };
 
 // ───────── 라벨 툴팁 (i 버튼으로 표시될 in-game 출처) ─────────
 const TOOLTIPS = {
@@ -838,7 +845,7 @@ function updateBead() {
     const s = stars[i];
     const cnt = parseInt($(`bead-reset-${i+1}`)?.value || 0);
     resetCounts[s] = cnt;
-    resetRefund += cnt * BEAD_VALUES[s];
+    resetRefund += cnt * BEAD_RESET_REFUND[s];
   }
 
   const total = owned + resetRefund;
@@ -851,8 +858,8 @@ function updateBead() {
   for (const s of stars) {
     const cnt = resetCounts[s];
     if (cnt > 0) {
-      const sub = cnt * BEAD_VALUES[s];
-      resetRows += `<tr><td class="label txt-purple">초기화 ${s}</td><td class="value txt-purple">${fmt(cnt)} × ${BEAD_VALUES[s]} = +${fmt(sub)}</td></tr>`;
+      const sub = cnt * BEAD_RESET_REFUND[s];
+      resetRows += `<tr><td class="label txt-purple">초기화 ${s}</td><td class="value txt-purple">${fmt(cnt)} × ${BEAD_RESET_REFUND[s]} = +${fmt(sub)}</td></tr>`;
     }
   }
   if (resetRefund > 0) {
@@ -891,7 +898,7 @@ function updateEssence() {
     "4진화": parseInt($("evo-reset-4").value || 0),
   };
   let evoReset = 0;
-  for (const stage in resetCounts) evoReset += resetCounts[stage] * EVO_VALUES[stage];
+  for (const stage in resetCounts) evoReset += resetCounts[stage] * EVO_RESET_REFUND[stage];
   const evoTotal = evoOwned + evoReset;
   const evoPeople = Math.floor(evoTotal / EVO_PER_PALMON);
   const evoRemain = evoTotal - evoPeople * EVO_PER_PALMON;
@@ -919,8 +926,8 @@ function updateEssence() {
   for (const stage of ["1진화", "2진화", "3진화", "4진화"]) {
     const cnt = resetCounts[stage];
     if (cnt > 0) {
-      const sub = cnt * EVO_VALUES[stage];
-      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${EVO_VALUES[stage]} = +${fmt(sub)}</td></tr>`;
+      const sub = cnt * EVO_RESET_REFUND[stage];
+      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${EVO_RESET_REFUND[stage]} = +${fmt(sub)}</td></tr>`;
     }
   }
   if (evoReset > 0) {
