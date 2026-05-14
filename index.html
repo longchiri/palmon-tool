@@ -2,7 +2,13 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <meta name="description" content="Palmon Tool — 캠프 레벨업 계산기 (시간 / 자원 / 가속권 / 걸작 구슬 / 팰몬 진화)" />
   <title>Palmon Tool</title>
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -85,9 +91,9 @@
               <div class="form-row">
                 <label>작업파견 가속</label>
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
-                  <input type="number" id="b-dispatch-h" placeholder="시" min="0" value="0">
-                  <input type="number" id="b-dispatch-m" placeholder="분" min="0" max="59" value="0">
-                  <input type="number" id="b-dispatch-s" placeholder="초" min="0" max="59" value="0">
+                  <input type="number" id="b-dispatch-h" placeholder="시" min="0" value="0" inputmode="numeric">
+                  <input type="number" id="b-dispatch-m" placeholder="분" min="0" max="59" value="0" inputmode="numeric">
+                  <input type="number" id="b-dispatch-s" placeholder="초" min="0" max="59" value="0" inputmode="numeric">
                 </div>
               </div>
             </div>
@@ -145,7 +151,7 @@
           <div class="group-title">보유 구슬</div>
           <div class="form-row">
             <label>보유 구슬</label>
-            <input type="number" id="bead-total" min="0" value="0">
+            <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="hint">예) 보유 구슬 600 → 무기 4개 완성 (무기 1개당 150 필요)</div>
         </div>
@@ -174,7 +180,7 @@
           <div class="group-title">승급 정수 (Promotion)</div>
           <div class="form-row">
             <label>보유 승급 정수</label>
-            <input type="number" id="promo-total" min="0" value="0">
+            <input type="number" id="promo-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="hint">예) 승급 정수 1950 → 2명 승급 완성 (1명당 975 필요)</div>
         </div>
@@ -183,7 +189,7 @@
           <div class="group-title">진화 정수 (Evolution)</div>
           <div class="form-row">
             <label>보유 진화 정수</label>
-            <input type="number" id="evo-total" min="0" value="0">
+            <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
           </div>
           <div class="form-row">
             <label>초기화할 팰몬</label>
@@ -194,7 +200,7 @@
                 <option value="2진화">2진화 (40)</option>
                 <option value="1진화">1진화 (20)</option>
               </select>
-              <input type="number" id="evo-reset-count" min="0" value="0">
+              <input type="number" id="evo-reset-count" min="0" value="0" inputmode="numeric">
             </div>
           </div>
           <div class="hint">예) 진화 정수 300 + 4진화 1마리 초기화 → 1명 진화 완성 (1명당 300 필요)</div>

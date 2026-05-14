@@ -480,27 +480,24 @@ function buildInventoryTab() {
   for (const rk of RESOURCE_KEYS) {
     ores.appendChild(el("div", { class: "form-row" },
       el("label", {}, RESOURCE_LABELS[rk]),
-      el("input", { type: "number", id: `res-${rk}`, min: "0", value: "0" }),
+      el("input", { type: "number", id: `res-${rk}`, min: "0", value: "0", inputmode: "numeric" }),
     ));
   }
 
-  // 자원 상자 (자원별 SR/SSR/UR)
+  // 자원 상자 — 4열 grid (라벨 + SR + SSR + UR)
   const boxes = $("owned-boxes");
   boxes.innerHTML = "";
   // 헤더
-  const hdr = el("div", { class: "form-row" }, el("label", {}, ""));
-  const hdrInputs = el("div", { class: "grid-3", style: "text-align:center;" });
-  for (const t of BOX_TIERS) hdrInputs.appendChild(el("div", { class: "txt-dim", style: "font-size:12px;" }, t));
-  hdr.appendChild(hdrInputs);
+  const hdr = el("div", { class: "inv-box-grid" },
+    el("div", {}),
+    ...BOX_TIERS.map((t) => el("div", { class: "h" }, t))
+  );
   boxes.appendChild(hdr);
-
   for (const rk of RESOURCE_KEYS) {
-    const row = el("div", { class: "form-row" }, el("label", {}, RESOURCE_LABELS[rk]));
-    const grid = el("div", { class: "grid-3" });
+    const row = el("div", { class: "inv-box-grid" }, el("div", { class: "rk-label" }, RESOURCE_LABELS[rk]));
     for (const tier of BOX_TIERS) {
-      grid.appendChild(el("input", { type: "number", id: `box-${rk}-${tier}`, min: "0", value: "0" }));
+      row.appendChild(el("input", { type: "number", id: `box-${rk}-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
     }
-    row.appendChild(grid);
     boxes.appendChild(row);
   }
 
@@ -512,7 +509,7 @@ function buildInventoryTab() {
     for (const k of Object.keys(sg[grp.key])) {
       cont.appendChild(el("div", { class: "form-row compact" },
         el("label", {}, k),
-        el("input", { type: "number", id: `spd-${grp.key}-${k}`, min: "0", value: "0" }),
+        el("input", { type: "number", id: `spd-${grp.key}-${k}`, min: "0", value: "0", inputmode: "numeric" }),
       ));
     }
   }
@@ -527,22 +524,19 @@ function buildPalmonTab() {
     camp.innerHTML += `<option value="${v}" ${v === 20 ? "selected" : ""}>LV${v}</option>`;
   }
 
-  // 상자 입력: 자원 × 등급
+  // 상자 입력 — palmon-box-grid (라벨 + SR/SSR/UR)
   const wrap = $("palmon-boxes");
   wrap.innerHTML = "";
-  const hdr = el("div", { class: "form-row" }, el("label", {}, ""));
-  const hdrInputs = el("div", { class: "grid-3", style: "text-align:center;" });
-  for (const t of BOX_TIERS) hdrInputs.appendChild(el("div", { class: "txt-dim", style: "font-size:12px;" }, t));
-  hdr.appendChild(hdrInputs);
+  const hdr = el("div", { class: "palmon-box-grid" },
+    el("div", {}),
+    ...BOX_TIERS.map((t) => el("div", { class: "h" }, t))
+  );
   wrap.appendChild(hdr);
-
   for (const rk of PALMON_RESOURCE_ORDER) {
-    const row = el("div", { class: "form-row" }, el("label", {}, PALMON_RESOURCE_LABELS[rk]));
-    const grid = el("div", { class: "grid-3" });
+    const row = el("div", { class: "palmon-box-grid" }, el("div", { class: "rk-label" }, PALMON_RESOURCE_LABELS[rk]));
     for (const tier of BOX_TIERS) {
-      grid.appendChild(el("input", { type: "number", id: `pbox-${rk}-${tier}`, min: "0", value: "0" }));
+      row.appendChild(el("input", { type: "number", id: `pbox-${rk}-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
     }
-    row.appendChild(grid);
     wrap.appendChild(row);
   }
 }
@@ -721,7 +715,7 @@ function renderResult(r) {
   const cardTime = `
     <div class="result-card" style="border-color:var(--green);">
       <div class="card-title txt-green">◆ 총 필요 시간</div>
-      <table class="tbl">${timeRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${timeRows}</table>
     </div>`;
 
   // 3. 자원
@@ -742,7 +736,7 @@ function renderResult(r) {
   const cardRes = `
     <div class="result-card" style="border-color:var(--amber);">
       <div class="card-title txt-amber">◆ 총 필요 자원</div>
-      <table class="tbl">${resRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${resRows}</table>
     </div>`;
 
   // 4. 자원상자
@@ -767,7 +761,7 @@ function renderResult(r) {
   const cardBox = `
     <div class="result-card" style="border-color:var(--blue);">
       <div class="card-title txt-blue">◆ 자원상자 추천</div>
-      <table class="tbl">${boxRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${boxRows}</table>
     </div>`;
 
   // 5. 가속권
@@ -778,7 +772,7 @@ function renderResult(r) {
   const cardSpd = `
     <div class="result-card" style="border-color:${spdColor};">
       <div class="card-title" style="color:${spdColor};">◆ 가속권 사용 결과</div>
-      <table class="tbl">
+      <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">필요한 총 가속</td><td class="value amber">${secondsToText(r.requiredSec)}</td></tr>
         <tr><td class="label">가속 가능 여부</td><td class="value">${possibleBadge}</td></tr>
         <tr><td class="label">사용한 건설 가속</td><td class="value">${secondsToText(r.usedBuildSec)}</td></tr>
@@ -786,18 +780,18 @@ function renderResult(r) {
         <tr><td class="label">사용한 일반 가속</td><td class="value">${secondsToText(r.usedGeneralSec)}</td></tr>
         <tr><td class="label">남는 일반 가속</td><td class="value green">${secondsToText(r.remainGeneral)}</td></tr>
         <tr><td class="label">추가로 필요한 가속</td><td class="value ${r.remainSec > 0 ? "red" : "green"}">${secondsToText(r.remainSec)}</td></tr>
-      </table>
+      </table></div>
     </div>`;
 
   // 6. 버프 요약
   const cardBuff = `
     <div class="result-card" style="border-color:var(--purple);">
       <div class="card-title txt-purple">◆ 적용 버프 요약</div>
-      <table class="tbl">
+      <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">건설속도 합계</td><td class="value green" style="font-size:16px;">${(r.buildSpeedSum*100).toFixed(2)}%</td></tr>
         <tr><td class="label">고정 시간 차감 합계</td><td class="value">${secondsToText(r.fixedSecondsSum + r.dispatchSeconds)}</td></tr>
         <tr><td class="label">자원 감소 합계</td><td class="value txt-purple" style="font-size:16px;">${(Math.abs(r.resourceRateSum)*100).toFixed(2)}%</td></tr>
-      </table>
+      </table></div>
     </div>`;
 
   $("result-output").innerHTML = cardTarget + cardTime + cardRes + cardBox + cardSpd + cardBuff;
@@ -815,11 +809,11 @@ function updateBead() {
       <div class="big-number" style="color:${color};">${fmt(possible)}<span class="unit">개</span></div>
     </div>
     <div class="result-card">
-      <table class="tbl">
+      <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">보유 구슬</td><td class="value">${fmt(total)}</td></tr>
         <tr><td class="label">무기 1개당 필요</td><td class="value">${fmt(BEAD_PER_WEAPON)}</td></tr>
         <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>
-      </table>
+      </table></div>
     </div>`;
 }
 
@@ -845,7 +839,7 @@ function updateEssence() {
       <div class="result-card strong" style="border-color:${color};">
         <div class="card-title" style="color:${color};text-align:center;">◆ ${headline}</div>
         <div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>
-        <table class="tbl">${rows}</table>
+        <div class="tbl-wrap"><table class="tbl">${rows}</table></div>
       </div>`;
   }
 
@@ -905,7 +899,7 @@ function updatePalmon() {
   const cardBase = `
     <div class="result-card strong" style="border-color:var(--amber);">
       <div class="card-title txt-amber">◆ 캠프 LV${baseLevel} 기준 합산</div>
-      <table class="tbl">${baseRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${baseRows}</table>
     </div>`;
 
   // 카드 2: 비교 (필요 시)
@@ -929,7 +923,7 @@ function updatePalmon() {
     cardCmp = `
       <div class="result-card" style="border-color:var(--blue);">
         <div class="card-title txt-blue">◆ 캠프 LV${cmpLevel} 기준 (LV${baseLevel} 대비 증가)</div>
-        <table class="tbl">${cmpRows}</table>
+        <div class="tbl-wrap"><table class="tbl">${cmpRows}</table>
       </div>`;
   }
 
@@ -949,7 +943,7 @@ function updatePalmon() {
   const cardUnit = `
     <div class="result-card">
       <div class="card-title txt-dim">● 단위값 (상자 1개당, LV${baseLevel})</div>
-      <table class="tbl">${unitRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${unitRows}</table>
     </div>`;
 
   $("palmon-result").innerHTML = cardBase + cardCmp + cardUnit;
@@ -977,8 +971,8 @@ function updateInventorySummary() {
       <td class="value amber">= ${fmt(after)}</td>
     </tr>`;
   }
-  let resTable = `<table class="tbl">
-    <tr><th></th><th>현재</th><th>상자</th><th>총합</th></tr>${rows}</table>`;
+  let resTable = `<div class="tbl-wrap"><table class="tbl">
+    <tr><th></th><th>현재</th><th>상자</th><th>총합</th></tr>${rows}</table></div>`;
 
   let spdRows = "";
   for (const grp of SPEEDUP_GROUPS) {
@@ -986,10 +980,10 @@ function updateInventorySummary() {
     for (const k of Object.keys(sg[grp.key])) sec += (ownedSpd[grp.key]?.[k] || 0) * sg[grp.key][k];
     spdRows += `<tr><td class="label">${grp.title}</td><td class="value">${secondsToText(sec)}</td></tr>`;
   }
-  let spdTable = `<table class="tbl">${spdRows}</table>`;
+  let spdTable = `<div class="tbl-wrap"><table class="tbl">${spdRows}</table></div>`;
 
   $("inventory-summary").innerHTML = `
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="grid-2">
       <div>
         <div class="card-title txt-dim" style="margin-bottom:4px;">상자 전부 개봉 시 자원</div>
         ${resTable}
