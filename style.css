@@ -161,38 +161,50 @@ body { overflow-x: hidden; }
 }
 
 /* ── form rows ───────────────────────────────────── */
-/* 라벨 + 입력칸을 바짝 붙여서 한 짝으로 보이게.
-   화면이 좁으면 라벨이 위, 입력칸이 아래로 자동 스택 */
+/* 라벨 = 우측정렬 고정폭, 입력 = 고정폭 → 모든 입력칸 x좌표가 한 라인에 정렬.
+   라벨 뒤 ":" 자동 추가로 짝임을 시각적으로 명시.
+   좁아지면 라벨이 위, 입력은 아래 100% 너비로 자동 스택. */
+:root { --label-w: 90px; --input-w: 150px; }
+@media (min-width: 980px) { :root { --label-w: 110px; --input-w: 180px; } }
+@media (min-width: 1200px) { :root { --label-w: 120px; --input-w: 200px; } }
+
 .form-row {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: var(--label-w) var(--input-w);
   align-items: center;
-  gap: 6px 10px;
+  gap: 8px;
   padding: 5px 0;
 }
 .form-row > label {
   color: var(--text-dim);
   font-size: 13px;
-  flex: 0 0 auto;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: right;
+}
+.form-row > label::after {
+  content: " :";
+  opacity: 0.55;
+  margin-left: 1px;
 }
 .form-row > input[type="number"],
 .form-row > select {
-  flex: 1 1 90px;
-  width: auto;
-  min-width: 70px;
-  max-width: var(--input-w, 180px);
-}
-.form-row > div {
-  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-  max-width: var(--input-w, 220px);
 }
+.form-row > div { min-width: 0; }
 .form-row.compact { padding: 3px 0; }
-:root { --input-w: 160px; }
-@media (min-width: 980px) {
-  :root { --input-w: 200px; }
+
+/* 체크박스 그룹 — 가로 정렬 */
+.check-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
 }
+.check-group .check-row { padding: 4px 0; }
 
 /* ── inputs ──────────────────────────────────────── */
 input[type="number"], select {
@@ -282,17 +294,21 @@ input[type="checkbox"] {
   .btn { padding: 7px 11px; font-size: 12.5px; min-height: 36px; }
   .group { padding: 14px 12px 14px; }
   .group-title { left: 10px; padding: 2px 10px; font-size: 12px; }
-  /* 라벨 위, 입력 아래로 스택 */
-  .form-row { gap: 4px 8px; padding: 6px 0; }
+  /* 모바일에서는 라벨이 위, 입력이 아래로 — 좁아서 가로 정렬 불가 */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding: 6px 0;
+  }
   .form-row > label {
-    flex-basis: 100%;
+    text-align: left;
     font-size: 12px;
     letter-spacing: 0.2px;
   }
+  .form-row > label::after { content: none; }
   .form-row > input[type="number"],
   .form-row > select,
   .form-row > div {
-    flex-basis: 100%;
     width: 100%;
     max-width: 100%;
   }
