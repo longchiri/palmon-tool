@@ -59,12 +59,48 @@ body { overflow-x: hidden; }
   border-bottom: 1px solid var(--border);
 }
 .header h1 {
-  font-size: 17px;
-  font-weight: 700;
-  margin: 0 6px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  margin: 0 10px 0 0;
   color: var(--amber);
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s, text-shadow .15s;
+  text-shadow: 0 0 12px rgba(251,191,36,0.15);
+}
+.header h1:hover {
+  color: #fde68a;
+  text-shadow: 0 0 16px rgba(251,191,36,0.4);
+}
+@media (min-width: 980px) { .header h1 { font-size: 26px; } }
+@media (max-width: 480px) { .header h1 { font-size: 20px; } }
+
+/* ── 사용법 탭 콘텐츠 ──────────────────────────── */
+.help-content { padding: 4px 4px 8px; }
+.help-content h3 {
+  font-size: 16px;
+  color: var(--amber);
+  margin: 18px 0 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.4px;
+}
+.help-content h3:first-child { margin-top: 4px; }
+.help-content p { font-size: 14px; line-height: 1.6; margin: 6px 0; color: var(--text); }
+.help-content ul, .help-content ol { margin: 6px 0 10px; padding-left: 20px; }
+.help-content li { font-size: 13.5px; line-height: 1.65; color: var(--text); margin: 3px 0; }
+.help-content b { color: var(--amber); font-weight: 700; }
+.help-content .kbd {
+  display: inline-block;
+  background: rgba(251,191,36,0.12);
+  color: var(--amber);
+  padding: 1px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid rgba(251,191,36,0.3);
 }
 .btn {
   background: #1e293b;

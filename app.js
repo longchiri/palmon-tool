@@ -558,12 +558,22 @@ function buildInventoryTab(opts) {
 }
 
 function buildPalmonTab() {
-  // 캠프 콤보
-  const camp = $("palmon-camp");
-  camp.innerHTML = "";
+  // 캠프 콤보 — 내 캠프 레벨 / 비교 캠프 둘 다
   const levels = Object.keys(DB.resource_boxes || {}).map((x) => parseInt(x)).sort((a, b) => a - b);
-  for (const v of levels) {
-    camp.innerHTML += `<option value="${v}" ${v === 20 ? "selected" : ""}>LV${v}</option>`;
+  const maxLv = levels[levels.length - 1];
+  const camp = $("palmon-camp");
+  if (camp) {
+    camp.innerHTML = "";
+    for (const v of levels) {
+      camp.innerHTML += `<option value="${v}" ${v === 20 ? "selected" : ""}>LV${v}</option>`;
+    }
+  }
+  const cmpCamp = $("palmon-cmp-camp");
+  if (cmpCamp) {
+    cmpCamp.innerHTML = "";
+    for (const v of levels) {
+      cmpCamp.innerHTML += `<option value="${v}" ${v === maxLv ? "selected" : ""}>LV${v}</option>`;
+    }
   }
 
   // 상자 입력 — palmon-box-grid (라벨 + SR/SSR/UR)
@@ -1067,11 +1077,14 @@ function updateEvoTargetResult(total) {
   out.classList.toggle("zero", count === 0);
 }
 
-// ===== 팰몬 XP / 자원 합산 =====
+// ===== 자원상자 비교하기 =====
 function updatePalmon() {
   const baseLevel = parseInt($("palmon-camp").value);
   const maxLevel = Math.max(...Object.keys(DB.resource_boxes).map((x) => parseInt(x)));
-  const cmpLevel = Math.min(30, maxLevel);
+  // 비교 캠프 — 사용자가 선택한 값 사용 (드롭다운). 없으면 폴백.
+  const cmpSel = $("palmon-cmp-camp");
+  let cmpLevel = cmpSel ? parseInt(cmpSel.value) : maxLevel;
+  if (!cmpLevel || isNaN(cmpLevel)) cmpLevel = maxLevel;
 
   function totalsAt(level) {
     const tbl = DB.resource_boxes[String(level)] || {};
@@ -1433,6 +1446,8 @@ async function bootstrap() {
     $("file-load").addEventListener("change", (e) => { if (e.target.files[0]) loadSettings(e.target.files[0]); });
     $("btn-reset").addEventListener("click", resetAll);
     $("btn-import-inv")?.addEventListener("click", importInventoryToTarget);
+    // 로고 클릭 시 사용법 탭으로 이동
+    $("logo-link")?.addEventListener("click", () => activateTab("t-help"));
 
     // 자동 업데이트 (구슬/진화/팰몬자원/요약)
     $("bead-total").addEventListener("input", updateBead);
@@ -1445,6 +1460,7 @@ async function bootstrap() {
     $("evo-target")?.addEventListener("change", () => updateEssence());
     ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
+    $("palmon-cmp-camp")?.addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));
     // 인벤토리 요약
     const invIds = [];
