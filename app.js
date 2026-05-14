@@ -900,7 +900,7 @@ function renderResult(r) {
   const cardTime = `
     <div class="result-card" style="border-color:var(--green);">
       <div class="card-title txt-green">◆ 총 필요 시간</div>
-      <div class="tbl-wrap"><table class="tbl">${timeRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${timeRows}</table></div>
     </div>`;
 
   // 3. 자원
@@ -946,7 +946,7 @@ function renderResult(r) {
   const cardRes = `
     <div class="result-card" style="border-color:var(--amber);">
       <div class="card-title txt-amber">◆ 총 필요 자원</div>
-      <div class="tbl-wrap"><table class="tbl">${resRows}${customRow}</table>
+      <div class="tbl-wrap"><table class="tbl">${resRows}${customRow}</table></div>
     </div>`;
 
   // 커스텀 박스 추천 카드 (별도, 박스 개수로 표시)
@@ -1016,7 +1016,7 @@ function renderResult(r) {
   const cardBox = `
     <div class="result-card" style="border-color:var(--blue);">
       <div class="card-title txt-blue">◆ 자원상자 추천</div>
-      <div class="tbl-wrap"><table class="tbl">${boxRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${boxRows}</table></div>
     </div>`;
 
   // 5. 가속권
