@@ -166,7 +166,14 @@ body { overflow-x: hidden; }
 }
 
 .tab-panel { display: none; }
-.tab-panel.active { display: block; animation: fade-in .15s ease-out; }
+.tab-panel.active { display: block; animation: fade-in .15s ease-out; padding-top: 38px; }
+@media (max-width: 639px) {
+  .tab-panel.active { padding-top: 28px; }
+}
+
+/* 메뉴 설명글 박스 — 모든 탭 공통 */
+.menu-intro { background: var(--bg-card); }
+.menu-intro p { margin: 0; font-size: 13.5px; line-height: 1.75; }
 @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
 
 /* ── group box / card ────────────────────────────── */
