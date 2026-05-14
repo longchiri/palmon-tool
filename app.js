@@ -1064,11 +1064,9 @@ function updateBead() {
   const beadTargetRemain = total - beadTargetCount * beadTargetCost;
 
   $("bead-result").innerHTML = `
-    <div class="result-card strong" style="border-color:${color};text-align:center;">
-      <div class="card-title" style="color:${color};">◆ 완성 가능 무기 (5성 기준)</div>
+    <div class="result-card strong" style="border-color:${color};">
+      <div class="card-title" style="color:${color};text-align:center;">◆ 완성 가능 무기 (5성 기준)</div>
       <div class="big-number" style="color:${color};">${fmt(possible)}<span class="unit">개</span></div>
-    </div>
-    <div class="result-card">
       <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">보유 구슬</td><td class="value">${fmt(owned)}</td></tr>
         ${resetRows}
@@ -1128,14 +1126,12 @@ function updateEssence() {
 
   const fullSet = Math.min(promoPeople, evoPeople);
 
-  // 두 카드 패턴: 큰 숫자 카드 + 디테일 테이블 카드 (걸작구슬과 동일)
+  // 한 카드로 통합 — 좌우 카드와 양옆 맞춤
   function bigCard(headline, count, color, rows) {
     return `
-      <div class="result-card strong" style="border-color:${color};text-align:center;">
-        <div class="card-title" style="color:${color};">◆ ${headline}</div>
+      <div class="result-card strong" style="border-color:${color};">
+        <div class="card-title" style="color:${color};text-align:center;">◆ ${headline}</div>
         <div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>
-      </div>
-      <div class="result-card">
         <div class="tbl-wrap"><table class="tbl">${rows}</table></div>
       </div>`;
   }
@@ -1523,11 +1519,11 @@ async function saveSettings() {
 
   const jsonStr = JSON.stringify(payload, null, 2);
   const blob = new Blob([jsonStr], { type: "application/json" });
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  // 1차 시도: File System Access API (Chrome/Edge) — 폴더 핸들을 기억해서 같은 곳에 저장
-  if (window.showSaveFilePicker) {
+  // 1차: File System Access API (데스크탑 Chrome/Edge) — 폴더 고정 가능
+  if (!isMobile && window.showSaveFilePicker) {
     try {
-      // 저장 폴더 핸들 재사용 (IndexedDB 대신 단순 in-memory)
       window._palmonDirHandle = window._palmonDirHandle || null;
       const handle = await window.showSaveFilePicker({
         suggestedName: filename,
@@ -1540,20 +1536,57 @@ async function saveSettings() {
       toast(`저장됨: ${filename}`);
       return;
     } catch (e) {
-      // 사용자가 취소했거나 API 실패 시 일반 다운로드로 폴백
-      if (e.name !== "AbortError") console.warn("showSaveFilePicker 실패:", e);
-      else { toast("저장 취소됨"); return; }
+      if (e.name === "AbortError") { toast("저장 취소됨"); return; }
+      console.warn("showSaveFilePicker 실패, 다음 방법 시도:", e);
     }
   }
 
-  // 폴백: 일반 다운로드 (브라우저 기본 다운로드 폴더)
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-  toast(`저장됨: ${filename}`);
+  // 2차: Web Share API (모바일에서 가장 안정적) — iOS Safari 17+, Android Chrome 등
+  try {
+    const file = new File([blob], filename, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: filename, text: filename });
+      toast(`공유 완료: ${filename}`);
+      return;
+    }
+  } catch (e) {
+    if (e.name === "AbortError") { toast("공유 취소됨"); return; }
+    console.warn("Web Share 실패, 다음 방법 시도:", e);
+  }
+
+  // 3차: 일반 다운로드 (Android Chrome / 데스크탑 폴백) — DOM 에 잠시 추가 필요 (iOS 호환)
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
+    toast(`저장됨: ${filename}`);
+    return;
+  } catch (e) {
+    console.warn("다운로드 실패, 최종 폴백:", e);
+  }
+
+  // 4차 최종 폴백: 새 탭에 열어서 사용자가 직접 저장 (iOS Safari 구버전)
+  try {
+    const url = URL.createObjectURL(blob);
+    const w = window.open(url, "_blank");
+    if (!w) {
+      // 팝업 차단 시 본문 클릭으로 처리
+      alert("저장 파일을 새 탭에서 열겠습니다.\n(파일을 길게 눌러 '다른 이름으로 저장' 해주세요)");
+      location.href = url;
+    } else {
+      toast("새 탭에서 파일을 길게 눌러 저장해주세요");
+    }
+  } catch (e) {
+    alert("저장 실패: " + (e.message || e));
+  }
 }
 
 function loadSettings(file) {
