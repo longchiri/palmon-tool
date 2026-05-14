@@ -741,7 +741,23 @@ input[type="checkbox"] {
 
 /* ── color helpers ───────────────────────────────── */
 .txt-amber { color: var(--amber); }
-.txt-green { color: var(--green); }
+.txt-green {
+  color: var(--green);
+  font-weight: 800;
+  font-size: 1.08em;
+  letter-spacing: 0.3px;
+}
+/* 인라인 style 로 초록색 처리된 요소도 강조 (예: 결과 카드 헤드라인) */
+[style*="color:var(--green)"],
+[style*="color: var(--green)"] {
+  font-weight: 800 !important;
+}
+/* 표 안의 초록 셀도 굵게 + 크게 */
+.tbl td.green {
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
 .txt-red { color: var(--red); }
 .txt-blue { color: var(--blue); }
 .txt-purple { color: var(--purple); }
@@ -770,6 +786,19 @@ input[type="checkbox"] {
   background: rgba(251,191,36,0.06);
   border-left: 4px solid var(--amber);
   border-radius: 0 6px 6px 0;
+}
+
+/* ── 우측 하단 서명 ──────────────────────────────── */
+.footer-sign {
+  text-align: right;
+  color: var(--text-mute);
+  font-size: 12px;
+  font-style: italic;
+  letter-spacing: 0.5px;
+  padding: 16px 6px 8px;
+  margin-top: 12px;
+  border-top: 1px solid var(--border);
+  opacity: 0.7;
 }
 
 /* ── modal / toast ───────────────────────────────── */
