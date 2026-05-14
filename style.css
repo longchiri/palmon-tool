@@ -265,16 +265,48 @@ body { overflow-x: hidden; }
 
 .tbl th.tier { font-size: 12px; opacity: 1; }
 
-/* 걸작 구슬 이미지 — 보유 구슬 입력 아래에 표시 */
+/* 걸작 구슬 이미지 — 그룹 타이틀 바로 아래, 보유 수량 위 */
 .bead-img {
   display: block;
-  max-width: 100%;
+  width: 120px;
+  max-width: 60%;
   height: auto;
-  margin: 12px auto 4px;
+  margin: 8px auto 12px;
   border-radius: 10px;
   background: transparent;
 }
-@media (min-width: 980px) { .bead-img { max-width: 220px; } }
+@media (max-width: 639px) { .bead-img { width: 100px; } }
+
+/* 초기화할 무기 — 컴팩트 2열 그리드 */
+.bead-reset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 10px;
+}
+.bead-reset-item {
+  display: grid;
+  grid-template-columns: 1fr 60px;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 0;
+}
+.bead-reset-item > .reset-label {
+  font-size: 12px;
+  text-align: right;
+  white-space: nowrap;
+}
+.bead-reset-item > input[type="number"] {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  font-size: 14px;
+  min-height: 34px;
+}
+@media (max-width: 480px) {
+  .bead-reset-grid { gap: 5px 6px; }
+  .bead-reset-item { grid-template-columns: 1fr 50px; }
+  .bead-reset-item > .reset-label { font-size: 11.5px; }
+}
 
 /* 라벨 안에 들어가는 hint 텍스트
    데스크탑: 라벨 텍스트 바로 아래로 줄바꿈 (블록)

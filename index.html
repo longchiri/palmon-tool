@@ -166,26 +166,28 @@
       <div class="grid-3">
         <div class="group">
           <div class="group-title">걸작 구슬</div>
+          <img src="bead.png" alt="걸작 구슬" class="bead-img" onerror="this.style.display='none'">
           <div class="form-row">
             <label>보유 수량</label>
             <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
-          <img src="bead.png" alt="걸작 구슬" class="bead-img" onerror="this.style.display='none'">
           <div class="hint">예) 보유 600 + 5성 무기 1개 초기화 → 600 + 50 = 650 → 무기 4개 완성 (남은 50)</div>
         </div>
 
         <div class="group">
           <div class="group-title">초기화할 무기</div>
-          <div class="form-row"><label>1성 ×10</label><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>2성 ×20</label><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>3성 ×30</label><input type="number" id="bead-reset-3" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>4성 ×40</label><input type="number" id="bead-reset-4" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>5성 ×50</label><input type="number" id="bead-reset-5" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>6성 ×75</label><input type="number" id="bead-reset-6" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>7성 ×100</label><input type="number" id="bead-reset-7" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>8성 ×200</label><input type="number" id="bead-reset-8" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>9성 ×300</label><input type="number" id="bead-reset-9" min="0" value="0" inputmode="numeric"></div>
-          <div class="form-row"><label>10성 ×500</label><input type="number" id="bead-reset-10" min="0" value="0" inputmode="numeric"></div>
+          <div class="bead-reset-grid">
+            <div class="bead-reset-item"><span class="reset-label">1성 ×10</span><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">2성 ×20</span><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">3성 ×30</span><input type="number" id="bead-reset-3" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">4성 ×40</span><input type="number" id="bead-reset-4" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">5성 ×50</span><input type="number" id="bead-reset-5" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">6성 ×75</span><input type="number" id="bead-reset-6" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">7성 ×100</span><input type="number" id="bead-reset-7" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">8성 ×200</span><input type="number" id="bead-reset-8" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">9성 ×300</span><input type="number" id="bead-reset-9" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">10성 ×500</span><input type="number" id="bead-reset-10" min="0" value="0" inputmode="numeric"></div>
+          </div>
         </div>
 
         <div class="group">
