@@ -884,6 +884,23 @@ input[type="checkbox"] {
 }
 .board-cat-add:hover { color: var(--text); background: rgba(251,191,36,0.1); }
 
+/* 고정된 게시판 탭 — 살짝 강조 + 📌 아이콘 inline */
+.board-cat.pinned {
+  border-color: rgba(251,191,36,0.35);
+  background: rgba(251,191,36,0.06);
+}
+.board-cat.pinned.active {
+  background: var(--tab-active);
+  border-color: var(--amber);
+}
+.board-cat-pin {
+  display: inline-block;
+  font-size: 11px;
+  margin-right: 3px;
+  vertical-align: middle;
+  filter: drop-shadow(0 0 2px rgba(251,191,36,0.6));
+}
+
 /* 툴바 */
 .board-toolbar {
   display: flex;

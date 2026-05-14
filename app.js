@@ -1829,13 +1829,29 @@ async function boardDeleteCurrent() {
   }
 }
 
-// 게시판 카테고리 탭 — DOM 렌더
+// 게시판 정렬: 고정(pin) → pin 시각 DESC (최근 고정 먼저), 미고정 → 원래 순서
+function boardSortForDisplay(list) {
+  const arr = list.map((b, i) => ({ ...b, __idx: i }));
+  arr.sort((a, b) => {
+    const pa = a.pin || 0, pb = b.pin || 0;
+    if (pa && pb) return pb - pa;  // 둘 다 고정 → 최근 고정 먼저
+    if (pa) return -1;
+    if (pb) return 1;
+    return a.__idx - b.__idx;       // 둘 다 미고정 → 원래 순서
+  });
+  return arr;
+}
+
+// 게시판 카테고리 탭 — DOM 렌더 (고정된 게시판 먼저)
 function boardRenderCatTabs(list) {
   const tabs = $("board-cat-tabs");
   if (!tabs) return;
-  tabs.innerHTML = list.map((b) =>
-    `<button class="board-cat ${b.id === CURRENT_BOARD_ID ? "active" : ""}" data-id="${escapeHtml(b.id)}">${escapeHtml(b.name)}</button>`
-  ).join("") + `<button class="board-cat board-cat-add" id="btn-board-create-inline">+</button>`;
+  const sorted = boardSortForDisplay(list);
+  tabs.innerHTML = sorted.map((b) => {
+    const pinned = !!b.pin;
+    const pinIcon = pinned ? `<span class="board-cat-pin" title="고정됨">📌</span>` : "";
+    return `<button class="board-cat ${b.id === CURRENT_BOARD_ID ? "active" : ""} ${pinned ? "pinned" : ""}" data-id="${escapeHtml(b.id)}">${pinIcon}${escapeHtml(b.name)}</button>`;
+  }).join("") + `<button class="board-cat board-cat-add" id="btn-board-create-inline">+</button>`;
   tabs.querySelectorAll(".board-cat").forEach((btn) => {
     if (btn.id === "btn-board-create-inline") {
       btn.addEventListener("click", boardCreateNew);
@@ -1845,8 +1861,36 @@ function boardRenderCatTabs(list) {
         localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
         boardShowList();
       });
+      // 우클릭 → 컨텍스트 메뉴 (고정/해제)
+      btn.addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        CURRENT_BOARD_ID = btn.dataset.id;
+        localStorage.setItem("palmon_current_board", CURRENT_BOARD_ID);
+        boardTogglePinCurrent();
+      });
     }
   });
+}
+
+// 현재 선택된 게시판 고정 / 해제
+async function boardTogglePinCurrent() {
+  try {
+    const list = (await boardLoadList()) || [];
+    const idx = list.findIndex((b) => b.id === CURRENT_BOARD_ID);
+    if (idx < 0) { alert("게시판을 찾을 수 없습니다"); return; }
+    const cur = list[idx];
+    if (cur.pin) {
+      delete cur.pin;
+      toast(`"${cur.name}" 고정 해제됨`);
+    } else {
+      cur.pin = Date.now();   // 최근 고정이 가장 앞에 오도록 타임스탬프 기록
+      toast(`"${cur.name}" 게시판 상단 고정됨 📌`);
+    }
+    await boardSaveList(list);
+    await boardRefreshList({ force: true });
+  } catch (e) {
+    alert("고정 처리 실패: " + (e.message || e));
+  }
 }
 
 // 게시판 카테고리 탭 갱신 — 캐시 즉시 + 백그라운드 갱신
@@ -2245,11 +2289,12 @@ function boardSetupListeners() {
   $("btn-write-cancel")?.addEventListener("click", boardShowList);
   $("btn-back-list")?.addEventListener("click", boardShowList);
 
-  // 새로고침 / 게시판 삭제 — 새로고침 버튼은 캐시 무시(force)
+  // 새로고침 / 게시판 고정 / 게시판 삭제 — 새로고침 버튼은 캐시 무시(force)
   $("btn-board-refresh").addEventListener("click", () => {
     boardRefreshList({ force: true });
     boardRefresh({ force: true });
   });
+  $("btn-board-pin-cat")?.addEventListener("click", boardTogglePinCurrent);
   $("btn-board-delete-cat")?.addEventListener("click", boardDeleteCurrent);
 
   // 댓글 작성
