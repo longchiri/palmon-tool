@@ -288,9 +288,28 @@ body { overflow-x: hidden; }
   border-top: 1px solid var(--border);
 }
 
-/* 보유 수량 입력칸만 좁게 — 라벨 옆에 깔끔히 */
+/* 이미지가 있는 그룹의 form-row — 중앙 정렬, 입력칸은 이미지 폭(96px)에 맞춤 */
+#t-bead .form-row,
+#t-essence .form-row {
+  grid-template-columns: auto auto;
+  justify-content: center;
+  gap: 8px;
+}
 #bead-total, #promo-total, #evo-total {
-  max-width: 130px;
+  width: 96px;
+  max-width: 96px;
+  min-width: 96px;
+}
+@media (max-width: 639px) {
+  #t-bead .form-row, #t-essence .form-row {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+  #bead-total, #promo-total, #evo-total {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 /* 초기화할 무기 — 컴팩트 2열 그리드 */
