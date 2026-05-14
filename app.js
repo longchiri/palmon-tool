@@ -47,6 +47,10 @@ const PALMON_RESOURCE_LABELS = {
 };
 
 const BEAD_PER_WEAPON = 150;
+const BEAD_VALUES = {
+  "1성": 10, "2성": 20, "3성": 30, "4성": 40, "5성": 50,
+  "6성": 75, "7성": 100, "8성": 200, "9성": 300, "10성": 500,
+};
 const PROMO_PER_PALMON = 975;
 const EVO_PER_PALMON = 300;
 const EVO_VALUES = { "1진화": 20, "2진화": 40, "3진화": 80, "4진화": 160 };
@@ -508,7 +512,7 @@ function buildInventoryTab() {
   // 헤더
   const hdr = el("div", { class: "inv-box-grid" },
     el("div", {}),
-    ...BOX_TIERS.map((t) => el("div", { class: "h" }, t))
+    ...BOX_TIERS.map((t) => el("div", { class: `h tier tier-${t.toLowerCase()}`}, t))
   );
   boxes.appendChild(hdr);
   for (const rk of RESOURCE_KEYS) {
@@ -554,7 +558,7 @@ function buildPalmonTab() {
   wrap.innerHTML = "";
   const hdr = el("div", { class: "palmon-box-grid" },
     el("div", {}),
-    ...BOX_TIERS.map((t) => el("div", { class: "h" }, t))
+    ...BOX_TIERS.map((t) => el("div", { class: `h tier tier-${t.toLowerCase()}`}, t))
   );
   wrap.appendChild(hdr);
   for (const rk of PALMON_RESOURCE_ORDER) {
@@ -765,7 +769,7 @@ function renderResult(r) {
     </div>`;
 
   // 4. 자원상자
-  let boxRows = `<tr><th></th><th>SR</th><th>SSR</th><th>UR</th><th>초과</th></tr>`;
+  let boxRows = `<tr><th></th><th class="tier tier-sr">SR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-ur">UR</th><th>초과</th></tr>`;
   for (const k of RESOURCE_KEYS) {
     const info = r.boxResult[k];
     if (info.possible) {
@@ -824,10 +828,37 @@ function renderResult(r) {
 
 // ===== 걸작 구슬 =====
 function updateBead() {
-  const total = parseInt($("bead-total").value || 0);
+  const owned = parseInt($("bead-total").value || 0);
+
+  // 1~10성 초기화 수량 → 환급 합산
+  const resetCounts = {};
+  let resetRefund = 0;
+  const stars = ["1성","2성","3성","4성","5성","6성","7성","8성","9성","10성"];
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i];
+    const cnt = parseInt($(`bead-reset-${i+1}`)?.value || 0);
+    resetCounts[s] = cnt;
+    resetRefund += cnt * BEAD_VALUES[s];
+  }
+
+  const total = owned + resetRefund;
   const possible = Math.floor(total / BEAD_PER_WEAPON);
   const remain = total - possible * BEAD_PER_WEAPON;
   const color = possible > 0 ? "var(--green)" : "var(--red)";
+
+  // 초기화 행 (값이 있을 때만 표시)
+  let resetRows = "";
+  for (const s of stars) {
+    const cnt = resetCounts[s];
+    if (cnt > 0) {
+      const sub = cnt * BEAD_VALUES[s];
+      resetRows += `<tr><td class="label txt-purple">초기화 ${s}</td><td class="value txt-purple">${fmt(cnt)} × ${BEAD_VALUES[s]} = +${fmt(sub)}</td></tr>`;
+    }
+  }
+  if (resetRefund > 0) {
+    resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(resetRefund)}</b></td></tr>`;
+  }
+
   $("bead-result").innerHTML = `
     <div class="result-card strong" style="border-color:${color};text-align:center;">
       <div class="card-title" style="color:${color};">◆ 완성 가능 무기</div>
@@ -835,7 +866,9 @@ function updateBead() {
     </div>
     <div class="result-card">
       <div class="tbl-wrap"><table class="tbl">
-        <tr><td class="label">보유 구슬</td><td class="value">${fmt(total)}</td></tr>
+        <tr><td class="label">보유 구슬</td><td class="value">${fmt(owned)}</td></tr>
+        ${resetRows}
+        <tr><td class="label">합계</td><td class="value amber"><b>${fmt(total)}</b></td></tr>
         <tr><td class="label">무기 1개당 필요</td><td class="value">${fmt(BEAD_PER_WEAPON)}</td></tr>
         <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>
       </table></div>
@@ -879,7 +912,7 @@ function updateEssence() {
     <tr><td class="label">보유</td><td class="value">${fmt(promoOwned)}</td></tr>
     <tr><td class="label">1명 승급 필요</td><td class="value">${fmt(PROMO_PER_PALMON)}</td></tr>
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(promoRemain)}</td></tr>`;
-  const promoCard = bigCard("승급 완성 가능 인원", promoPeople, promoColor, promoRows);
+  const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows);
 
   // 4단계 초기화 행 추가
   let resetRows = "";
@@ -901,7 +934,7 @@ function updateEssence() {
     <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
     <tr><td class="label">1명 진화 필요</td><td class="value">${fmt(EVO_PER_PALMON)}</td></tr>
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoRemain)}</td></tr>`;
-  const evoCard = bigCard("진화 완성 가능 인원", evoPeople, evoColor, evoRows);
+  const evoCard = bigCard("진화 가능 팰몬", evoPeople, evoColor, evoRows);
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
   const fullCard = `
@@ -975,7 +1008,7 @@ function updatePalmon() {
   // 카드 3: 단위값
   const tbl = DB.resource_boxes[String(baseLevel)] || {};
   let unitRows = `<tr><th></th>`;
-  for (const t of BOX_TIERS) unitRows += `<th>${t}</th>`;
+  for (const t of BOX_TIERS) unitRows += `<th class="tier tier-${t.toLowerCase()}">${t}</th>`;
   unitRows += `</tr>`;
   for (const rk of PALMON_RESOURCE_ORDER) {
     let r = `<td class="label">${PALMON_RESOURCE_LABELS[rk]}</td>`;
@@ -1058,6 +1091,10 @@ function buildSettingsPayload() {
     time_buffs_selection: getTimeBuffsSelection(),
     resource_buffs_selection: getResourceBuffsSelection(),
     bead_total: parseInt($("bead-total").value || 0),
+    bead_resets: Object.fromEntries(
+      ["1성","2성","3성","4성","5성","6성","7성","8성","9성","10성"]
+        .map((s, i) => [s, parseInt($(`bead-reset-${i+1}`).value || 0)])
+    ),
     essence_promo_total: parseInt($("promo-total").value || 0),
     essence_evo_total: parseInt($("evo-total").value || 0),
     essence_evo_resets: {
@@ -1113,6 +1150,15 @@ function applySettingsPayload(p) {
     bt = 0; for (const s in p.beads) bt += (parseInt(p.beads[s])||0) * (BV[s]||0);
   }
   $("bead-total").value = bt || 0;
+  // 구슬 1~10성 초기화 수량
+  if (p.bead_resets) {
+    const stars = ["1성","2성","3성","4성","5성","6성","7성","8성","9성","10성"];
+    for (let i = 0; i < stars.length; i++) {
+      const v = parseInt(p.bead_resets[stars[i]] || 0);
+      const el = $(`bead-reset-${i+1}`);
+      if (el) el.value = v;
+    }
+  }
 
   let pt = p.essence_promo_total;
   if (pt == null && p.essence_promo) {
@@ -1251,6 +1297,10 @@ async function bootstrap() {
 
     // 자동 업데이트 (구슬/진화/팰몬자원/요약)
     $("bead-total").addEventListener("input", updateBead);
+    for (let i = 1; i <= 10; i++) {
+      const el = $(`bead-reset-${i}`);
+      if (el) el.addEventListener("input", updateBead);
+    }
     ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));

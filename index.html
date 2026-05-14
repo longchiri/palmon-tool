@@ -161,16 +161,30 @@
     <!-- TAB: 걸작 구슬                                         -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-bead">
-      <p class="txt-dim" style="margin:0 0 12px;">내가 가진 구슬을 입력하면, 완성 가능한 무기 수를 보여줍니다. (무기 1개당 구슬 150 필요)</p>
+      <p class="txt-dim" style="margin:0 0 12px;">보유 구슬과 초기화할 무기를 입력하면, 완성 가능한 무기 수를 보여줍니다. (무기 1개당 구슬 150 필요)</p>
 
-      <div class="grid-2">
+      <div class="grid-3">
         <div class="group">
           <div class="group-title">보유 구슬</div>
           <div class="form-row">
             <label>보유 구슬</label>
             <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="hint">예) 보유 구슬 600 → 무기 4개 완성 (무기 1개당 150 필요)</div>
+          <div class="hint">예) 보유 600 + 5성 무기 1개 초기화 → 600 + 50 = 650 → 무기 4개 완성 (남은 50)</div>
+        </div>
+
+        <div class="group">
+          <div class="group-title">초기화할 무기</div>
+          <div class="form-row"><label>1성 ×10</label><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>2성 ×20</label><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>3성 ×30</label><input type="number" id="bead-reset-3" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>4성 ×40</label><input type="number" id="bead-reset-4" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>5성 ×50</label><input type="number" id="bead-reset-5" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>6성 ×75</label><input type="number" id="bead-reset-6" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>7성 ×100</label><input type="number" id="bead-reset-7" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>8성 ×200</label><input type="number" id="bead-reset-8" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>9성 ×300</label><input type="number" id="bead-reset-9" min="0" value="0" inputmode="numeric"></div>
+          <div class="form-row"><label>10성 ×500</label><input type="number" id="bead-reset-10" min="0" value="0" inputmode="numeric"></div>
         </div>
 
         <div class="group">
@@ -178,7 +192,13 @@
           <div style="font-size:13px;line-height:1.7;">
             <b>무기 1개당 필요</b>: 구슬 150<br>
             <b>구슬 환산 값</b><br>
-            • 5성 = 50<br>• 4성 = 40<br>• 3성 = 30<br>• 2성 = 20<br>• 1성 = 10
+            • 1성 = 10  · 2성 = 20<br>
+            • 3성 = 30  · 4성 = 40<br>
+            • 5성 = 50  · 6성 = 75<br>
+            • 7성 = 100  · 8성 = 200<br>
+            • 9성 = 300  · 10성 = 500<br><br>
+            <b>계산 방식</b><br>
+            (보유 + 초기화 환급) ÷ 150
           </div>
         </div>
       </div>
