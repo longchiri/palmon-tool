@@ -1664,29 +1664,71 @@ const BOARDS_META_BASKET = "palmon-boards-meta";
 const PANTRY_BASKET_FOR = (boardId) => `palmon-board-${boardId}`;
 const PANTRY_URL = (basket) => `https://getpantry.cloud/apiv1/pantry/${PANTRY_ID}/basket/${basket}`;
 
+// ── 캐시 (속도 최적화) ─────────────────────────────────
+// 1) 메모리 캐시: 짧은 시간(15초) 내 동일 요청은 fetch 안 함
+// 2) localStorage 캐시: 페이지 새로고침 후에도 즉시 렌더 → 백그라운드 fetch
+const BOARD_MEM_CACHE = {};   // basket → { data, t }
+const BOARD_FETCH_TTL = 15000;  // 15초
+const BOARD_INFLIGHT = {};    // basket → Promise (중복 요청 방지)
+const LS_BOARDS_LIST = "palmon_cache_boards_list";
+const LS_BOARD_POSTS = (id) => `palmon_cache_board_posts_${id}`;
+
+function lsGet(key) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+}
+
 function boardIsConfigured() {
   return !!(PANTRY_ID && PANTRY_ID.length > 10);
 }
 
+// 공통 GET — 메모리 캐시 + 중복 요청 합치기
+async function boardFetchBasket(basket, { force = false } = {}) {
+  const mem = BOARD_MEM_CACHE[basket];
+  if (!force && mem && (Date.now() - mem.t < BOARD_FETCH_TTL)) {
+    return mem.data;
+  }
+  if (BOARD_INFLIGHT[basket]) return BOARD_INFLIGHT[basket];
+  const p = (async () => {
+    const res = await fetch(PANTRY_URL(basket), { cache: "no-store" });
+    if (res.status === 400 || res.status === 404) return { __empty: true };
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    BOARD_MEM_CACHE[basket] = { data, t: Date.now() };
+    return data;
+  })().finally(() => { delete BOARD_INFLIGHT[basket]; });
+  BOARD_INFLIGHT[basket] = p;
+  return p;
+}
+
 // 게시판 목록 (메타) 로드/저장
-async function boardLoadList() {
+async function boardLoadList({ force = false } = {}) {
   if (!boardIsConfigured()) return null;
   try {
-    const res = await fetch(PANTRY_URL(BOARDS_META_BASKET));
-    if (res.status === 400 || res.status === 404) {
-      // 첫 사용 — 기본 게시판 자동 생성
+    const data = await boardFetchBasket(BOARDS_META_BASKET, { force });
+    if (data.__empty) {
       const defaults = [{ id: "general", name: "자유 게시판", t: Date.now() }];
       await boardSaveList(defaults);
       return defaults;
     }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
     const boards = Array.isArray(data.boards) ? data.boards : [];
-    return boards.length > 0 ? boards : [{ id: "general", name: "자유 게시판", t: Date.now() }];
+    const out = boards.length > 0 ? boards : [{ id: "general", name: "자유 게시판", t: Date.now() }];
+    lsSet(LS_BOARDS_LIST, out);
+    return out;
   } catch (e) {
     console.error("게시판 목록 로드 실패:", e);
     return null;
   }
+}
+// 캐시(메모리/로컬)에서 즉시 — 없으면 null
+function boardLoadListCached() {
+  const mem = BOARD_MEM_CACHE[BOARDS_META_BASKET];
+  if (mem && mem.data && !mem.data.__empty) {
+    return Array.isArray(mem.data.boards) ? mem.data.boards : null;
+  }
+  return lsGet(LS_BOARDS_LIST);
 }
 
 async function boardSaveList(boards) {
@@ -1697,31 +1739,47 @@ async function boardSaveList(boards) {
     body: JSON.stringify({ boards }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // 캐시 갱신
+  BOARD_MEM_CACHE[BOARDS_META_BASKET] = { data: { boards }, t: Date.now() };
+  lsSet(LS_BOARDS_LIST, boards);
 }
 
 // 현재 선택된 게시판의 글 로드/저장
-async function boardLoadPosts() {
+async function boardLoadPosts({ force = false } = {}) {
   if (!boardIsConfigured()) return null;
+  const basket = PANTRY_BASKET_FOR(CURRENT_BOARD_ID);
   try {
-    const res = await fetch(PANTRY_URL(PANTRY_BASKET_FOR(CURRENT_BOARD_ID)));
-    if (res.status === 400 || res.status === 404) return [];
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data.posts) ? data.posts : [];
+    const data = await boardFetchBasket(basket, { force });
+    const posts = data.__empty ? [] : (Array.isArray(data.posts) ? data.posts : []);
+    lsSet(LS_BOARD_POSTS(CURRENT_BOARD_ID), posts);
+    return posts;
   } catch (e) {
     console.error("게시글 로드 실패:", e);
     return null;
   }
 }
+// 캐시에서 즉시 — 없으면 null
+function boardLoadPostsCached() {
+  const basket = PANTRY_BASKET_FOR(CURRENT_BOARD_ID);
+  const mem = BOARD_MEM_CACHE[basket];
+  if (mem && mem.data && !mem.data.__empty) {
+    return Array.isArray(mem.data.posts) ? mem.data.posts : null;
+  }
+  return lsGet(LS_BOARD_POSTS(CURRENT_BOARD_ID));
+}
 
 async function boardSavePosts(posts) {
   if (!boardIsConfigured()) throw new Error("PANTRY_ID 미설정");
-  const res = await fetch(PANTRY_URL(PANTRY_BASKET_FOR(CURRENT_BOARD_ID)), {
+  const basket = PANTRY_BASKET_FOR(CURRENT_BOARD_ID);
+  const res = await fetch(PANTRY_URL(basket), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ posts }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  // 캐시 갱신
+  BOARD_MEM_CACHE[basket] = { data: { posts }, t: Date.now() };
+  lsSet(LS_BOARD_POSTS(CURRENT_BOARD_ID), posts);
 }
 
 // 게시판 생성
@@ -1771,15 +1829,13 @@ async function boardDeleteCurrent() {
   }
 }
 
-// 게시판 카테고리 탭 갱신
-async function boardRefreshList() {
+// 게시판 카테고리 탭 — DOM 렌더
+function boardRenderCatTabs(list) {
   const tabs = $("board-cat-tabs");
   if (!tabs) return;
-  const list = (await boardLoadList()) || [];
   tabs.innerHTML = list.map((b) =>
     `<button class="board-cat ${b.id === CURRENT_BOARD_ID ? "active" : ""}" data-id="${escapeHtml(b.id)}">${escapeHtml(b.name)}</button>`
   ).join("") + `<button class="board-cat board-cat-add" id="btn-board-create-inline">+</button>`;
-  // 클릭 핸들러
   tabs.querySelectorAll(".board-cat").forEach((btn) => {
     if (btn.id === "btn-board-create-inline") {
       btn.addEventListener("click", boardCreateNew);
@@ -1793,11 +1849,24 @@ async function boardRefreshList() {
   });
 }
 
-// 뷰 전환 헬퍼
+// 게시판 카테고리 탭 갱신 — 캐시 즉시 + 백그라운드 갱신
+async function boardRefreshList({ force = false } = {}) {
+  // 1) 캐시가 있으면 즉시 렌더
+  const cached = boardLoadListCached();
+  if (cached) boardRenderCatTabs(cached);
+  // 2) 백그라운드(또는 force)에서 fresh 로드
+  const fresh = await boardLoadList({ force });
+  if (fresh && JSON.stringify(fresh) !== JSON.stringify(cached)) {
+    boardRenderCatTabs(fresh);
+  }
+}
+
+// 뷰 전환 헬퍼 — 캐시 즉시 + 병렬 백그라운드 갱신
 function boardShowList() {
   $("board-list-view").style.display = "";
   $("board-write-view").style.display = "none";
   $("board-detail-view").style.display = "none";
+  // 카테고리 탭 + 글 목록 동시 갱신 (각자 캐시 즉시 표시 → 백그라운드 fetch)
   boardRefreshList();
   boardRefresh();
 }
@@ -1994,29 +2063,15 @@ function formatBoardTime(ts) {
   return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
 
-async function boardRefresh() {
+// 게시글 목록 → DOM 렌더 (재사용)
+function boardRenderPosts(posts) {
   const statusEl = $("board-status");
   const tbody = $("board-list-body");
   if (!tbody) return;
-
-  if (!boardIsConfigured()) {
-    $("board-setup-warn").style.display = "";
-    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</td></tr>`;
-    statusEl.textContent = "";
-    return;
-  }
-  $("board-setup-warn").style.display = "none";
-  statusEl.textContent = "불러오는 중...";
-  const posts = await boardLoadPosts();
-  if (posts === null) {
-    statusEl.textContent = "❌ 불러오기 실패";
-    return;
-  }
-  // 최신순 + 번호 부여
-  posts.sort((a, b) => (b.t || 0) - (a.t || 0));
+  posts = posts.slice().sort((a, b) => (b.t || 0) - (a.t || 0));
   if (posts.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">아직 게시글이 없습니다. 첫 글을 작성해보세요!</td></tr>`;
-    statusEl.textContent = `총 0개`;
+    if (statusEl) statusEl.textContent = `총 0개`;
     return;
   }
   tbody.innerHTML = posts.map((p, i) => {
@@ -2039,8 +2094,7 @@ async function boardRefresh() {
         <td class="col-date">${dateStr}</td>
       </tr>`;
   }).join("");
-  statusEl.textContent = `총 ${posts.length}개`;
-
+  if (statusEl) statusEl.textContent = `총 ${posts.length}개`;
   // 행 클릭 → 상세 보기
   tbody.querySelectorAll(".board-row").forEach((row) => {
     row.addEventListener("click", () => {
@@ -2049,6 +2103,42 @@ async function boardRefresh() {
       if (post) boardShowDetail(post);
     });
   });
+}
+
+async function boardRefresh({ force = false } = {}) {
+  const statusEl = $("board-status");
+  const tbody = $("board-list-body");
+  if (!tbody) return;
+
+  if (!boardIsConfigured()) {
+    $("board-setup-warn").style.display = "";
+    tbody.innerHTML = `<tr><td colspan="5" class="txt-mute" style="text-align:center;padding:30px;">PANTRY_ID 설정 후 새로고침해주세요.</td></tr>`;
+    if (statusEl) statusEl.textContent = "";
+    return;
+  }
+  $("board-setup-warn").style.display = "none";
+
+  // 1) 캐시 있으면 즉시 표시 (체감 속도 핵심)
+  const cached = boardLoadPostsCached();
+  if (cached && cached.length >= 0) {
+    boardRenderPosts(cached);
+    if (statusEl) statusEl.textContent = `총 ${cached.length}개 · 새로고침 중…`;
+  } else if (statusEl) {
+    statusEl.textContent = "불러오는 중...";
+  }
+
+  // 2) 백그라운드(또는 force)에서 fresh 로드 → 결과가 다르면 다시 렌더
+  const posts = await boardLoadPosts({ force });
+  if (posts === null) {
+    if (statusEl) statusEl.textContent = cached ? `총 ${cached.length}개 · ⚠️ 갱신 실패` : "❌ 불러오기 실패";
+    return;
+  }
+  // 캐시와 동일하면 다시 그리지 않음(깜빡임 방지)
+  if (!cached || JSON.stringify(posts) !== JSON.stringify(cached)) {
+    boardRenderPosts(posts);
+  } else if (statusEl) {
+    statusEl.textContent = `총 ${posts.length}개`;
+  }
 }
 
 async function boardSubmit() {
@@ -2155,8 +2245,11 @@ function boardSetupListeners() {
   $("btn-write-cancel")?.addEventListener("click", boardShowList);
   $("btn-back-list")?.addEventListener("click", boardShowList);
 
-  // 새로고침 / 게시판 삭제
-  $("btn-board-refresh").addEventListener("click", boardRefresh);
+  // 새로고침 / 게시판 삭제 — 새로고침 버튼은 캐시 무시(force)
+  $("btn-board-refresh").addEventListener("click", () => {
+    boardRefreshList({ force: true });
+    boardRefresh({ force: true });
+  });
   $("btn-board-delete-cat")?.addEventListener("click", boardDeleteCurrent);
 
   // 댓글 작성
@@ -2175,15 +2268,18 @@ function boardSetupListeners() {
     }
   });
 
-  // 게시판 탭 처음 열 때 자동 로드
-  let _boardLoaded = false;
-  document.querySelector('.tab[data-tab="t-board"]')?.addEventListener("click", async () => {
-    if (!_boardLoaded) {
-      _boardLoaded = true;
-      await boardRefreshList();
-    }
+  // 게시판 탭 클릭 시 표시 — 캐시 즉시 + 백그라운드 fresh
+  // (boardShowList 내부에서 캐시→DOM 즉시, 그 다음 fetch 가 비동기로 갱신)
+  document.querySelector('.tab[data-tab="t-board"]')?.addEventListener("click", () => {
     boardShowList();
   });
+
+  // 페이지 로드 직후 백그라운드 prefetch — 사용자가 탭 누르기 전 미리 받아둠
+  if (boardIsConfigured()) {
+    setTimeout(() => {
+      boardLoadList().then(() => boardLoadPosts()).catch(() => {});
+    }, 600);
+  }
 }
 
 async function bootstrap() {
