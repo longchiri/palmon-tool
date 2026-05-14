@@ -1943,7 +1943,7 @@ function boardRenderDetail(post) {
   const myId = boardGetAuthorId();
   const isMine = post.a === myId;
   const img = post.img
-    ? `<div style="margin-top:14px;"><img src="${escapeHtml(post.img)}" alt="" style="max-width:100%;max-height:600px;border-radius:8px;display:block;"></div>`
+    ? `<div style="margin-top:14px;"><img class="board-post-img" src="${escapeHtml(post.img)}" alt="게시글 이미지" title="클릭하면 크게 보기" style="max-width:100%;max-height:600px;border-radius:8px;display:block;cursor:zoom-in;"></div>`
     : "";
   $("board-detail-content").innerHTML = `
     <div class="group-title">📄 게시글</div>
@@ -1962,8 +1962,121 @@ function boardRenderDetail(post) {
   if (delBtn) {
     delBtn.addEventListener("click", () => boardDeletePost(delBtn.dataset.id));
   }
+  // 이미지 클릭 → 라이트박스
+  const imgEl = $("board-detail-content").querySelector(".board-post-img");
+  if (imgEl) {
+    imgEl.addEventListener("click", () => boardOpenImageLightbox(post.img));
+  }
   // 댓글 렌더
   boardRenderComments(post.comments || []);
+}
+
+// 이미지 라이트박스 — 클릭 시 화면 가득 확대해서 보기
+function boardOpenImageLightbox(src) {
+  if (!src) return;
+  // 기존 오버레이가 있으면 제거 (중복 방지)
+  document.getElementById("__board-lightbox")?.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "__board-lightbox";
+  overlay.className = "board-lightbox";
+  overlay.innerHTML = `
+    <button class="board-lightbox-close" type="button" title="닫기 (Esc)" aria-label="닫기">×</button>
+    <div class="board-lightbox-hint">클릭/ESC: 닫기 · 드래그로 이동 · 휠/핀치: 확대</div>
+    <img class="board-lightbox-img" src="${escapeHtml(src)}" alt="">
+  `;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  const imgEl = overlay.querySelector(".board-lightbox-img");
+  let scale = 1, tx = 0, ty = 0;
+  let dragging = false, dragStartX = 0, dragStartY = 0, dragOrigTx = 0, dragOrigTy = 0;
+  let lastTouchDist = 0;
+
+  const applyTransform = () => {
+    imgEl.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+  };
+
+  // 닫기
+  const close = () => {
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  overlay.querySelector(".board-lightbox-close").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+  // 휠 줌
+  overlay.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    const newScale = Math.min(6, Math.max(1, scale + delta));
+    if (newScale === 1) { tx = 0; ty = 0; }
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  // 더블 클릭 → 1.0 ↔ 2.5 토글
+  imgEl.addEventListener("dblclick", (e) => {
+    e.stopPropagation();
+    if (scale > 1) { scale = 1; tx = 0; ty = 0; }
+    else { scale = 2.5; }
+    applyTransform();
+  });
+
+  // 드래그 (확대 상태에서 이동)
+  imgEl.addEventListener("mousedown", (e) => {
+    if (scale <= 1) return;
+    dragging = true;
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    dragOrigTx = tx; dragOrigTy = ty;
+    imgEl.style.cursor = "grabbing";
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    tx = dragOrigTx + (e.clientX - dragStartX);
+    ty = dragOrigTy + (e.clientY - dragStartY);
+    applyTransform();
+  });
+  window.addEventListener("mouseup", () => { dragging = false; imgEl.style.cursor = ""; });
+
+  // 모바일 핀치 줌
+  imgEl.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDist = Math.hypot(dx, dy);
+    } else if (e.touches.length === 1 && scale > 1) {
+      dragging = true;
+      dragStartX = e.touches[0].clientX;
+      dragStartY = e.touches[0].clientY;
+      dragOrigTx = tx; dragOrigTy = ty;
+    }
+  }, { passive: true });
+  imgEl.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const d = Math.hypot(dx, dy);
+      if (lastTouchDist) {
+        const newScale = Math.min(6, Math.max(1, scale * (d / lastTouchDist)));
+        if (newScale === 1) { tx = 0; ty = 0; }
+        scale = newScale;
+        applyTransform();
+      }
+      lastTouchDist = d;
+      e.preventDefault();
+    } else if (e.touches.length === 1 && dragging) {
+      tx = dragOrigTx + (e.touches[0].clientX - dragStartX);
+      ty = dragOrigTy + (e.touches[0].clientY - dragStartY);
+      applyTransform();
+      e.preventDefault();
+    }
+  }, { passive: false });
+  imgEl.addEventListener("touchend", () => { dragging = false; lastTouchDist = 0; });
 }
 
 function boardRenderComments(comments) {
