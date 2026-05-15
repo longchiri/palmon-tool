@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515f" />
+  <link rel="stylesheet" href="style.css?v=20260515g" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -50,17 +50,21 @@
       <span class="header-sign">By CODE, Python</span>
     </div>
 
-    <div class="tabs" id="tab-bar">
+    <!-- 1차: 대분류 탭 -->
+    <div class="tabs tabs-primary" id="tab-bar">
       <button class="tab active" data-tab="t-help">📖 사용법</button>
       <button class="tab" data-tab="t-board">📋 게시판</button>
-      <button class="tab" data-tab="t-result">🎯 목표캠프계산기</button>
-      <button class="tab" data-tab="t-inventory">📦 보유자원/가속 계산하기</button>
-      <button class="tab" data-tab="t-bead">💎 걸작 구슬</button>
-      <button class="tab" data-tab="t-essence">✨ 팰몬 진화</button>
-      <button class="tab" data-tab="t-skillexp">🌰 스킬열매 / 경험치</button>
-      <button class="tab" data-tab="t-palmon">📊 캠프별 자원상자 비교</button>
+      <button class="tab tab-group" data-group="g-construction">🏗️ 건설 관련</button>
+      <button class="tab tab-group" data-group="g-palmon">💎 팰몬 관련</button>
+      <button class="tab tab-group" data-group="g-resource">💰 자원 관련</button>
       <button class="tab" data-tab="t-map">🗺️ 자리배치도</button>
       <button class="tab" data-tab="t-changelog">📰 업데이트 현황</button>
+    </div>
+
+    <!-- 2차: 서브 탭 (대분류 선택 시 표시) -->
+    <div class="sub-tabs-wrap" id="sub-tabs-wrap" style="display:none;">
+      <div class="sub-breadcrumb" id="sub-breadcrumb"></div>
+      <div class="sub-tabs" id="sub-tabs"></div>
     </div>
 
 
@@ -417,6 +421,11 @@
         <div class="group-title">v1.5 · 2026-05-15</div>
 
         <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>탭 메뉴 대분류 구조 개편</b> — 🏗️ 건설 관련 / 💎 팰몬 관련 / 💰 자원 관련 3개 대분류로 그룹화. 1차 탭 클릭 → 서브탭(녹색 밑줄) + 브레드크럼(경로) 표시. 마지막으로 본 탭 자동 복원. 사용법 페이지도 같은 구조로 정리</div>
+        </div>
+
+        <div class="cl-item">
           <span class="cl-tag cl-new">✨ 신규</span>
           <div class="cl-text"><b>🌰 스킬열매 / 경험치 계산기 탭 추가</b> — 팰몬 진화 옆에 신설. 🌟 경험치(Lv 1~290) + 🌰 스킬 레벨업 열매(Lv 1~30) 계산기. 현재/목표 Lv 선택 → 필요량 자동 계산. 누적값 기반</div>
         </div>
@@ -608,6 +617,8 @@
         <div class="group-title">📖 사용법</div>
         <div class="help-content">
 
+          <h2 class="help-group">🏗️ 건설 관련</h2>
+
           <h3>🎯 목표캠프계산기</h3>
           <p>이 도구의 메인 탭입니다. 입력하면 <b>자동으로</b> 캠프 목표 달성에 필요한 시간/자원/가속권이 계산됩니다.</p>
           <ol>
@@ -617,13 +628,7 @@
             <li>→ 화면 맨 아래 <b>🎯 자동 계산 결과</b> 카드에 즉시 표시됨</li>
           </ol>
 
-          <h3>📦 보유자원/가속 계산하기</h3>
-          <p>인벤토리만 따로 관리하고 싶을 때 사용하는 별도 탭. 목표캠프계산기와 <b>독립</b>으로 동작합니다.</p>
-          <ul>
-            <li>골드/목재/강철 보유량, SR/SSR/UR 상자 수, 가속권 5종 (일반/건설/연구/훈련/의료) 입력</li>
-            <li>맨 아래 요약: 상자 전부 개봉 시 자원 + 가속권 종류별 총합</li>
-            <li>여기서 입력한 값은 <b>목표캠프계산기</b>의 [📥 불러오기] 버튼으로 가져갈 수 있음</li>
-          </ul>
+          <h2 class="help-group">💎 팰몬 관련</h2>
 
           <h3>💎 걸작 구슬</h3>
           <p>구슬로 무기를 만들 때 사용. 보유 구슬과 초기화할 무기를 입력하면 <b>완성 가능 무기 수</b>가 즉시 표시.</p>
@@ -651,6 +656,16 @@
             <li>두 계산기 모두 <b>누적값 차이</b>로 계산: (목표 Lv 누적) − (현재 Lv 누적) = 필요량</li>
           </ul>
 
+          <h2 class="help-group">💰 자원 관련</h2>
+
+          <h3>📦 보유자원/가속 계산하기</h3>
+          <p>인벤토리만 따로 관리하고 싶을 때 사용하는 별도 탭. 목표캠프계산기와 <b>독립</b>으로 동작합니다.</p>
+          <ul>
+            <li>골드/목재/강철 보유량, SR/SSR/UR 상자 수, 가속권 5종 (일반/건설/연구/훈련/의료) 입력</li>
+            <li>맨 아래 요약: 상자 전부 개봉 시 자원 + 가속권 종류별 총합</li>
+            <li>여기서 입력한 값은 <b>목표캠프계산기</b>의 [📥 불러오기] 버튼으로 가져갈 수 있음</li>
+          </ul>
+
           <h3>📊 캠프별 자원상자 비교</h3>
           <p>같은 보유 상자를 어느 캠프 레벨에서 까는 게 이득인지 비교.</p>
           <ul>
@@ -658,6 +673,8 @@
             <li>각 자원(팰몬 경험치/전력/골드/강철/목재)별 SR/SSR/UR 상자 보유 수 입력</li>
             <li>두 캠프 레벨에서 까면 각각 얼마인지 + 증가량/증가율 한눈에 비교</li>
           </ul>
+
+          <h2 class="help-group">🌐 기타 탭</h2>
 
           <h3>🗺️ 자리배치도</h3>
           <p>게임 내 건물 자리배치를 시각적으로 설계하는 도구. 1300×1300 픽셀 맵을 13×13 셀로 나눠 표시하고, 셀 클릭 → 100×100 픽셀 상세 화면에서 정확한 위치에 건물을 배치합니다.</p>
@@ -953,6 +970,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515f"></script>
+  <script src="app.js?v=20260515g"></script>
 </body>
 </html>
