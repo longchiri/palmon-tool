@@ -2835,6 +2835,34 @@ function startAdvBanner() {
 startAdvBanner();
 
 // =====================================================
+// 숫자 입력 클릭 시 기존 값 자동 선택 — 0 위에 1 누르면 10 되는 문제 해결
+// =====================================================
+function setupAutoSelectInputs() {
+  // focus 시 전체 선택 (이벤트 위임 — 동적 생성된 input 도 포함)
+  document.addEventListener("focusin", (e) => {
+    const el = e.target;
+    if (el && el.matches && el.matches('input[type="number"], input[type="text"].auto-select')) {
+      // 모바일에서 키보드 뜨기 전에 select() 호출 → 다음 프레임으로 미룸
+      requestAnimationFrame(() => {
+        try { el.select(); } catch (_) {}
+      });
+    }
+  });
+  // iOS Safari/Chrome: click 후 caret 만 이동하는 경우 대비
+  document.addEventListener("click", (e) => {
+    const el = e.target;
+    if (el && el.matches && el.matches('input[type="number"]')) {
+      // 이미 포커스된 input 의 caret 만 이동시키는 경우, 현재 값이 0 이면 비우기
+      if (document.activeElement === el && el.value === "0") {
+        // 첫 클릭 시 빈 상태로 시작 → 새 숫자 입력 시 0 이 사라짐
+        try { el.select(); } catch (_) {}
+      }
+    }
+  }, true);
+}
+setupAutoSelectInputs();
+
+// =====================================================
 // 사용법 탭 — 최신 업데이트 3개 자동 표시
 // =====================================================
 function renderLatestUpdates() {
