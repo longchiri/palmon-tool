@@ -1212,6 +1212,15 @@ const SHRINE_FIXED = {
   color: "#fcd34d",   // 황금색
 };
 
+// 🗼 포탑 — 신전 4모서리 대각선 방향 6칸 떨어진 곳에 고정 (3×3 each)
+// 신전 우상단 (654, 654) → 6 픽셀 대각선 떨어진 위치
+const TURRETS_FIXED = [
+  { id: "t1", name: "1호 포탑", w: 3, h: 3, worldX: 661, worldY: 661, color: "#9ca3af" }, // 우상단(TR)
+  { id: "t2", name: "2호 포탑", w: 3, h: 3, worldX: 661, worldY: 637, color: "#9ca3af" }, // 우하단(BR)
+  { id: "t3", name: "3호 포탑", w: 3, h: 3, worldX: 637, worldY: 661, color: "#9ca3af" }, // 좌상단(TL)
+  { id: "t4", name: "4호 포탑", w: 3, h: 3, worldX: 637, worldY: 637, color: "#9ca3af" }, // 좌하단(BL)
+];
+
 // 오브젝트 종류 정의 (w, h: 픽셀 단위)
 const OBJECT_TYPES = {
   resource: { name: "자원지",       icon: "🌾", w: 1, h: 1, color: "#fbbf24" },
@@ -1334,6 +1343,38 @@ function buildMainGrid() {
     lbl.setAttribute("paint-order", "stroke");
     lbl.setAttribute("pointer-events", "none");
     lbl.textContent = s.name;
+    mapSvg.appendChild(lbl);
+  }
+
+  // 🗼 포탑 4개 (고정) — 신전 4모서리 대각선
+  for (const t of TURRETS_FIXED) {
+    const svgX = t.worldX;
+    const svgY = MAP_SIZE - t.worldY - t.h;
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", "turret-fixed");
+    r.setAttribute("x", svgX);
+    r.setAttribute("y", svgY);
+    r.setAttribute("width", t.w);
+    r.setAttribute("height", t.h);
+    r.setAttribute("fill", t.color);
+    r.setAttribute("stroke", "#374151");
+    r.setAttribute("stroke-width", "0.5");
+    r.setAttribute("pointer-events", "none");
+    r.style.filter = `drop-shadow(0 0 4px ${t.color})`;
+    mapSvg.appendChild(r);
+
+    const lbl = document.createElementNS(NS, "text");
+    lbl.setAttribute("x", svgX + t.w / 2);
+    lbl.setAttribute("y", svgY - 0.8);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.setAttribute("font-size", "2");
+    lbl.setAttribute("font-weight", "800");
+    lbl.setAttribute("fill", "#fff");
+    lbl.setAttribute("stroke", "#000");
+    lbl.setAttribute("stroke-width", "0.35");
+    lbl.setAttribute("paint-order", "stroke");
+    lbl.setAttribute("pointer-events", "none");
+    lbl.textContent = t.name;
     mapSvg.appendChild(lbl);
   }
 
@@ -1553,7 +1594,7 @@ function onPaintTouchMove(e) {
 
 function drawObjectsOnDetail() {
   // 기존에 그려진 오브젝트(rect + 텍스트) 전부 제거
-  pixelSvg.querySelectorAll(".placed-obj, .placed-obj-text, .placed-obj-label, .shrine-fixed-detail").forEach((n) => n.remove());
+  pixelSvg.querySelectorAll(".placed-obj, .placed-obj-text, .placed-obj-label, .shrine-fixed-detail, .turret-fixed-detail").forEach((n) => n.remove());
   if (!currentCell) return;
 
   // 🛡️ 신전 (고정) — 현재 셀과 겹치면 그리기
@@ -1595,6 +1636,45 @@ function drawObjectsOnDetail() {
       lbl.textContent = s.name;
       pixelSvg.appendChild(lbl);
     }
+  }
+
+  // 🗼 포탑 4개 (고정) — 현재 셀에 겹치면 그리기
+  for (const t of TURRETS_FIXED) {
+    const tRight = t.worldX + t.w;
+    const tTop = t.worldY + t.h;
+    if (tRight <= currentCell.gameXStart || t.worldX >= currentCell.gameXEnd ||
+        tTop <= currentCell.gameYStart || t.worldY >= currentCell.gameYEnd) continue;
+    const localX = t.worldX - currentCell.gameXStart;
+    const localYBottom = t.worldY - currentCell.gameYStart;
+    const svgX = localX;
+    const svgY = 100 - localYBottom - t.h;
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", "turret-fixed-detail");
+    r.setAttribute("x", svgX);
+    r.setAttribute("y", svgY);
+    r.setAttribute("width", t.w);
+    r.setAttribute("height", t.h);
+    r.setAttribute("fill", t.color);
+    r.setAttribute("stroke", "#374151");
+    r.setAttribute("stroke-width", "0.3");
+    r.setAttribute("pointer-events", "none");
+    r.style.filter = `drop-shadow(0 0 2px ${t.color})`;
+    pixelSvg.appendChild(r);
+
+    const lbl = document.createElementNS(NS, "text");
+    lbl.setAttribute("class", "turret-fixed-detail");
+    lbl.setAttribute("x", svgX + t.w / 2);
+    lbl.setAttribute("y", svgY + t.h / 2 + 0.6);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.setAttribute("font-size", "1.4");
+    lbl.setAttribute("font-weight", "800");
+    lbl.setAttribute("fill", "#fff");
+    lbl.setAttribute("stroke", "#000");
+    lbl.setAttribute("stroke-width", "0.25");
+    lbl.setAttribute("paint-order", "stroke");
+    lbl.setAttribute("pointer-events", "none");
+    lbl.textContent = t.name;
+    pixelSvg.appendChild(lbl);
   }
 
   for (const obj of placedObjects) {
@@ -1676,6 +1756,10 @@ function paintTerrainPixel(worldX, worldY, erase) {
   // 신전 영역은 페인트 금지
   const s = SHRINE_FIXED;
   if (worldX >= s.worldX && worldX < s.worldX + s.w && worldY >= s.worldY && worldY < s.worldY + s.h) return;
+  // 포탑 영역도 페인트 금지
+  for (const t of TURRETS_FIXED) {
+    if (worldX >= t.worldX && worldX < t.worldX + t.w && worldY >= t.worldY && worldY < t.worldY + t.h) return;
+  }
   const key = `${worldX},${worldY}`;
   if (erase) terrainPixels.delete(key);
   else terrainPixels.add(key);
@@ -1798,13 +1882,20 @@ function onPixelMouseLeave() {
   updateDetailHeader();
 }
 
-// 겹침 검사 — 새 오브젝트가 신전/오브젝트/지형 픽셀과 겹치는지
+// 겹침 검사 — 새 오브젝트가 신전/포탑/오브젝트/지형 픽셀과 겹치는지
 function hasOverlap(newX, newY, newW, newH, excludeId = null) {
   // 신전(고정) 충돌 검사
   const s = SHRINE_FIXED;
   if (newX < s.worldX + s.w && newX + newW > s.worldX &&
       newY < s.worldY + s.h && newY + newH > s.worldY) {
     return { label: s.name, type: "shrine" };
+  }
+  // 포탑(고정) 충돌 검사
+  for (const t of TURRETS_FIXED) {
+    if (newX < t.worldX + t.w && newX + newW > t.worldX &&
+        newY < t.worldY + t.h && newY + newH > t.worldY) {
+      return { label: t.name, type: "turret" };
+    }
   }
   // 사용자 배치 오브젝트 검사
   for (const obj of placedObjects) {
@@ -1846,6 +1937,7 @@ function onPixelClick(e) {
     const ot = OBJECT_TYPES[overlapping.type];
     const oname = overlapping.label || (ot ? ot.name :
       overlapping.type === "shrine" ? "신전" :
+      overlapping.type === "turret" ? "포탑" :
       overlapping.type === "terrain" ? "지형(장애물)" : "건물");
     alert(`⚠️ ${oname}와 겹치는 위치입니다.\n다른 자리를 선택해주세요.`);
     return;
