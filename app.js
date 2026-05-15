@@ -1512,6 +1512,124 @@ function renderFruitBoxIdle() {
     </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════
+// 🎁 미스테리박스 시뮬레이터
+// ════════════════════════════════════════════════════════════════
+// 가중치 base = 10000 (각 확률 × 100)
+// 합계: 2*200 + 25 + 10 + 1 + 10 + 100 + 10 + 5*100 + 250 + 3*2898 = 10000 ✓
+const MYSTERYBOX_DROPS = [
+  { label: "🧭 보물찾기 나침반",       qty: 1,    weight: 200,  pct: 2.00  },
+  { label: "✈️ 비행선 갱신권",         qty: 1,    weight: 200,  pct: 2.00  },
+  { label: "🥚 팰몬 알",                qty: 1,    weight: 25,   pct: 0.25  },
+  { label: "🟡 UR 팰몬 만능 증표",     qty: 1,    weight: 10,   pct: 0.10, color: "var(--amber)" },
+  { label: "💎 다이아 (5,000)",         qty: 5000, weight: 1,    pct: 0.01  },
+  { label: "💎 다이아 (50)",            qty: 50,   weight: 10,   pct: 0.10  },
+  { label: "💎 다이아 (10)",            qty: 10,   weight: 100,  pct: 1.00  },
+  { label: "🗿 화려한 조각상 보물상자", qty: 1,    weight: 10,   pct: 0.10  },
+  { label: "⚡ 5분 일반 가속",          qty: 5,    weight: 100,  pct: 1.00  },
+  { label: "🏗️ 5분 건설 가속",         qty: 5,    weight: 100,  pct: 1.00  },
+  { label: "🔬 5분 연구 가속",          qty: 5,    weight: 100,  pct: 1.00  },
+  { label: "⚔️ 5분 훈련 가속",         qty: 5,    weight: 100,  pct: 1.00  },
+  { label: "🩹 5분 의료 가속",          qty: 5,    weight: 100,  pct: 1.00  },
+  { label: "💠 강화 결정(소)",          qty: 100,  weight: 250,  pct: 2.50  },
+  { label: "🪵 10K 목판 보물상자",      qty: 1,    weight: 2898, pct: 28.98 },
+  { label: "⚙️ 10K 강철 보물상자",      qty: 1,    weight: 2898, pct: 28.98 },
+  { label: "🪙 10K 골드 보물상자",      qty: 1,    weight: 2898, pct: 28.98 },
+];
+const MYSTERYBOX_TOTAL_WEIGHT = MYSTERYBOX_DROPS.reduce((s, d) => s + d.weight, 0);
+
+function buildMysteryBoxTab() {
+  if (!$("mysterybox-count")) return;
+  renderMysteryBoxIdle();
+
+  $("mysterybox-roll").addEventListener("click", () => {
+    const n = Math.max(0, parseInt($("mysterybox-count").value || 0));
+    if (n <= 0) { renderMysteryBoxIdle(); return; }
+    const counts = rollMysteryBoxes(n);
+    renderMysteryBoxResult(n, counts);
+  });
+
+  if ($("mysterybox-prob-toggle")) {
+    $("mysterybox-prob-toggle").addEventListener("click", () => {
+      const tbl = $("mysterybox-prob-table");
+      const btn = $("mysterybox-prob-toggle");
+      if (!tbl) return;
+      const isHidden = tbl.style.display === "none";
+      tbl.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "📊 확률표 숨기기" : "📊 확률표 보기";
+    });
+  }
+}
+
+function rollMysteryBoxes(n) {
+  const counts = MYSTERYBOX_DROPS.map(() => 0);
+  for (let i = 0; i < n; i++) {
+    let r = Math.floor(Math.random() * MYSTERYBOX_TOTAL_WEIGHT);
+    for (let j = 0; j < MYSTERYBOX_DROPS.length; j++) {
+      r -= MYSTERYBOX_DROPS[j].weight;
+      if (r < 0) { counts[j]++; break; }
+    }
+  }
+  return counts;
+}
+
+function renderMysteryBoxIdle() {
+  const slot = $("mysterybox-result-slot");
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="result-card" style="text-align:center;">
+      <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+        <p class="txt-dim" style="margin:0;font-size:13.5px;line-height:1.9;">
+          🎁 보유 수량을 입력하고<br>
+          ✅ <b>확인하기</b> 버튼을 눌러주세요.
+        </p>
+      </div>
+    </div>`;
+}
+
+function renderMysteryBoxResult(n, rowCounts) {
+  const slot = $("mysterybox-result-slot");
+  if (!slot) return;
+
+  // 받은 아이템만 표시 (0회 받은 건 숨김) — 받은 횟수 많은 순으로 정렬
+  const got = [];
+  rowCounts.forEach((c, i) => {
+    if (c > 0) got.push({ ...MYSTERYBOX_DROPS[i], count: c, total: c * MYSTERYBOX_DROPS[i].qty });
+  });
+  got.sort((a, b) => b.count - a.count);
+
+  let rows = "";
+  if (got.length === 0) {
+    rows = `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:18px 0;">아무 것도 못 받았습니다 🥲</td></tr>`;
+  } else {
+    for (const g of got) {
+      const c = g.color || "var(--text)";
+      rows += `<tr>
+        <td><b style="color:${c};">${g.label}</b></td>
+        <td class="value">${fmt(g.count)}회</td>
+        <td class="value amber"><b>${fmt(g.total)}개</b></td>
+      </tr>`;
+    }
+  }
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:var(--amber);">
+      <div class="card-title" style="color:var(--amber);text-align:center;">◆ 시뮬레이션 결과 (${fmt(n)}상자 개봉)</div>
+      <div class="tbl-wrap" style="margin-top:8px;"><table class="tbl">
+        <thead><tr>
+          <th style="text-align:left;">아이템</th>
+          <th>받은 횟수</th>
+          <th>총 갯수</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p style="margin:14px 0 0;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--red);text-align:left;">
+        ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+      </p>
+    </div>`;
+}
+
 function renderFruitBoxResult(n, rowCounts) {
   const slot = $("fruitbox-result-slot");
   if (!slot) return;
@@ -1737,7 +1855,8 @@ const TAB_GROUPS = {
     icon: "📦",
     label: "상자시뮬레이터",
     tabs: [
-      { id: "t-fruitbox", icon: "🌰", label: "열매상자" },
+      { id: "t-fruitbox",   icon: "🌰", label: "열매상자" },
+      { id: "t-mysterybox", icon: "🎁", label: "미스테리박스" },
     ],
   },
 };
@@ -1970,6 +2089,7 @@ function applySettingsPayload(p) {
   updatePalmon();
   buildSkillExpTab();
   buildFruitBoxTab();
+  buildMysteryBoxTab();
 }
 
 // 커스텀 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 가 차단되는 경우 대응
@@ -3115,6 +3235,7 @@ async function bootstrap() {
     updatePalmon();
     buildSkillExpTab();
     buildFruitBoxTab();
+    buildMysteryBoxTab();
     updateInventorySummary();
     autoCalculate();
     // 게시판 초기화

@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515p" />
+  <link rel="stylesheet" href="style.css?v=20260515q" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -461,6 +461,87 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 미스테리박스 시뮬레이터                             -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-mysterybox">
+
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🎁 <b>미스테리박스 시뮬레이터</b> — 보유한 미스테리박스 갯수를 입력하고 <b>확인하기</b>를 누르면 확률에 따라 실제 한 번 굴려본 결과를 보여줍니다.<br>
+          상자 1개당 1번 굴림. 결과는 매번 다르게 나옵니다.
+        </p>
+        <div style="margin-top:10px;">
+          <button type="button" id="mysterybox-prob-toggle" class="btn">📊 확률표 보기</button>
+        </div>
+        <div id="mysterybox-prob-table" style="display:none;margin-top:14px;">
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="text-align:left;">아이템 명칭</th>
+              <th>수량</th>
+              <th>드랍 확률</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>🧭 보물찾기 나침반</td><td class="value">1개</td><td class="value">2.00%</td></tr>
+              <tr><td>✈️ 비행선 갱신권</td><td class="value">1개</td><td class="value">2.00%</td></tr>
+              <tr><td>🥚 팰몬 알</td><td class="value">1개</td><td class="value">0.25%</td></tr>
+              <tr><td><b class="tier-ur">🟡 UR 팰몬 만능 증표</b></td><td class="value">1개</td><td class="value">0.10%</td></tr>
+              <tr><td>💎 다이아</td><td class="value">5,000개</td><td class="value">0.01%</td></tr>
+              <tr><td>💎 다이아</td><td class="value">50개</td><td class="value">0.10%</td></tr>
+              <tr><td>💎 다이아</td><td class="value">10개</td><td class="value">1.00%</td></tr>
+              <tr><td>🗿 화려한 조각상 보물상자</td><td class="value">1개</td><td class="value">0.10%</td></tr>
+              <tr><td>⚡ 5분 일반 가속</td><td class="value">5개</td><td class="value">1.00%</td></tr>
+              <tr><td>🏗️ 5분 건설 가속</td><td class="value">5개</td><td class="value">1.00%</td></tr>
+              <tr><td>🔬 5분 연구 가속</td><td class="value">5개</td><td class="value">1.00%</td></tr>
+              <tr><td>⚔️ 5분 훈련 가속</td><td class="value">5개</td><td class="value">1.00%</td></tr>
+              <tr><td>🩹 5분 의료 가속</td><td class="value">5개</td><td class="value">1.00%</td></tr>
+              <tr><td>💠 강화 결정(소)</td><td class="value">100개</td><td class="value">2.50%</td></tr>
+              <tr><td>🪵 10K 목판 보물상자</td><td class="value">1개</td><td class="value">28.98%</td></tr>
+              <tr><td>⚙️ 10K 강철 보물상자</td><td class="value">1개</td><td class="value">28.98%</td></tr>
+              <tr><td>🪙 10K 골드 보물상자</td><td class="value">1개</td><td class="value">28.98%</td></tr>
+              <tr style="border-top:2px solid var(--border);"><td colspan="2"><b>총합</b></td><td class="value amber"><b>100.00%</b></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <p style="margin-top:14px;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:13px;line-height:1.6;color:var(--red);">
+          ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+        </p>
+      </div>
+
+      <!-- Row 1: 입력 + 결과 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🎁 미스테리박스</div>
+          <img src="mysterybox.png" alt="미스테리박스" class="bead-img" onerror="this.style.display='none'">
+          <div class="form-row">
+            <label>보유 수량</label>
+            <input type="number" id="mysterybox-count" min="0" value="0" inputmode="numeric">
+          </div>
+          <button type="button" id="mysterybox-roll" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 확인하기</button>
+          <div class="hint" style="margin-top:14px;">예) 100상자 → 확률 기반 랜덤 결과 표시</div>
+        </div>
+
+        <div id="mysterybox-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title">주요 드랍 (높은 확률 순)</div>
+          <div style="font-size:13px;line-height:1.7;">
+            • 🪵 10K 목판 보물상자: <b>28.98%</b><br>
+            • ⚙️ 10K 강철 보물상자: <b>28.98%</b><br>
+            • 🪙 10K 골드 보물상자: <b>28.98%</b><br>
+            • 💠 강화 결정(소) 100개: <b>2.50%</b><br>
+            • 🧭 보물찾기 나침반: <b>2.00%</b><br>
+            • ✈️ 비행선 갱신권: <b>2.00%</b><br>
+            • 💎 다이아 10개: <b>1.00%</b><br>
+            • ⚡ 가속권 5종 각각: <b>1.00%</b><br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">💎 다이아 5000개(0.01%) / UR 만능 증표(0.1%) 등 희귀 아이템 포함 총 17종</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 자리배치도 (map.html iframe)                       -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-map">
@@ -493,6 +574,11 @@
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🎁 미스테리박스 시뮬레이터 추가</b> — 상자시뮬레이터 두 번째 서브탭. 17종 아이템(10K 자원상자 각 28.98% / 다이아 / 가속권 / UR 만능 증표 등) 확률 기반 시뮬레이션. ✅ 확인하기 클릭 → 받은 아이템만 표 형식으로 표시 (받은 횟수 많은 순). 📊 확률표 보기 버튼으로 17행 전체 확률표 토글</div>
+        </div>
 
         <div class="cl-item">
           <span class="cl-tag cl-new">✨ 신규</span>
@@ -777,6 +863,15 @@
                 <li>🔵 레어 스킬 열매 — 5개 4.55% / 10개 9.09% / 15개 4.55% (합 18.19%)</li>
               </ul>
             </li>
+            <li><span style="color:var(--red);">⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b></span></li>
+          </ul>
+
+          <h3>🎁 미스테리박스</h3>
+          <p>보유한 미스테리박스를 한 번에 깠을 때의 결과를 확률 기반 랜덤 시뮬레이션. 17종 아이템 중 받은 것만 결과 표에 표시 (받은 횟수 많은 순).</p>
+          <ul>
+            <li><b>보유 수량 입력</b> → ✅ <b>확인하기</b> 버튼 → 결과창에 <b>아이템명 + 받은 횟수 + 총 갯수</b> 표 형식 표시</li>
+            <li>메뉴 설명글의 <b>📊 확률표 보기</b> 버튼으로 17행 상세 확률표 토글</li>
+            <li><b>주요 드랍률</b>: 🪵🪙⚙️ 10K 자원 보물상자 각 28.98% / 💠 강화 결정(소) 100개 2.5% / 🧭✈️ 보물찾기·비행선 각 2% / 💎 다이아 5000개 0.01%</li>
             <li><span style="color:var(--red);">⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b></span></li>
           </ul>
 
@@ -1076,6 +1171,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515p"></script>
+  <script src="app.js?v=20260515q"></script>
 </body>
 </html>
