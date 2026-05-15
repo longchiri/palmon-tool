@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515h" />
+  <link rel="stylesheet" href="style.css?v=20260515k" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -308,13 +308,13 @@
           <div class="group-title">기준값</div>
           <div style="font-size:13px;line-height:1.7;">
             <b>최대 레벨</b>: 290<br><br>
-            <b>예시 구간</b><br>
-            • Lv 1 → 10: 900<br>
-            • Lv 1 → 50: 50,000<br>
-            • Lv 1 → 100: 1,950,000<br>
-            • Lv 1 → 200: 33,490,000<br>
-            • Lv 1 → 290: 178,982,000<br><br>
-            <p class="txt-dim" style="font-size:12px;margin:0;">누적 경험치 기준으로 계산</p>
+            <b>예시 구간 (Lv 1 → N 총합)</b><br>
+            • Lv 1 → 10: 4,500<br>
+            • Lv 1 → 50: 488,700<br>
+            • Lv 1 → 100: 6,033,700<br>
+            • Lv 1 → 200: 630,156,700<br>
+            • Lv 1 → 290: 7,910,690,700<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">레벨별 비용을 누적 합산하여 계산</p>
           </div>
         </div>
       </div>
@@ -340,14 +340,14 @@
           <div class="group-title">기준값</div>
           <div style="font-size:13px;line-height:1.7;">
             <b>최대 레벨</b>: 30<br><br>
-            <b>주요 구간 (1→N)</b><br>
-            • Lv 1 → 5: 400<br>
-            • Lv 1 → 10: 1,400<br>
-            • Lv 1 → 15: 2,900<br>
-            • Lv 1 → 20: 4,400<br>
-            • Lv 1 → 25: 6,500<br>
-            • Lv 1 → 30: 9,000<br><br>
-            <p class="txt-dim" style="font-size:12px;margin:0;">스킬 1개 풀레벨(30) 기준 = 9,000개</p>
+            <b>주요 구간 (Lv 1 → N 총합)</b><br>
+            • Lv 1 → 5: 1,000<br>
+            • Lv 1 → 10: 6,000<br>
+            • Lv 1 → 15: 17,500<br>
+            • Lv 1 → 20: 36,500<br>
+            • Lv 1 → 25: 64,200<br>
+            • Lv 1 → 30: 104,200<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">스킬 1개 풀레벨(1→30) = 104,200개</p>
           </div>
         </div>
       </div>
@@ -423,6 +423,11 @@
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
           <div class="cl-text"><b>탭 메뉴 대분류 구조 개편</b> — 🏗️ 건설 관련 / 💎 팰몬 관련 / 💰 자원 관련 3개 대분류로 그룹화. 1차 탭 클릭 → 서브탭(녹색 밑줄) + 브레드크럼(경로) 표시. 마지막으로 본 탭 자동 복원. 사용법 페이지도 같은 구조로 정리</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-fix">🐛 버그수정</span>
+          <div class="cl-text"><b>🌰 스킬열매 / 경험치 계산기 계산식 수정</b> — 데이터 해석 오류 수정. 각 레벨 값이 누적값이 아니라 <b>레벨당 비용</b>이었음. 이제 엑셀과 동일하게 작동: 스킬 1→30 = 104,200개 / 경험치 280→290 = 1,644,807,000 / 스킬 29→30 = 9,000개</div>
         </div>
 
         <div class="cl-item">
@@ -652,8 +657,8 @@
           <p>현재 레벨에서 목표 레벨까지 올리는 데 필요한 경험치 / 스킬 열매 갯수를 자동 계산.</p>
           <ul>
             <li><b>🌟 경험치 계산기</b> — Lv 1 ~ Lv 290 까지 지원. 현재 Lv + 목표 Lv 드롭다운 선택 → 필요 경험치 즉시 계산</li>
-            <li><b>🌰 스킬 레벨업 열매 계산기</b> — Lv 1 ~ Lv 30 까지 지원. 스킬 풀레벨까지 9,000개 필요</li>
-            <li>두 계산기 모두 <b>누적값 차이</b>로 계산: (목표 Lv 누적) − (현재 Lv 누적) = 필요량</li>
+            <li><b>🌰 스킬 레벨업 열매 계산기</b> — Lv 1 ~ Lv 30 까지 지원. 스킬 1개 풀레벨까지 <b>104,200개</b> 필요</li>
+            <li>각 레벨별 비용을 합산해서 계산: Lv X → Y 비용 = arr[X] + arr[X+1] + ... + arr[Y−1] (각 단계별 비용의 합)</li>
           </ul>
 
           <h2 class="help-group">💰 자원 관련</h2>
@@ -970,6 +975,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515h"></script>
+  <script src="app.js?v=20260515k"></script>
 </body>
 </html>
