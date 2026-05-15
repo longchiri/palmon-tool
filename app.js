@@ -1099,6 +1099,11 @@ function updateBead() {
   const beadBigDisplay = beadTargetCount > 0
     ? `<div class="big-number" style="color:${targetColor};">${fmt(beadTargetCount)}<span class="unit">개</span></div>`
     : `<div class="big-number" style="color:${targetColor};font-size:42px;">부족 <span class="unit" style="color:${targetColor};">${fmt(beadShortage)}개</span></div>`;
+  // 완성 후 남은 양 — 부족할 때는 숨김
+  const beadRemainRow = beadTargetCount > 0
+    ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(beadTargetRemain)}</td></tr>`
+    : "";
+  // 부족 갯수 — 부족할 때만 표시
   const beadShortageRow = beadTargetCount === 0 && beadShortage > 0
     ? `<tr><td class="label" style="color:var(--red);font-weight:700;">부족 갯수</td><td class="value red"><b>${fmt(beadShortage)}</b></td></tr>`
     : "";
@@ -1111,7 +1116,7 @@ function updateBead() {
         ${resetRows}
         <tr><td class="label">합계</td><td class="value amber"><b>${fmt(total)}</b></td></tr>
         <tr><td class="label">${beadTarget} 1개당 필요</td><td class="value">${fmt(beadTargetCost)}</td></tr>
-        <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(beadTargetRemain)}</td></tr>
+        ${beadRemainRow}
         ${beadShortageRow}
       </table></div>
     </div>`;
@@ -1179,10 +1184,13 @@ function updateEssence() {
 
   const promoColor = promoPeople > 0 ? "var(--green)" : "var(--red)";
   const promoShortage = promoPeople === 0 ? Math.max(0, PROMO_PER_PALMON - promoOwned) : 0;
+  const promoRemainRow = promoPeople > 0
+    ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(promoRemain)}</td></tr>`
+    : "";
   const promoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(promoOwned)}</td></tr>
     <tr><td class="label">1명 승급 필요</td><td class="value">${fmt(PROMO_PER_PALMON)}</td></tr>
-    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(promoRemain)}</td></tr>`;
+    ${promoRemainRow}`;
   const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows, promoShortage);
 
   // 4단계 초기화 행 추가
@@ -1207,12 +1215,15 @@ function updateEssence() {
   // 결과 카드 — 선택한 진화 단계 기준으로 표시
   const evoColor = evoTargetCount > 0 ? "var(--green)" : "var(--red)";
   const evoShortage = evoTargetCount === 0 ? Math.max(0, evoTargetCost - evoTotal) : 0;
+  const evoRemainRow = evoTargetCount > 0
+    ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`
+    : "";
   const evoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
     ${resetRows}
     <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
     <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(evoTargetCost)}</td></tr>
-    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`;
+    ${evoRemainRow}`;
   const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows, evoShortage);
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
