@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515c" />
+  <link rel="stylesheet" href="style.css?v=20260515d" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -566,6 +566,19 @@
             <li>두 캠프 레벨에서 까면 각각 얼마인지 + 증가량/증가율 한눈에 비교</li>
           </ul>
 
+          <h3>🗺️ 자리배치도</h3>
+          <p>게임 내 건물 자리배치를 시각적으로 설계하는 도구. 1300×1300 픽셀 맵을 13×13 셀로 나눠 표시하고, 셀 클릭 → 100×100 픽셀 상세 화면에서 정확한 위치에 건물을 배치합니다.</p>
+          <ul>
+            <li><b>7가지 건물 종류</b> — 🌾 자원지(1×1) / 📦 상자(1×1) / 👹 팰몬(엘리트)(1×1) / 🐾 팰몬무리(3×3) / ⚙️ 길드발전기(6×6) / 🏠 캠프(3×3) / 🏛️ 성전(9×9)</li>
+            <li><b>🛡️ 신전 자동 고정</b> — 맵 정중앙(646,646)에 9×9 신전이 항상 표시. 이동/삭제 불가, 다른 건물도 그 위에 못 놓음</li>
+            <li><b>🌊 지형 페인트</b> — 호수/얼음/장애물 등을 픽셀 단위로 칠하기 (드래그로 연속). 칠한 픽셀 위에는 건물 배치 불가</li>
+            <li><b>이름 커스텀</b> — 배치된 건물 클릭 → 팝업에서 이름 변경 (예: "메인 캠프", "1차 성전") + ⚙️ 설정으로 위치 이동, 🗑️ 제거</li>
+            <li><b>🔍 검색 + 네비게이션</b> — 배치된 건물 조회에서 이름/타입 검색 → 클릭 시 그 위치로 자동 이동. 신전도 검색 가능</li>
+            <li><b>📄 PDF 저장</b> — 디테일 화면 상단 버튼 → 서버명 입력 → 2페이지 PDF 자동 생성 (1페이지: 상세지도 / 2페이지: 캠프·길드발전기 이동 요청 리스트)</li>
+            <li><b>💾 자리배치 저장/불러오기</b> — 상단 버튼으로 JSON 파일 저장. 다른 사람에게 카톡/메일로 공유 가능. 받은 사람은 📂 불러오기로 동일한 배치 확인</li>
+            <li><b>확대/축소/이동</b> — +/− 버튼, 마우스 휠, 모바일 핀치/드래그 지원. 페인트 모드에서는 드래그가 페인트로 동작</li>
+          </ul>
+
           <h3>💾 설정 저장 / 불러오기</h3>
           <ul>
             <li><b>설정 저장</b> — 모든 입력값이 JSON 으로 다운로드 + 브라우저에 자동 저장. 같은 브라우저에서는 다음 방문 시 자동 복원</li>
@@ -847,6 +860,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515c"></script>
+  <script src="app.js?v=20260515d"></script>
 </body>
 </html>
