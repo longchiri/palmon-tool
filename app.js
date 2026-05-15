@@ -1501,12 +1501,14 @@ function renderFruitBoxIdle() {
   const slot = $("fruitbox-result-slot");
   if (!slot) return;
   slot.innerHTML = `
-    <div class="result-card" style="text-align:center;padding:36px 18px;">
+    <div class="result-card" style="text-align:center;">
       <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
-      <p class="txt-dim" style="margin:18px 0 0;font-size:13px;line-height:1.7;">
-        🌰 보유 수량을 입력하고<br>
-        ✅ <b>확인하기</b> 버튼을 눌러주세요.
-      </p>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+        <p class="txt-dim" style="margin:0;font-size:13.5px;line-height:1.9;">
+          🌰 보유 수량을 입력하고<br>
+          ✅ <b>확인하기</b> 버튼을 눌러주세요.
+        </p>
+      </div>
     </div>`;
 }
 
