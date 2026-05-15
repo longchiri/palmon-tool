@@ -1093,18 +1093,26 @@ function updateBead() {
   const beadTargetCount = beadTargetCost > 0 ? Math.floor(total / beadTargetCost) : 0;
   const beadTargetRemain = total - beadTargetCount * beadTargetCost;
 
-  // 결과 카드 — 선택한 성급 기준으로 표시
+  // 결과 카드 — 선택한 성급 기준으로 표시 (0이면 "부족" + 부족 갯수)
   const targetColor = beadTargetCount > 0 ? "var(--green)" : "var(--red)";
+  const beadShortage = beadTargetCount === 0 ? Math.max(0, beadTargetCost - total) : 0;
+  const beadBigDisplay = beadTargetCount > 0
+    ? `<div class="big-number" style="color:${targetColor};">${fmt(beadTargetCount)}<span class="unit">개</span></div>`
+    : `<div class="big-number" style="color:${targetColor};font-size:42px;">부족 <span class="unit" style="color:${targetColor};">${fmt(beadShortage)}개</span></div>`;
+  const beadShortageRow = beadTargetCount === 0 && beadShortage > 0
+    ? `<tr><td class="label" style="color:var(--red);font-weight:700;">부족 갯수</td><td class="value red"><b>${fmt(beadShortage)}</b></td></tr>`
+    : "";
   $("bead-result").innerHTML = `
     <div class="result-card strong" style="border-color:${targetColor};">
       <div class="card-title" style="color:${targetColor};text-align:center;">◆ 완성 가능 무기 (${beadTarget} 기준)</div>
-      <div class="big-number" style="color:${targetColor};">${fmt(beadTargetCount)}<span class="unit">개</span></div>
+      ${beadBigDisplay}
       <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">보유 구슬</td><td class="value">${fmt(owned)}</td></tr>
         ${resetRows}
         <tr><td class="label">합계</td><td class="value amber"><b>${fmt(total)}</b></td></tr>
         <tr><td class="label">${beadTarget} 1개당 필요</td><td class="value">${fmt(beadTargetCost)}</td></tr>
         <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(beadTargetRemain)}</td></tr>
+        ${beadShortageRow}
       </table></div>
     </div>`;
 }
@@ -1153,22 +1161,29 @@ function updateEssence() {
 
   const fullSet = Math.min(promoPeople, evoPeople);
 
-  // 한 카드로 통합 — 좌우 카드와 양옆 맞춤
-  function bigCard(headline, count, color, rows) {
+  // 한 카드로 통합 — 0이면 "부족 + 부족갯수" 표시
+  function bigCard(headline, count, color, rows, shortage = 0) {
+    const bigDisplay = count > 0
+      ? `<div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>`
+      : `<div class="big-number" style="color:${color};font-size:42px;">부족 <span class="unit" style="color:${color};">${fmt(shortage)}개</span></div>`;
+    const shortageRow = (count === 0 && shortage > 0)
+      ? `<tr><td class="label" style="color:var(--red);font-weight:700;">부족 갯수</td><td class="value red"><b>${fmt(shortage)}</b></td></tr>`
+      : "";
     return `
       <div class="result-card strong" style="border-color:${color};">
         <div class="card-title" style="color:${color};text-align:center;">◆ ${headline}</div>
-        <div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>
-        <div class="tbl-wrap"><table class="tbl">${rows}</table></div>
+        ${bigDisplay}
+        <div class="tbl-wrap"><table class="tbl">${rows}${shortageRow}</table></div>
       </div>`;
   }
 
   const promoColor = promoPeople > 0 ? "var(--green)" : "var(--red)";
+  const promoShortage = promoPeople === 0 ? Math.max(0, PROMO_PER_PALMON - promoOwned) : 0;
   const promoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(promoOwned)}</td></tr>
     <tr><td class="label">1명 승급 필요</td><td class="value">${fmt(PROMO_PER_PALMON)}</td></tr>
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(promoRemain)}</td></tr>`;
-  const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows);
+  const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows, promoShortage);
 
   // 4단계 초기화 행 추가
   let resetRows = "";
@@ -1191,13 +1206,14 @@ function updateEssence() {
 
   // 결과 카드 — 선택한 진화 단계 기준으로 표시
   const evoColor = evoTargetCount > 0 ? "var(--green)" : "var(--red)";
+  const evoShortage = evoTargetCount === 0 ? Math.max(0, evoTargetCost - evoTotal) : 0;
   const evoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
     ${resetRows}
     <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
     <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(evoTargetCost)}</td></tr>
     <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`;
-  const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows);
+  const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows, evoShortage);
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
   const fullCard = `
