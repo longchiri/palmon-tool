@@ -927,6 +927,7 @@ function renderResult(r) {
   const totalCustomBoxes = totalUsedBoxes + totalRemainBoxes;
 
   // 결과 자원 카드 — 커스텀 분배 행은 박스 개수로 (순서: 골드 → 목재 → 강철)
+  // 색상 통일: SR=blue / SSR=purple / UR=amber
   let customRow = "";
   if (totalUsedBoxes > 0) {
     const parts = [];
@@ -935,13 +936,13 @@ function renderResult(r) {
       const used = (a.SR||0)+(a.SSR||0)+(a.UR||0);
       if (used > 0) {
         const tierStr = [];
-        if (a.UR) tierStr.push(`UR×${a.UR}`);
-        if (a.SSR) tierStr.push(`SSR×${a.SSR}`);
-        if (a.SR) tierStr.push(`SR×${a.SR}`);
-        parts.push(`${label}: ${tierStr.join(" ")}`);
+        if (a.UR) tierStr.push(`<span class="tier-ur">UR×${a.UR}</span>`);
+        if (a.SSR) tierStr.push(`<span class="tier-ssr">SSR×${a.SSR}</span>`);
+        if (a.SR) tierStr.push(`<span class="tier-sr">SR×${a.SR}</span>`);
+        parts.push(`<span style="color:var(--amber);">${label}:</span> ${tierStr.join(" ")}`);
       }
     }
-    customRow = `<tr><td class="label" style="color:var(--amber);">📦 커스텀상자 분배</td><td colspan="3" class="value" style="color:var(--amber);text-align:left;font-size:12px;">${parts.join(" / ")}</td></tr>`;
+    customRow = `<tr><td class="label" style="color:var(--amber);">📦 커스텀상자 분배</td><td colspan="3" class="value" style="text-align:left;font-size:12px;">${parts.join(" / ")}</td></tr>`;
   }
   const cardRes = `
     <div class="result-card" style="border-color:var(--amber);">
@@ -953,6 +954,7 @@ function renderResult(r) {
   let cardCustom = "";
   if (totalCustomBoxes > 0) {
     // 추천 행 — 자원별 박스 개수 (순서 고정: 골드 → 목재 → 강철, 이모지 포함)
+    // 색상 통일: SR=blue / SSR=purple / UR=amber
     let recRows = `<tr><th></th><th class="tier tier-ur">UR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-sr">SR</th></tr>`;
     const labelMap = { gold: "💰 골드", wood: "🪵 목재", steel: "🧱 강철" };
     const sortedRes = ["gold", "wood", "steel"];
@@ -963,20 +965,20 @@ function renderResult(r) {
       if (used > 0) {
         recRows += `<tr>
           <td class="label" style="color:var(--amber);">→ ${labelMap[k]}</td>
-          <td class="value amber">${a.UR ? a.UR + "개" : "-"}</td>
-          <td class="value amber">${a.SSR ? a.SSR + "개" : "-"}</td>
-          <td class="value amber">${a.SR ? a.SR + "개" : "-"}</td>
+          <td class="value tier-ur">${a.UR ? a.UR + "개" : "-"}</td>
+          <td class="value tier-ssr">${a.SSR ? a.SSR + "개" : "-"}</td>
+          <td class="value tier-sr">${a.SR ? a.SR + "개" : "-"}</td>
         </tr>`;
       } else if (isShortageZero) {
         recRows += `<tr><td class="label txt-dim">${labelMap[k]}</td><td colspan="3" class="value txt-dim">충분함</td></tr>`;
       }
     }
-    // 잉여 박스
+    // 잉여 박스 — tier 색상 유지 + 살짝 dim
     if (totalRemainBoxes > 0) {
       recRows += `<tr><td class="label txt-dim">잉여 (안 쓴 박스)</td>
-        <td class="value txt-dim">${cRemain.UR ? cRemain.UR + "개" : "-"}</td>
-        <td class="value txt-dim">${cRemain.SSR ? cRemain.SSR + "개" : "-"}</td>
-        <td class="value txt-dim">${cRemain.SR ? cRemain.SR + "개" : "-"}</td>
+        <td class="value tier-ur" style="opacity:0.65;">${cRemain.UR ? cRemain.UR + "개" : "-"}</td>
+        <td class="value tier-ssr" style="opacity:0.65;">${cRemain.SSR ? cRemain.SSR + "개" : "-"}</td>
+        <td class="value tier-sr" style="opacity:0.65;">${cRemain.SR ? cRemain.SR + "개" : "-"}</td>
       </tr>`;
     }
     const noShortage = totalUsedBoxes === 0;
@@ -1001,9 +1003,9 @@ function renderResult(r) {
     if (info.possible) {
       boxRows += `<tr>
         <td class="label">${RESOURCE_LABELS[k]}</td>
-        <td class="value">${fmtN(info.open_counts.SR)}</td>
-        <td class="value">${fmtN(info.open_counts.SSR)}</td>
-        <td class="value">${fmtN(info.open_counts.UR)}</td>
+        <td class="value tier-sr">${fmtN(info.open_counts.SR)}</td>
+        <td class="value tier-ssr">${fmtN(info.open_counts.SSR)}</td>
+        <td class="value tier-ur">${fmtN(info.open_counts.UR)}</td>
         <td class="value amber">${fmtN(info.overage)}</td>
       </tr>`;
     } else {
@@ -1304,7 +1306,7 @@ function updatePalmon() {
     let r = `<td class="label">${PALMON_RESOURCE_LABELS[rk]}</td>`;
     for (const t of BOX_TIERS) {
       const unit = parseInt(tbl[t]?.[rk] || 0);
-      r += `<td class="value">${fmt(unit)}</td>`;
+      r += `<td class="value tier-${t.toLowerCase()}">${fmt(unit)}</td>`;
     }
     unitRows += `<tr>${r}</tr>`;
   }

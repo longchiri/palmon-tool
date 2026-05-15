@@ -301,9 +301,10 @@ body { overflow-x: hidden; }
   font-weight: 800;
   letter-spacing: 0.6px;
 }
-.tier-sr  { color: var(--blue); }
-.tier-ssr { color: var(--purple); }
-.tier-ur  { color: var(--amber); }
+/* SR/SSR/UR 색상 통일 — SR=파란색, SSR=보라색, UR=노란색(amber) */
+.tier-sr,  .tier-SR  { color: var(--blue)   !important; font-weight: 800; letter-spacing: 0.4px; }
+.tier-ssr, .tier-SSR { color: var(--purple) !important; font-weight: 800; letter-spacing: 0.4px; }
+.tier-ur,  .tier-UR  { color: var(--amber)  !important; font-weight: 800; letter-spacing: 0.4px; }
 
 /* 상자 그리드 헤더 — 더 진하게 */
 .inv-box-grid > .h, .palmon-box-grid > .h {
@@ -860,9 +861,7 @@ input[type="checkbox"] {
 
 /* ── 등급별 색상 (전 사이트 통일) ──────────────────
    SR = 파랑 / SSR = 보라 / UR = 노랑 */
-.tier-SR  { color: var(--blue);   font-weight: 800; letter-spacing: 0.4px; }
-.tier-SSR { color: var(--purple); font-weight: 800; letter-spacing: 0.4px; }
-.tier-UR  { color: var(--amber);  font-weight: 800; letter-spacing: 0.4px; }
+/* 중복 정의 — 위쪽에서 이미 처리됨 (호환용 빈 줄) */
 
 /* ── 결과 탭 ─────────────────────────────────────── */
 #result-output { padding: 6px 0; }
