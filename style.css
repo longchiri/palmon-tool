@@ -384,17 +384,14 @@ body { overflow-x: hidden; }
 }
 
 /* 원하는 성급/진화 필터 */
-/* 원하는 성급 / 원하는 진화 — 이미지 위 강조 박스 */
+/* 원하는 성급 / 원하는 진화 — 이미지 위 필터 (간단한 라벨 + 드롭다운) */
 .target-filter-top {
-  background: rgba(251,191,36,0.07);
-  border: 1px solid rgba(251,191,36,0.4);
-  border-radius: 10px;
-  padding: 10px 14px;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
   gap: 10px;
   justify-content: center;
+  padding: 0;
 }
 .target-filter-top > label {
   color: var(--amber);
@@ -407,14 +404,22 @@ body { overflow-x: hidden; }
   opacity: 0.6;
 }
 .target-filter-top > select {
-  background: #0f1729 !important;
+  background-color: #0f1729 !important;
+  /* 드롭다운 화살표 — 황금색 */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path fill='%23fbbf24' d='M6 7L0 1l1.4-1.4L6 4.2 10.6-.4 12 1z'/></svg>") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 10px center !important;
+  background-size: 10px !important;
   border: 1px solid rgba(251,191,36,0.5) !important;
   color: var(--text);
-  padding: 8px 32px 8px 12px !important;
+  padding: 8px 30px 8px 12px !important;
   border-radius: 8px !important;
   font-size: 15px !important;
   font-weight: 700;
   min-width: 110px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
 }
 
 .target-filter {
@@ -1217,35 +1222,46 @@ input[type="checkbox"] {
 /* 트로피 — 컨테이너 왼쪽 바깥 여백 영역에 위치 (PC) */
 .event-banner-reopen {
   position: fixed;
-  /* 컨테이너가 중앙 정렬이므로, viewport 왼쪽 끝에서 약간 안쪽 */
-  left: 24px;
+  left: 12px;
   /* 탭바와 같은 높이 — 헤더 아래 */
-  top: calc(var(--header-h, 56px) + 56px);
-  width: 42px;
-  height: 42px;
+  top: calc(var(--header-h, 56px) + 50px);
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background: rgba(17,24,39,0.92);
-  border: 1px solid var(--border-strong, #334155);
+  border: 2px solid var(--border-strong, #334155);
   color: var(--amber);
-  font-size: 20px;
+  font-size: 28px;
   cursor: pointer;
   z-index: 998;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 18px rgba(0,0,0,0.5), 0 0 24px rgba(251,191,36,0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
 }
 .event-banner-reopen:hover {
-  transform: scale(1.08);
+  transform: scale(1.1);
   background: rgba(17,24,39,1);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.6), 0 0 32px rgba(251,191,36,0.3);
 }
 
 /* 넓은 화면 — 컨테이너 좌측 여백을 더 확실하게 활용 */
 @media (min-width: 1280px) {
   .event-banner-reopen {
-    /* 컨테이너(보통 max-width 1200px)의 왼쪽 바깥 영역 */
-    left: max(24px, calc((100vw - 1200px) / 2 - 50px));
+    /* 컨테이너(보통 max-width 1200px)의 왼쪽 바깥 영역 더 바깥으로 */
+    left: max(16px, calc((100vw - 1200px) / 2 - 80px));
+    width: 64px;
+    height: 64px;
+    font-size: 30px;
+  }
+}
+@media (min-width: 1600px) {
+  .event-banner-reopen {
+    left: max(20px, calc((100vw - 1200px) / 2 - 100px));
+    width: 70px;
+    height: 70px;
+    font-size: 34px;
   }
 }
 
