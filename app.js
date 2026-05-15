@@ -1597,7 +1597,10 @@ async function saveSettings() {
 
   const jsonStr = JSON.stringify(payload, null, 2);
   const blob = new Blob([jsonStr], { type: "application/json" });
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+  const isMobile = isIOS || isAndroid;
 
   // 1차: File System Access API (데스크탑 Chrome/Edge) — 폴더 고정 가능
   if (!isMobile && window.showSaveFilePicker) {
@@ -1619,11 +1622,26 @@ async function saveSettings() {
     }
   }
 
-  // 모바일: 일반 다운로드 우선 (Android Chrome 매우 안정적, iOS Safari 16+ 도 지원)
-  // 그래도 실패하면 Web Share API → 새 탭 순으로 폴백
   let attemptedShare = false;
 
-  // 2차: 일반 다운로드 (Android Chrome / iOS Safari 16+ / 데스크탑 폴백)
+  // 모바일 1순위: Web Share API — 사용자가 저장 위치 직접 선택 (Files, 드라이브, 카톡 등)
+  // → 이렇게 하면 "파일을 못 찾는" 문제가 사라집니다
+  if (isMobile) {
+    try {
+      const file = new File([blob], filename, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        attemptedShare = true;
+        await navigator.share({ files: [file], title: filename, text: "Palmon Tool 설정" });
+        toast(`✅ 저장 완료: ${filename}`);
+        return;
+      }
+    } catch (e) {
+      if (e.name === "AbortError") { toast("저장 취소됨"); return; }
+      console.warn("Web Share 실패, 다운로드로 폴백:", e);
+    }
+  }
+
+  // 2차: 일반 다운로드 — 위치 안내 메시지 포함
   try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -1637,24 +1655,33 @@ async function saveSettings() {
       if (a.parentNode) a.parentNode.removeChild(a);
       URL.revokeObjectURL(url);
     }, 1500);
-    toast(`저장됨: ${filename}`);
+    // 모바일 사용자에게 파일 위치 안내
+    if (isIOS) {
+      toast(`✅ 저장됨 — 파일 앱 > 다운로드`);
+    } else if (isAndroid) {
+      toast(`✅ 저장됨 — 내 파일 > Download`);
+    } else {
+      toast(`저장됨: ${filename}`);
+    }
     return;
   } catch (e) {
     console.warn("다운로드 실패, 공유 시도:", e);
   }
 
-  // 3차: Web Share API (iOS Safari 17+ 등)
-  try {
-    const file = new File([blob], filename, { type: "application/json" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      attemptedShare = true;
-      await navigator.share({ files: [file], title: filename, text: filename });
-      toast(`공유 완료: ${filename}`);
-      return;
+  // 3차: Web Share API (위에서 시도 안 했을 때 마지막 시도)
+  if (!attemptedShare) {
+    try {
+      const file = new File([blob], filename, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        attemptedShare = true;
+        await navigator.share({ files: [file], title: filename, text: filename });
+        toast(`공유 완료: ${filename}`);
+        return;
+      }
+    } catch (e) {
+      if (e.name === "AbortError") { toast("공유 취소됨"); return; }
+      console.warn("Web Share 실패, 최종 폴백:", e);
     }
-  } catch (e) {
-    if (e.name === "AbortError") { toast("공유 취소됨"); return; }
-    console.warn("Web Share 실패, 최종 폴백:", e);
   }
 
   // 4차 최종 폴백: 새 탭에 열어서 사용자가 직접 저장 (iOS Safari 구버전)
