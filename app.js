@@ -2688,6 +2688,152 @@ async function bootstrap() {
 
 bootstrap();
 
+// =====================================================
+// 모험가대회 배너 — 왼쪽에서 슬라이드 인
+// =====================================================
+// 5개 이벤트가 4시간 단위로 회전, 매주 +2 오프셋
+const ADV_EVENT_CYCLE = ["건물렙업", "아미고", "기술연구", "AP소모", "팰몬강화"];
+const ADV_EVENT_ICONS = {
+  "건물렙업": "🏗️",
+  "아미고": "🐾",
+  "기술연구": "🔬",
+  "AP소모": "⚔️",
+  "팰몬강화": "✨",
+};
+const ADV_EVENT_COLORS = {
+  "건물렙업": "#fbbf24",  // amber
+  "아미고": "#a78bfa",    // purple
+  "기술연구": "#60a5fa",  // blue
+  "AP소모": "#f87171",    // red
+  "팰몬강화": "#34d399",  // green
+};
+// 앵커: 2026-05-11 (월) 11:00 KST = 첫 슬롯 (건물렙업)
+const ADV_ANCHOR_TS = new Date("2026-05-11T11:00:00+09:00").getTime();
+const ADV_SLOT_MS = 4 * 60 * 60 * 1000;  // 4시간
+
+function getCurrentAdvEvent() {
+  const now = Date.now();
+  const slotIndex = Math.floor((now - ADV_ANCHOR_TS) / ADV_SLOT_MS);
+  const eventIdx = ((slotIndex % 5) + 5) % 5;
+  const nextSlotStart = ADV_ANCHOR_TS + (slotIndex + 1) * ADV_SLOT_MS;
+  const remainingMs = nextSlotStart - now;
+  return {
+    current: ADV_EVENT_CYCLE[eventIdx],
+    next: ADV_EVENT_CYCLE[(eventIdx + 1) % 5],
+    remainingMs,
+    slotIndex,
+    nextStartTime: new Date(nextSlotStart),
+  };
+}
+
+function fmtAdvCountdown(ms) {
+  if (ms <= 0) return "곧 시작";
+  const totalMin = Math.floor(ms / 60000);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h > 0) return `${h}시간 ${m}분`;
+  return `${m}분`;
+}
+
+let _advBannerInterval = null;
+let _advLastRenderedSlot = null;
+
+function renderAdvBanner({ force = false } = {}) {
+  const banner = document.getElementById("event-banner");
+  const reopenBtn = document.getElementById("event-banner-reopen");
+  if (!banner) return;
+  const info = getCurrentAdvEvent();
+
+  // 닫혔는지 확인 — 같은 슬롯에서 닫았고 1시간 안 지났으면 숨김
+  let isHidden = false;
+  if (!force) {
+    try {
+      const closeData = JSON.parse(localStorage.getItem("palmon_adv_banner_closed") || "null");
+      if (closeData && closeData.slot === info.slotIndex) {
+        const elapsed = Date.now() - closeData.t;
+        if (elapsed < 60 * 60 * 1000) isHidden = true;
+      }
+    } catch {}
+  }
+
+  if (isHidden) {
+    banner.classList.remove("show");
+    if (reopenBtn) reopenBtn.style.display = "";
+    return;
+  }
+  if (reopenBtn) reopenBtn.style.display = "none";
+
+  // 이미 같은 슬롯이면 카운트다운만 갱신
+  if (_advLastRenderedSlot === info.slotIndex && banner.classList.contains("show")) {
+    const cd = banner.querySelector(".event-banner-countdown");
+    if (cd) cd.innerHTML = `⏱ 종료까지 <b>${fmtAdvCountdown(info.remainingMs)}</b>`;
+    return;
+  }
+
+  _advLastRenderedSlot = info.slotIndex;
+
+  const curIcon = ADV_EVENT_ICONS[info.current] || "🎯";
+  const nextIcon = ADV_EVENT_ICONS[info.next] || "▶";
+  const curColor = ADV_EVENT_COLORS[info.current] || "#fbbf24";
+  const nextColor = ADV_EVENT_COLORS[info.next] || "#94a3b8";
+  const nextStartHHMM = `${String(info.nextStartTime.getHours()).padStart(2, "0")}:${String(info.nextStartTime.getMinutes()).padStart(2, "0")}`;
+
+  banner.style.setProperty("--cur-color", curColor);
+  banner.style.setProperty("--next-color", nextColor);
+  banner.innerHTML = `
+    <button class="event-banner-close" type="button" aria-label="닫기">×</button>
+    <div class="event-banner-title">🏆 모험가대회</div>
+    <div class="event-banner-current">
+      <span class="event-icon-lg">${curIcon}</span>
+      <div class="event-current-info">
+        <div class="event-name-row">
+          <span class="event-name">${escapeHtml(info.current)}</span>
+          <span class="event-status">진행중</span>
+        </div>
+        <div class="event-banner-countdown">⏱ 종료까지 <b>${fmtAdvCountdown(info.remainingMs)}</b></div>
+      </div>
+    </div>
+    <div class="event-banner-divider"></div>
+    <div class="event-banner-next">
+      <span class="event-icon-sm">${nextIcon}</span>
+      다음 <span class="next-name">${escapeHtml(info.next)}</span>
+      <span class="next-time">${nextStartHHMM}~</span>
+    </div>
+  `;
+  // 슬라이드 인
+  setTimeout(() => banner.classList.add("show"), 30);
+
+  // 닫기 버튼
+  banner.querySelector(".event-banner-close").addEventListener("click", () => {
+    banner.classList.remove("show");
+    if (reopenBtn) reopenBtn.style.display = "";
+    try {
+      localStorage.setItem("palmon_adv_banner_closed", JSON.stringify({
+        slot: info.slotIndex,
+        t: Date.now(),
+      }));
+    } catch {}
+  });
+}
+
+function startAdvBanner() {
+  // 첫 표시
+  setTimeout(() => renderAdvBanner(), 800);
+  // 30초마다 카운트다운/슬롯 변경 체크
+  if (_advBannerInterval) clearInterval(_advBannerInterval);
+  _advBannerInterval = setInterval(() => renderAdvBanner(), 30000);
+  // 다시 보기 버튼
+  const reopenBtn = document.getElementById("event-banner-reopen");
+  if (reopenBtn) {
+    reopenBtn.addEventListener("click", () => {
+      try { localStorage.removeItem("palmon_adv_banner_closed"); } catch {}
+      _advLastRenderedSlot = null;
+      renderAdvBanner({ force: true });
+    });
+  }
+}
+startAdvBanner();
+
 // 헤더 높이를 CSS 변수로 노출 → 탭바 sticky 위치 자동 계산
 function updateHeaderHeight() {
   const h = document.querySelector(".header")?.offsetHeight || 56;

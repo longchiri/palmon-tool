@@ -971,6 +971,159 @@ input[type="checkbox"] {
   .col-target-select { font-size: 18px !important; padding: 12px !important; }
 }
 
+/* ════════════════════════════════════════════════════
+   모험가대회 배너 — 왼쪽에서 슬라이드 인
+   ════════════════════════════════════════════════════ */
+.event-banner {
+  position: fixed;
+  bottom: 18px;
+  left: 0;
+  width: 240px;
+  transform: translateX(-110%);
+  background: linear-gradient(135deg, rgba(17,24,39,0.97), rgba(13,18,32,0.97));
+  border: 1px solid var(--border-strong, #334155);
+  border-left: 4px solid var(--cur-color, var(--amber));
+  border-radius: 0 14px 14px 0;
+  padding: 12px 14px 14px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.55);
+  z-index: 998;
+  transition: transform 0.55s cubic-bezier(0.5, 0, 0.2, 1);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.event-banner.show {
+  transform: translateX(0);
+}
+.event-banner-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  color: var(--text-dim);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.event-banner-close:hover { background: rgba(255,255,255,0.15); color: var(--text); }
+.event-banner-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--amber);
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+.event-banner-current {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.event-icon-lg {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px var(--cur-color));
+}
+.event-current-info { flex: 1; min-width: 0; }
+.event-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.event-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--cur-color, var(--amber));
+}
+.event-status {
+  font-size: 10px;
+  font-weight: 700;
+  color: #34d399;
+  background: rgba(52,211,153,0.12);
+  padding: 1px 6px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+.event-banner-countdown {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.event-banner-countdown b { color: var(--text); font-weight: 700; }
+.event-banner-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0;
+}
+.event-banner-next {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.event-icon-sm {
+  font-size: 14px;
+  filter: drop-shadow(0 0 4px var(--next-color, transparent));
+}
+.event-banner-next .next-name {
+  color: var(--next-color, var(--text));
+  font-weight: 700;
+}
+.event-banner-next .next-time {
+  margin-left: auto;
+  color: var(--text-mute);
+  font-size: 11px;
+}
+
+/* 다시 보기 버튼 — 닫혔을 때 좌측 하단에 작은 트로피 */
+.event-banner-reopen {
+  position: fixed;
+  bottom: 18px;
+  left: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(17,24,39,0.92);
+  border: 1px solid var(--border-strong, #334155);
+  color: var(--amber);
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 998;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, background 0.2s;
+}
+.event-banner-reopen:hover {
+  transform: scale(1.08);
+  background: rgba(17,24,39,1);
+}
+
+/* 모바일 — 배너 폭 약간 축소, 위치는 동일 */
+@media (max-width: 639px) {
+  .event-banner {
+    width: 215px;
+    padding: 10px 12px 12px;
+    bottom: 12px;
+  }
+  .event-icon-lg { font-size: 24px; }
+  .event-name { font-size: 14px; }
+  .event-banner-reopen { width: 38px; height: 38px; bottom: 14px; left: 10px; font-size: 18px; }
+}
+
 /* 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 차단 대응 */
 .nickname-modal-overlay {
   position: fixed; inset: 0; z-index: 10000;
