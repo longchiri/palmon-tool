@@ -285,6 +285,48 @@ svg.pixel-grid .axis-tick {
 .info-panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--amber); }
 .info-panel h3 { margin: 16px 0 8px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
 
+/* 💾 자리배치 저장 / 불러오기 액션 바 */
+.map-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.map-action-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  min-height: 40px;
+  touch-action: manipulation;
+  transition: background 0.15s, transform 0.05s;
+}
+.map-action-btn:hover { background: rgba(255,255,255,0.16); transform: translateY(-1px); }
+.map-action-btn:active { transform: translateY(0); }
+.map-action-btn.primary {
+  background: rgba(52,211,153,0.15);
+  border-color: rgba(52,211,153,0.45);
+  color: var(--green);
+}
+.map-action-btn.primary:hover { background: rgba(52,211,153,0.25); }
+.map-action-btn.danger {
+  margin-left: auto;
+  background: rgba(248,113,113,0.08);
+  border-color: rgba(248,113,113,0.35);
+  color: var(--red);
+}
+.map-action-btn.danger:hover { background: rgba(248,113,113,0.18); }
+@media (max-width: 639px) {
+  .map-actions { gap: 6px; }
+  .map-action-btn { padding: 10px 14px; font-size: 13px; flex: 1; min-width: 110px; min-height: 44px; }
+  .map-action-btn.danger { flex-basis: 100%; margin-left: 0; }
+}
+
 /* 📝 메뉴 설명글 / 📖 상세 설명서 공통 */
 .info-section {
   margin-bottom: 10px;
@@ -979,6 +1021,14 @@ svg.pixel-grid .axis-tick {
         <div class="map-title">
           <span class="title-text">🗺️ 팰몬 자리배치도</span>
           <span class="grid-info">1300 × 1300 px · 13 × 13 셀</span>
+        </div>
+
+        <!-- 💾 자리배치 저장 / 불러오기 -->
+        <div class="map-actions">
+          <button class="map-action-btn primary" id="btn-save-map" type="button">💾 자리배치 저장</button>
+          <button class="map-action-btn" id="btn-load-map" type="button">📂 자리배치 불러오기</button>
+          <input type="file" id="file-load-map" accept=".json,application/json" hidden>
+          <button class="map-action-btn danger" id="btn-clear-map" type="button">🗑️ 전체 초기화</button>
         </div>
 
         <!-- 📝 메뉴 설명글 (메인용) -->
@@ -2479,6 +2529,131 @@ async function saveDetailAsPDF() {
 }
 
 document.getElementById("btn-save-pdf").addEventListener("click", saveDetailAsPDF);
+
+// ─── 💾 자리배치 JSON 저장 / 불러오기 ───
+function buildMapPayload() {
+  return {
+    _meta: {
+      type: "palmon_map",
+      version: 1,
+      saved_at: new Date().toISOString(),
+      server: localStorage.getItem("palmon_map_server") || "",
+    },
+    placedObjects: placedObjects.slice(),
+    terrainPixels: Array.from(terrainPixels),
+  };
+}
+
+async function saveMapAsJSON() {
+  const stored = localStorage.getItem("palmon_map_server") || "";
+  const input = await askServerName(stored);
+  if (input === null) return;
+  const server = input.trim().replace(/[\s/\\:*?"<>|]+/g, "_");
+  if (!server) { alert("서버명을 입력해주세요"); return; }
+  localStorage.setItem("palmon_map_server", server);
+
+  const payload = buildMapPayload();
+  payload._meta.server = server;
+  const jsonStr = JSON.stringify(payload, null, 2);
+  const blob = new Blob([jsonStr], { type: "application/json" });
+
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  const filename = `PAL_${server}_자리배치_${yyyy}-${mm}-${dd}.json`;
+
+  const ua = navigator.userAgent;
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
+
+  // 모바일 1순위: Web Share API
+  if (isMobile) {
+    try {
+      const file = new File([blob], filename, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: filename, text: "Palmon 자리배치 데이터" });
+        return;
+      }
+    } catch (e) {
+      if (e.name === "AbortError") return;
+      console.warn("Web Share 실패, 다운로드 폴백:", e);
+    }
+  }
+
+  // 일반 다운로드
+  try {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.rel = "noopener";
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1500);
+  } catch (e) {
+    alert("저장 실패: " + (e.message || e));
+  }
+}
+
+function loadMapFromFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data || data._meta?.type !== "palmon_map") {
+        alert("⚠️ Palmon 자리배치 JSON 파일이 아닙니다.\n파일 형식을 확인해주세요.");
+        return;
+      }
+      const newObjs = Array.isArray(data.placedObjects) ? data.placedObjects : [];
+      const newTerr = Array.isArray(data.terrainPixels) ? data.terrainPixels : [];
+      const msg = `📂 불러오기:\n• 건물 ${newObjs.length}개\n• 지형 ${newTerr.length}px\n• 서버: ${data._meta?.server || "-"}\n• 저장 시각: ${data._meta?.saved_at ? new Date(data._meta.saved_at).toLocaleString("ko-KR") : "-"}\n\n현재 배치(건물 ${placedObjects.length}개, 지형 ${terrainPixels.size}px)를 덮어쓰고 불러올까요?`;
+      if (!confirm(msg)) return;
+      placedObjects = newObjs;
+      terrainPixels = new Set(newTerr);
+      saveObjects();
+      saveTerrain();
+      buildMainGrid();
+      rebindCellClicks();
+      if (currentCell) drawObjectsOnDetail();
+      renderPlacedList();
+      alert(`✅ 불러오기 완료!\n건물 ${newObjs.length}개, 지형 ${newTerr.length}px`);
+    } catch (err) {
+      alert("❌ JSON 파일 읽기 실패: " + (err.message || err));
+    }
+  };
+  reader.onerror = () => alert("❌ 파일을 읽을 수 없습니다.");
+  reader.readAsText(file);
+}
+
+function clearAllMap() {
+  if (placedObjects.length === 0 && terrainPixels.size === 0) {
+    alert("이미 비어있습니다.");
+    return;
+  }
+  if (!confirm(`⚠️ 전체 초기화\n\n• 배치된 건물 ${placedObjects.length}개\n• 지형 픽셀 ${terrainPixels.size}px\n\n모두 제거됩니다. 계속할까요?`)) return;
+  placedObjects = [];
+  terrainPixels = new Set();
+  saveObjects();
+  saveTerrain();
+  buildMainGrid();
+  rebindCellClicks();
+  if (currentCell) drawObjectsOnDetail();
+  renderPlacedList();
+  alert("✅ 전체 초기화 완료");
+}
+
+document.getElementById("btn-save-map").addEventListener("click", saveMapAsJSON);
+document.getElementById("btn-load-map").addEventListener("click", () => {
+  document.getElementById("file-load-map").click();
+});
+document.getElementById("file-load-map").addEventListener("change", (e) => {
+  const file = e.target.files?.[0];
+  if (file) loadMapFromFile(file);
+  e.target.value = "";   // 같은 파일 다시 불러올 수 있게 초기화
+});
+document.getElementById("btn-clear-map").addEventListener("click", clearAllMap);
 document.getElementById("btn-cancel-mode").addEventListener("click", () => setActiveType(null));
 
 // ───────────────────────────────────────────
