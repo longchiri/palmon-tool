@@ -1522,13 +1522,63 @@ function applySettingsPayload(p) {
   updatePalmon();
 }
 
+// 커스텀 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 가 차단되는 경우 대응
+function askNickname(defaultValue = "") {
+  return new Promise((resolve) => {
+    // 기존 모달이 있으면 제거
+    document.getElementById("__nickname-modal")?.remove();
+
+    const overlay = document.createElement("div");
+    overlay.id = "__nickname-modal";
+    overlay.className = "nickname-modal-overlay";
+    overlay.innerHTML = `
+      <div class="nickname-modal">
+        <div class="nickname-modal-title">💾 설정 저장</div>
+        <div class="nickname-modal-desc">저장할 닉네임을 입력해주세요<br>
+          <span class="nickname-modal-hint">파일명: <code>PAL_닉네임_오늘날짜.json</code></span>
+        </div>
+        <input type="text" id="__nickname-input" class="nickname-modal-input"
+          maxlength="30" placeholder="예) 롱칠 / Python" autocomplete="off" autocapitalize="off"
+          value="${(defaultValue || "").replace(/"/g, "&quot;")}">
+        <div class="nickname-modal-actions">
+          <button class="btn btn-ghost" id="__nickname-cancel">취소</button>
+          <button class="btn btn-primary" id="__nickname-ok">저장</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = "hidden";
+
+    const input = overlay.querySelector("#__nickname-input");
+    const okBtn = overlay.querySelector("#__nickname-ok");
+    const cancelBtn = overlay.querySelector("#__nickname-cancel");
+
+    const close = (val) => {
+      overlay.remove();
+      document.body.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+      resolve(val);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close(null);
+      if (e.key === "Enter") close(input.value);
+    };
+    document.addEventListener("keydown", onKey);
+    okBtn.addEventListener("click", () => close(input.value));
+    cancelBtn.addEventListener("click", () => close(null));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(null); });
+
+    // 모바일/데스크탑 모두 자동 포커스 + 텍스트 선택
+    setTimeout(() => {
+      input.focus();
+      try { input.select(); } catch (_) {}
+    }, 50);
+  });
+}
+
 async function saveSettings() {
-  // 닉네임 — 한번 입력하면 기억됨, 매번 수정만 가능
+  // 닉네임 — 커스텀 모달 사용 (iOS Chrome 등에서 prompt() 차단 회피)
   const storedNick = localStorage.getItem("palmon_nickname") || "";
-  const input = prompt(
-    "저장할 닉네임을 입력해주세요\n(파일명: PAL_닉네임_오늘날짜.json)",
-    storedNick
-  );
+  const input = await askNickname(storedNick);
   if (input === null) { toast("저장 취소됨"); return; }
   const nickname = input.trim().replace(/[\s/\\:*?"<>|]+/g, "_");
   if (!nickname) { toast("닉네임을 입력해주세요"); return; }
