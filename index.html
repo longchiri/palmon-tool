@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260514w" />
+  <link rel="stylesheet" href="style.css?v=20260514x" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -232,10 +232,10 @@
           <div class="target-filter target-filter-top">
             <label>원하는 진화</label>
             <select id="evo-target">
-              <option value="1진화">1진화</option>
-              <option value="2진화">2진화</option>
-              <option value="3진화">3진화</option>
-              <option value="4진화" selected>4진화</option>
+              <option value="진화 1단계">진화 1단계</option>
+              <option value="진화 2단계">진화 2단계</option>
+              <option value="진화 3단계">진화 3단계</option>
+              <option value="진화 4단계" selected>진화 4단계</option>
             </select>
           </div>
           <img src="evo.png" alt="진화 정수" class="bead-img" onerror="this.style.display='none'">
@@ -245,12 +245,12 @@
           </div>
           <div class="reset-subtitle">초기화할 팰몬</div>
           <div class="bead-reset-grid">
-            <div class="bead-reset-item"><span class="reset-label">1진화</span><input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">2진화</span><input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">3진화</span><input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">4진화</span><input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">진화 1단계</span><input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">진화 2단계</span><input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">진화 3단계</span><input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric"></div>
+            <div class="bead-reset-item"><span class="reset-label">진화 4단계</span><input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric"></div>
           </div>
-          <div class="hint">예) 진화 정수 100 + 4진화 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)</div>
+          <div class="hint">예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)</div>
         </div>
 
         <div id="evo-result-slot"></div>
@@ -260,9 +260,9 @@
           <div style="font-size:13px;line-height:1.6;">
             <b>진화 1명 완성</b>: 300<br><br>
             <b>초기화 환급 (누적)</b><br>
-            • 1진화 +20  · 2진화 +60<br>
-            • 3진화 +140  · 4진화 +300<br><br>
-            <p class="txt-dim" style="font-size:12px;margin:0;">진화 정수 300개 = 팰몬 1명 4진화 완료</p>
+            • 진화 1단계 +20  · 진화 2단계 +60<br>
+            • 진화 3단계 +140  · 진화 4단계 +300<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">진화 정수 300개 = 팰몬 1명 진화 4단계 완료</p>
           </div>
         </div>
       </div>
@@ -331,6 +331,21 @@
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
           <div class="cl-text"><b>SR / SSR / UR 색상 통일</b> — 모든 입력값과 결과값에서 <span class="tier-sr">SR (파란색)</span> / <span class="tier-ssr">SSR (보라색)</span> / <span class="tier-ur">UR (노란색)</span> 으로 통일. 자원상자 추천, 커스텀상자 분배, 캠프별 비교 등 어디서나 동일한 색상</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🏆 모험가대회 — 오늘 일정 더보기</b> — 배너 안 "📅 오늘 일정 더보기" 버튼 클릭 시 오늘 6개 슬롯(11시, 15시, 19시, 23시, 다음날 3시, 7시) 전체 일정을 큰 모달로 표시. 진행중/예정/종료 상태 자동 구분</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>✨ 팰몬 진화 라벨 변경</b> — "1진화 / 2진화 / 3진화 / 4진화" → "진화 1단계 / 진화 2단계 / 진화 3단계 / 진화 4단계"로 통일 (드롭다운, 입력칸, 결과창, 기준값 모두)</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>결과 표 글씨 크기 키움</b> — 합산/증가량/%, SR/SSR/UR, 현재/상자/총합, 필요/보유/부족 등 표 헤더와 값 글씨를 모두 키워서 가독성 향상</div>
         </div>
 
         <div class="cl-item">
@@ -504,8 +519,8 @@
           <p>승급 / 진화 정수를 활용해 팰몬을 키울 때.</p>
           <ul>
             <li><b>UR 만능 팰몬조각 (승급)</b> — 보유 수량 입력 → 975 ÷ 1명 → 승급 가능 인원 표시</li>
-            <li><b>진화 정수</b> — 보유 수량 + 초기화할 팰몬(1~4진화 수량) 입력 → 진화 가능 인원 표시</li>
-            <li>초기화 환급(누적): 1진화 +20 / 2진화 +60 / 3진화 +140 / 4진화 +300</li>
+            <li><b>진화 정수</b> — 보유 수량 + 초기화할 팰몬(진화 1~4단계 수량) 입력 → 진화 가능 인원 표시</li>
+            <li>초기화 환급(누적): 진화 1단계 +20 / 진화 2단계 +60 / 진화 3단계 +140 / 진화 4단계 +300</li>
             <li>[원하는 진화] 드롭다운으로 특정 단계 목표 인원 확인 가능</li>
             <li>풀세팅 완성 인원 = 승급 가능 ∩ 진화 가능</li>
           </ul>
@@ -799,6 +814,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260514w"></script>
+  <script src="app.js?v=20260514x"></script>
 </body>
 </html>

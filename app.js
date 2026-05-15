@@ -77,9 +77,9 @@ const BEAD_RESET_REFUND = {
 };
 const PROMO_PER_PALMON = 975;
 const EVO_PER_PALMON = 300;
-const EVO_VALUES = { "1진화": 20, "2진화": 40, "3진화": 80, "4진화": 160 };
+const EVO_VALUES = { "진화 1단계": 20, "진화 2단계": 40, "진화 3단계": 80, "진화 4단계": 160 };
 // 초기화 환급 = 그 단계까지의 누적 비용 (해당 팰몬을 그 단계까지 만드는 데 들어간 정수 합)
-const EVO_RESET_REFUND = { "1진화": 20, "2진화": 60, "3진화": 140, "4진화": 300 };
+const EVO_RESET_REFUND = { "진화 1단계": 20, "진화 2단계": 60, "진화 3단계": 140, "진화 4단계": 300 };
 
 // ───────── 라벨 툴팁 (i 버튼으로 표시될 in-game 출처) ─────────
 const TOOLTIPS = {
@@ -1140,10 +1140,10 @@ function updateEssence() {
 
   // 4단계별 초기화 수량 입력 → 합산
   const resetCounts = {
-    "1진화": parseInt($("evo-reset-1").value || 0),
-    "2진화": parseInt($("evo-reset-2").value || 0),
-    "3진화": parseInt($("evo-reset-3").value || 0),
-    "4진화": parseInt($("evo-reset-4").value || 0),
+    "진화 1단계": parseInt($("evo-reset-1").value || 0),
+    "진화 2단계": parseInt($("evo-reset-2").value || 0),
+    "진화 3단계": parseInt($("evo-reset-3").value || 0),
+    "진화 4단계": parseInt($("evo-reset-4").value || 0),
   };
   let evoReset = 0;
   for (const stage in resetCounts) evoReset += resetCounts[stage] * EVO_RESET_REFUND[stage];
@@ -1172,7 +1172,7 @@ function updateEssence() {
 
   // 4단계 초기화 행 추가
   let resetRows = "";
-  for (const stage of ["1진화", "2진화", "3진화", "4진화"]) {
+  for (const stage of ["진화 1단계", "진화 2단계", "진화 3단계", "진화 4단계"]) {
     const cnt = resetCounts[stage];
     if (cnt > 0) {
       const sub = cnt * EVO_RESET_REFUND[stage];
@@ -1184,7 +1184,7 @@ function updateEssence() {
   }
 
   // 목표한 진화 (원하는 진화 드롭다운 기반)
-  const evoTarget = $("evo-target")?.value || "4진화";
+  const evoTarget = $("evo-target")?.value || "진화 4단계";
   const evoTargetCost = EVO_RESET_REFUND[evoTarget] || EVO_PER_PALMON;
   const evoTargetCount = evoTargetCost > 0 ? Math.floor(evoTotal / evoTargetCost) : 0;
   const evoTargetRemain = evoTotal - evoTargetCount * evoTargetCost;
@@ -1221,7 +1221,7 @@ function updateEvoTargetResult(total) {
   if (total == null) {
     const owned = parseInt($("evo-total").value || 0);
     let refund = 0;
-    for (const stage of ["1진화","2진화","3진화","4진화"]) {
+    for (const stage of ["진화 1단계","진화 2단계","진화 3단계","진화 4단계"]) {
       const idx = stage[0];
       refund += parseInt($(`evo-reset-${idx}`)?.value || 0) * EVO_RESET_REFUND[stage];
     }
@@ -1355,11 +1355,11 @@ function updateInventorySummary() {
   $("inventory-summary").innerHTML = `
     <div class="grid-2">
       <div>
-        <div class="card-title txt-dim" style="margin-bottom:4px;">상자 전부 개봉 시 자원</div>
+        <div class="card-title txt-dim" style="margin-bottom:6px;font-size:14px;font-weight:700;">상자 전부 개봉 시 자원</div>
         ${resTable}
       </div>
       <div>
-        <div class="card-title txt-dim" style="margin-bottom:4px;">가속권 종류별 총합</div>
+        <div class="card-title txt-dim" style="margin-bottom:6px;font-size:14px;font-weight:700;">가속권 종류별 총합</div>
         ${spdTable}
       </div>
     </div>`;
@@ -1397,10 +1397,10 @@ function buildSettingsPayload() {
     essence_promo_total: parseInt($("promo-total").value || 0),
     essence_evo_total: parseInt($("evo-total").value || 0),
     essence_evo_resets: {
-      "1진화": parseInt($("evo-reset-1").value || 0),
-      "2진화": parseInt($("evo-reset-2").value || 0),
-      "3진화": parseInt($("evo-reset-3").value || 0),
-      "4진화": parseInt($("evo-reset-4").value || 0),
+      "진화 1단계": parseInt($("evo-reset-1").value || 0),
+      "진화 2단계": parseInt($("evo-reset-2").value || 0),
+      "진화 3단계": parseInt($("evo-reset-3").value || 0),
+      "진화 4단계": parseInt($("evo-reset-4").value || 0),
     },
     palmon_res_camp: parseInt($("palmon-camp").value),
     palmon_res_boxes: Object.fromEntries(PALMON_RESOURCE_ORDER.map((rk) => [rk, Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`pbox-${rk}-${t}`).value || 0)]))])),
@@ -1494,7 +1494,7 @@ function applySettingsPayload(p) {
   $("evo-total").value = et || 0;
 
   // 4단계 초기화 수량 복원 (+ 이전 단일-필터 포맷 호환)
-  const RESET_IDS = { "1진화": "evo-reset-1", "2진화": "evo-reset-2", "3진화": "evo-reset-3", "4진화": "evo-reset-4" };
+  const RESET_IDS = { "진화 1단계": "evo-reset-1", "진화 2단계": "evo-reset-2", "진화 3단계": "evo-reset-3", "진화 4단계": "evo-reset-4" };
   if (p.essence_evo_resets) {
     for (const stage in RESET_IDS) {
       $(RESET_IDS[stage]).value = parseInt(p.essence_evo_resets[stage] || 0);
@@ -2799,9 +2799,15 @@ function renderAdvBanner({ force = false } = {}) {
       다음 <span class="next-name">${escapeHtml(info.next)}</span>
       <span class="next-time">${nextStartHHMM}~</span>
     </div>
+    <button class="event-banner-more" type="button">📅 오늘 일정 더보기</button>
   `;
   // 슬라이드 인
   setTimeout(() => banner.classList.add("show"), 30);
+
+  // 더보기 버튼 — 오늘 일정 전체 모달 열기
+  banner.querySelector(".event-banner-more")?.addEventListener("click", () => {
+    openAdvScheduleModal();
+  });
 
   // 닫기 버튼 — × 즉시 축소 (모바일/PC 모두)
   banner.querySelector(".event-banner-close").addEventListener("click", () => {
@@ -2826,6 +2832,95 @@ function renderAdvBanner({ force = false } = {}) {
       // 자동 축소는 "closed" 상태를 저장하지 않음 — 트로피로 다시 열 수 있게
     }, ADV_MOBILE_AUTO_SHRINK_MS);
   }
+}
+
+// 오늘 전체 일정 모달 — 더보기 버튼 클릭 시
+function openAdvScheduleModal() {
+  document.getElementById("__adv-modal")?.remove();
+
+  // 오늘 시작되는 6개 슬롯 계산 (11시, 15시, 19시, 23시, 다음날 3시, 다음날 7시)
+  const now = new Date();
+  // "오늘"의 기준 시작: 오늘 날짜 11:00 (KST)
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 0, 0).getTime();
+  // 만약 현재 시각이 11시 전이면 어제 11시부터 (어제 슬롯이 오늘 7시까지 이어짐)
+  const cycleBase = now.getTime() < todayStart ? todayStart - 24 * 60 * 60 * 1000 : todayStart;
+
+  // 6개 슬롯 정보 만들기 (4시간씩)
+  const slots = [];
+  for (let i = 0; i < 6; i++) {
+    const slotStartTs = cycleBase + i * ADV_SLOT_MS;
+    const slotIdx = Math.floor((slotStartTs - ADV_ANCHOR_TS) / ADV_SLOT_MS);
+    const evIdx = ((slotIdx % 5) + 5) % 5;
+    const evName = ADV_EVENT_CYCLE[evIdx];
+    const slotDate = new Date(slotStartTs);
+    const slotEnd = new Date(slotStartTs + ADV_SLOT_MS);
+    const isOngoing = now >= slotDate && now < slotEnd;
+    const isPast = now >= slotEnd;
+    slots.push({
+      slotIdx, evName, slotDate, slotEnd, isOngoing, isPast,
+      hh: String(slotDate.getHours()).padStart(2, "0"),
+      mm: String(slotDate.getMinutes()).padStart(2, "0"),
+      endHh: String(slotEnd.getHours()).padStart(2, "0"),
+      endMm: String(slotEnd.getMinutes()).padStart(2, "0"),
+    });
+  }
+
+  // 오늘 날짜 + 요일
+  const dayNames = ["일", "월", "화", "수", "목", "금", "토"];
+  const dateLabel = `${now.getMonth() + 1}월 ${now.getDate()}일 (${dayNames[now.getDay()]})`;
+
+  // 슬롯 행 HTML
+  let rowsHtml = "";
+  for (const s of slots) {
+    const icon = ADV_EVENT_ICONS[s.evName] || "🎯";
+    const color = ADV_EVENT_COLORS[s.evName] || "#fbbf24";
+    const statusBadge = s.isOngoing
+      ? `<span class="adv-modal-badge ongoing">진행중</span>`
+      : s.isPast
+        ? `<span class="adv-modal-badge past">종료</span>`
+        : `<span class="adv-modal-badge upcoming">예정</span>`;
+    rowsHtml += `
+      <div class="adv-modal-row ${s.isOngoing ? "is-ongoing" : ""} ${s.isPast ? "is-past" : ""}">
+        <div class="adv-modal-time">${s.hh}:${s.mm} ~ ${s.endHh}:${s.endMm}</div>
+        <div class="adv-modal-event" style="--ev-color: ${color};">
+          <span class="adv-modal-icon">${icon}</span>
+          <span class="adv-modal-name">${escapeHtml(s.evName)}</span>
+        </div>
+        <div class="adv-modal-status">${statusBadge}</div>
+      </div>`;
+  }
+
+  const overlay = document.createElement("div");
+  overlay.id = "__adv-modal";
+  overlay.className = "adv-modal-overlay";
+  overlay.innerHTML = `
+    <div class="adv-modal">
+      <button class="adv-modal-close" type="button" aria-label="닫기">×</button>
+      <div class="adv-modal-header">
+        <div class="adv-modal-title">🏆 오늘 모험가대회 일정</div>
+        <div class="adv-modal-date">${dateLabel}</div>
+      </div>
+      <div class="adv-modal-list">
+        ${rowsHtml}
+      </div>
+      <div class="adv-modal-footer">
+        <div class="adv-modal-cycle">
+          이벤트 사이클: 🏗️ 건물렙업 → 🐾 아미고 → 🔬 기술연구 → ⚔️ AP소모 → ✨ 팰몬강화 (4시간마다 회전)
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  document.body.style.overflow = "hidden";
+
+  const close = () => {
+    overlay.remove();
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onKey);
+  };
+  const onKey = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  overlay.querySelector(".adv-modal-close").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
 }
 
 function startAdvBanner() {
