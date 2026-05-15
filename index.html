@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515d" />
+  <link rel="stylesheet" href="style.css?v=20260515e" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -57,6 +57,7 @@
       <button class="tab" data-tab="t-inventory">📦 보유자원/가속 계산하기</button>
       <button class="tab" data-tab="t-bead">💎 걸작 구슬</button>
       <button class="tab" data-tab="t-essence">✨ 팰몬 진화</button>
+      <button class="tab" data-tab="t-skillexp">🌰 스킬열매 / 경험치</button>
       <button class="tab" data-tab="t-palmon">📊 캠프별 자원상자 비교</button>
       <button class="tab" data-tab="t-map">🗺️ 자리배치도</button>
       <button class="tab" data-tab="t-changelog">📰 업데이트 현황</button>
@@ -271,6 +272,85 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 스킬열매 / 경험치 계산하기                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-skillexp">
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🌰 <b>경험치</b>와 <b>스킬 레벨업 열매</b>를 현재 레벨에서 목표 레벨까지 올리는 데 필요한 양을 자동 계산합니다.<br>
+          현재 레벨과 목표 레벨을 선택하면 <b>필요량 / 증가량 / 누적값</b>이 즉시 표시돼요. <span class="txt-amber">정확히 입력해야 확인이 가능합니다.</span>
+        </p>
+      </div>
+
+      <!-- Row 1: 경험치 계산기 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🌟 경험치 계산기</div>
+          <div class="target-filter target-filter-top">
+            <label>현재 Lv</label>
+            <select id="exp-current"></select>
+          </div>
+          <div class="target-filter target-filter-top" style="margin-top:8px;">
+            <label>목표 Lv</label>
+            <select id="exp-target"></select>
+          </div>
+          <div class="hint" style="margin-top:14px;">예) 현재 Lv 280 → 목표 Lv 290 까지 필요한 경험치 자동 계산 (최대 290)</div>
+        </div>
+
+        <div id="exp-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.7;">
+            <b>최대 레벨</b>: 290<br><br>
+            <b>예시 구간</b><br>
+            • Lv 1 → 10: 900<br>
+            • Lv 1 → 50: 50,000<br>
+            • Lv 1 → 100: 1,950,000<br>
+            • Lv 1 → 200: 33,490,000<br>
+            • Lv 1 → 290: 178,982,000<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">누적 경험치 기준으로 계산</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: 스킬 레벨업 열매 계산기 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🌰 스킬 레벨업 열매 계산기</div>
+          <div class="target-filter target-filter-top">
+            <label>현재 Lv</label>
+            <select id="skill-current"></select>
+          </div>
+          <div class="target-filter target-filter-top" style="margin-top:8px;">
+            <label>목표 Lv</label>
+            <select id="skill-target"></select>
+          </div>
+          <div class="hint" style="margin-top:14px;">예) 현재 Lv 1 → 목표 Lv 30 = 9,000 열매 필요 (최대 30)</div>
+        </div>
+
+        <div id="skill-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.7;">
+            <b>최대 레벨</b>: 30<br><br>
+            <b>주요 구간 (1→N)</b><br>
+            • Lv 1 → 5: 400<br>
+            • Lv 1 → 10: 1,400<br>
+            • Lv 1 → 15: 2,900<br>
+            • Lv 1 → 20: 4,400<br>
+            • Lv 1 → 25: 6,500<br>
+            • Lv 1 → 30: 9,000<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">스킬 1개 풀레벨(30) 기준 = 9,000개</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 팰몬 XP / 자원 합산                                -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-palmon">
@@ -335,6 +415,11 @@
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🌰 스킬열매 / 경험치 계산기 탭 추가</b> — 팰몬 진화 옆에 신설. 🌟 경험치(Lv 1~290) + 🌰 스킬 레벨업 열매(Lv 1~30) 계산기. 현재/목표 Lv 선택 → 필요량 자동 계산. 누적값 기반</div>
+        </div>
 
         <div class="cl-item">
           <span class="cl-tag cl-new">✨ 신규</span>
@@ -556,6 +641,14 @@
             <li>초기화 환급(누적): 진화 1단계 +20 / 진화 2단계 +60 / 진화 3단계 +140 / 진화 4단계 +300</li>
             <li>[원하는 진화] 드롭다운으로 특정 단계 목표 인원 확인 가능</li>
             <li>풀세팅 완성 인원 = 승급 가능 ∩ 진화 가능</li>
+          </ul>
+
+          <h3>🌰 스킬열매 / 경험치 계산하기</h3>
+          <p>현재 레벨에서 목표 레벨까지 올리는 데 필요한 경험치 / 스킬 열매 갯수를 자동 계산.</p>
+          <ul>
+            <li><b>🌟 경험치 계산기</b> — Lv 1 ~ Lv 290 까지 지원. 현재 Lv + 목표 Lv 드롭다운 선택 → 필요 경험치 즉시 계산</li>
+            <li><b>🌰 스킬 레벨업 열매 계산기</b> — Lv 1 ~ Lv 30 까지 지원. 스킬 풀레벨까지 9,000개 필요</li>
+            <li>두 계산기 모두 <b>누적값 차이</b>로 계산: (목표 Lv 누적) − (현재 Lv 누적) = 필요량</li>
           </ul>
 
           <h3>📊 캠프별 자원상자 비교</h3>
@@ -860,6 +953,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515d"></script>
+  <script src="app.js?v=20260515e"></script>
 </body>
 </html>
