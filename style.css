@@ -1070,14 +1070,15 @@ input[type="checkbox"] {
    ════════════════════════════════════════════════════ */
 .event-banner {
   position: fixed;
-  bottom: 18px;
-  left: 0;
-  width: 240px;
-  transform: translateX(-110%);
+  /* 헤더+탭바 아래에 위치 — header-h(JS 동적) + 탭바 높이(약 50px) */
+  top: calc(var(--header-h, 56px) + 52px);
+  left: 14px;
+  width: 230px;
+  transform: translateX(-115%);
   background: linear-gradient(135deg, rgba(17,24,39,0.97), rgba(13,18,32,0.97));
   border: 1px solid var(--border-strong, #334155);
   border-left: 4px solid var(--cur-color, var(--amber));
-  border-radius: 0 14px 14px 0;
+  border-radius: 14px;
   padding: 12px 14px 14px;
   box-shadow: 0 8px 30px rgba(0,0,0,0.55);
   z-index: 998;
@@ -1181,11 +1182,11 @@ input[type="checkbox"] {
   font-size: 11px;
 }
 
-/* 다시 보기 버튼 — 닫혔을 때 좌측 하단에 작은 트로피 */
+/* 다시 보기 버튼 — 닫혔을 때 좌측 상단에 작은 트로피 (배너와 같은 위치) */
 .event-banner-reopen {
   position: fixed;
-  bottom: 18px;
-  left: 12px;
+  top: calc(var(--header-h, 56px) + 56px);
+  left: 14px;
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -1206,16 +1207,23 @@ input[type="checkbox"] {
   background: rgba(17,24,39,1);
 }
 
-/* 모바일 — 배너 폭 약간 축소, 위치는 동일 */
+/* 모바일 — 배너 폭 축소 */
 @media (max-width: 639px) {
   .event-banner {
-    width: 215px;
+    width: 200px;
     padding: 10px 12px 12px;
-    bottom: 12px;
+    top: calc(var(--header-h, 56px) + 48px);
+    left: 10px;
   }
   .event-icon-lg { font-size: 24px; }
   .event-name { font-size: 14px; }
-  .event-banner-reopen { width: 38px; height: 38px; bottom: 14px; left: 10px; font-size: 18px; }
+  .event-banner-reopen {
+    width: 38px;
+    height: 38px;
+    top: calc(var(--header-h, 56px) + 52px);
+    left: 10px;
+    font-size: 18px;
+  }
 }
 
 /* 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 차단 대응 */
