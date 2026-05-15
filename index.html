@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515q" />
+  <link rel="stylesheet" href="style.css?v=20260515r" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -542,6 +542,76 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 이글아이 보물상자 시뮬레이터                        -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-eaglebox">
+
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🦅 <b>이글아이 보물상자 시뮬레이터</b> — 보유한 이글아이 보물상자 갯수를 입력하고 <b>확인하기</b>를 누르면 확률에 따라 실제 한 번 굴려본 결과를 보여줍니다.<br>
+          상자 1개당 1번 굴림. 결과는 매번 다르게 나옵니다.
+        </p>
+        <div style="margin-top:10px;">
+          <button type="button" id="eaglebox-prob-toggle" class="btn">📊 확률표 보기</button>
+        </div>
+        <div id="eaglebox-prob-table" style="display:none;margin-top:14px;">
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="text-align:left;">아이템 명칭</th>
+              <th>수량</th>
+              <th>드랍 확률</th>
+            </tr></thead>
+            <tbody>
+              <tr><td>💧 물의 조각상 정수</td><td class="value">1개</td><td class="value">3.35%</td></tr>
+              <tr><td>🔥 불의 조각상 정수</td><td class="value">1개</td><td class="value">3.35%</td></tr>
+              <tr><td>🪨 바위의 조각상 정수</td><td class="value">1개</td><td class="value">3.35%</td></tr>
+              <tr><td>⚡ 전기의 조각상 정수</td><td class="value">1개</td><td class="value">3.35%</td></tr>
+              <tr><td><b class="tier-ur">🟡 UR 팰몬 만능 증표</b></td><td class="value">1개</td><td class="value">2.79%</td></tr>
+              <tr><td>💠 강화 결정(소)</td><td class="value">100개</td><td class="value">41.90%</td></tr>
+              <tr><td>🎯 10 AP</td><td class="value">1개</td><td class="value">41.90%</td></tr>
+              <tr style="border-top:2px solid var(--border);"><td colspan="2"><b>총합</b></td><td class="value amber"><b>99.99%</b></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <p style="margin-top:14px;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:13px;line-height:1.6;color:var(--red);">
+          ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+        </p>
+      </div>
+
+      <!-- Row 1: 입력 + 결과 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🦅 이글아이 보물상자</div>
+          <img src="eaglebox.png" alt="이글아이 보물상자" class="bead-img" onerror="this.style.display='none'">
+          <div class="form-row">
+            <label>보유 수량</label>
+            <input type="number" id="eaglebox-count" min="0" value="0" inputmode="numeric">
+          </div>
+          <button type="button" id="eaglebox-roll" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 확인하기</button>
+          <div class="hint" style="margin-top:14px;">예) 100상자 → 확률 기반 랜덤 결과 표시</div>
+        </div>
+
+        <div id="eaglebox-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title">주요 드랍 (높은 확률 순)</div>
+          <div style="font-size:13px;line-height:1.7;">
+            • 💠 강화 결정(소) 100개: <b>41.90%</b><br>
+            • 🎯 10 AP: <b>41.90%</b><br>
+            • 💧 물의 조각상 정수: <b>3.35%</b><br>
+            • 🔥 불의 조각상 정수: <b>3.35%</b><br>
+            • 🪨 바위의 조각상 정수: <b>3.35%</b><br>
+            • ⚡ 전기의 조각상 정수: <b>3.35%</b><br>
+            • <b class="tier-ur">🟡 UR 팰몬 만능 증표</b>: <b>2.79%</b><br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">총 7종 — 강화 결정(소) / 10 AP가 가장 흔하고 조각상 정수 4종 + UR 증표가 희귀 아이템</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 자리배치도 (map.html iframe)                       -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-map">
@@ -574,6 +644,11 @@
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🦅 이글아이 보물상자 시뮬레이터 추가</b> — 상자시뮬레이터 세 번째 서브탭. 7종 아이템(💠 강화 결정(소) / 🎯 10 AP 각 41.9% / 💧🔥🪨⚡ 조각상 정수 4종 각 3.35% / 🟡 UR 만능 증표 2.79%) 확률 기반 시뮬레이션. ✅ 확인하기 클릭 → 받은 아이템만 표 형식으로 표시 (받은 횟수 많은 순)</div>
+        </div>
 
         <div class="cl-item">
           <span class="cl-tag cl-new">✨ 신규</span>
@@ -875,6 +950,15 @@
             <li><span style="color:var(--red);">⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b></span></li>
           </ul>
 
+          <h3>🦅 이글아이 보물상자</h3>
+          <p>보유한 이글아이 보물상자(7종 아이템) 결과를 확률 기반 랜덤 시뮬레이션.</p>
+          <ul>
+            <li><b>보유 수량 입력</b> → ✅ <b>확인하기</b> 버튼 → 결과창에 <b>아이템명 + 받은 횟수 + 총 갯수</b> 표 형식 표시</li>
+            <li>메뉴 설명글의 <b>📊 확률표 보기</b> 버튼으로 7행 확률표 토글</li>
+            <li><b>주요 드랍률</b>: 💠 강화 결정(소) 100개 / 🎯 10 AP 각 41.9% / 💧🔥🪨⚡ 조각상 정수 4종 각 3.35% / 🟡 UR 만능 증표 2.79%</li>
+            <li><span style="color:var(--red);">⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b></span></li>
+          </ul>
+
           <h2 class="help-group">🌐 기타 탭</h2>
 
           <h3>🗺️ 자리배치도</h3>
@@ -1171,6 +1255,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515q"></script>
+  <script src="app.js?v=20260515r"></script>
 </body>
 </html>

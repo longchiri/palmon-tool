@@ -607,7 +607,8 @@ body { overflow-x: hidden; }
 #t-essence .grid-3,
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
-#t-mysterybox .grid-3 {
+#t-mysterybox .grid-3,
+#t-eaglebox .grid-3 {
   align-items: stretch;
   grid-auto-rows: minmax(min-content, auto);
 }
@@ -616,7 +617,8 @@ body { overflow-x: hidden; }
 #t-essence .grid-3 > *,
 #t-skillexp .grid-3 > *,
 #t-fruitbox .grid-3 > *,
-#t-mysterybox .grid-3 > * {
+#t-mysterybox .grid-3 > *,
+#t-eaglebox .grid-3 > * {
   margin-bottom: 0;             /* 그리드 안에서는 margin 제거 (행 높이 계산 정확히) */
   align-self: stretch;
 }
@@ -628,7 +630,8 @@ body { overflow-x: hidden; }
 #exp-result-slot,
 #skill-result-slot,
 #fruitbox-result-slot,
-#mysterybox-result-slot {
+#mysterybox-result-slot,
+#eaglebox-result-slot {
   display: flex;
   flex-direction: column;
 }
@@ -638,7 +641,8 @@ body { overflow-x: hidden; }
 #exp-result-slot > .result-card,
 #skill-result-slot > .result-card,
 #fruitbox-result-slot > .result-card,
-#mysterybox-result-slot > .result-card {
+#mysterybox-result-slot > .result-card,
+#eaglebox-result-slot > .result-card {
   flex: 1 1 auto;
   margin: 0;
   display: flex;
@@ -651,7 +655,8 @@ body { overflow-x: hidden; }
 #t-essence .grid-3 > .group:last-child,
 #t-skillexp .grid-3 > .group:last-child,
 #t-fruitbox .grid-3 > .group:last-child,
-#t-mysterybox .grid-3 > .group:last-child {
+#t-mysterybox .grid-3 > .group:last-child,
+#t-eaglebox .grid-3 > .group:last-child {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -661,7 +666,8 @@ body { overflow-x: hidden; }
 #t-essence .grid-3,
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
-#t-mysterybox .grid-3 {
+#t-mysterybox .grid-3,
+#t-eaglebox .grid-3 {
   row-gap: 28px;
 }
 /* 두 개의 .grid-3 블록 사이 간격 — 떠있는 제목 알약이 가려지지 않도록 충분히 띄움 */
@@ -669,7 +675,8 @@ body { overflow-x: hidden; }
 #t-essence > .grid-3:not(:last-child),
 #t-skillexp > .grid-3:not(:last-child),
 #t-fruitbox > .grid-3:not(:last-child),
-#t-mysterybox > .grid-3:not(:last-child) {
+#t-mysterybox > .grid-3:not(:last-child),
+#t-eaglebox > .grid-3:not(:last-child) {
   margin-bottom: 28px;
 }
 

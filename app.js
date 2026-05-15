@@ -1630,6 +1630,113 @@ function renderMysteryBoxResult(n, rowCounts) {
     </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════
+// 🦅 이글아이 보물상자 시뮬레이터
+// ════════════════════════════════════════════════════════════════
+// 가중치 base = 10000 (3.35% → 335, 2.79% → 279, 41.9% → 4190)
+// 합계: 4×335 + 279 + 2×4190 = 1340 + 279 + 8380 = 9999 (99.99%)
+const EAGLEBOX_DROPS = [
+  { label: "💧 물의 조각상 정수",      qty: 1,   weight: 335,  pct: 3.35  },
+  { label: "🔥 불의 조각상 정수",      qty: 1,   weight: 335,  pct: 3.35  },
+  { label: "🪨 바위의 조각상 정수",    qty: 1,   weight: 335,  pct: 3.35  },
+  { label: "⚡ 전기의 조각상 정수",    qty: 1,   weight: 335,  pct: 3.35  },
+  { label: "🟡 UR 팰몬 만능 증표",    qty: 1,   weight: 279,  pct: 2.79, color: "var(--amber)" },
+  { label: "💠 강화 결정(소)",         qty: 100, weight: 4190, pct: 41.90 },
+  { label: "🎯 10 AP",                 qty: 1,   weight: 4190, pct: 41.90 },
+];
+const EAGLEBOX_TOTAL_WEIGHT = EAGLEBOX_DROPS.reduce((s, d) => s + d.weight, 0);
+
+function buildEagleBoxTab() {
+  if (!$("eaglebox-count")) return;
+  renderEagleBoxIdle();
+
+  $("eaglebox-roll").addEventListener("click", () => {
+    const n = Math.max(0, parseInt($("eaglebox-count").value || 0));
+    if (n <= 0) { renderEagleBoxIdle(); return; }
+    const counts = rollEagleBoxes(n);
+    renderEagleBoxResult(n, counts);
+  });
+
+  if ($("eaglebox-prob-toggle")) {
+    $("eaglebox-prob-toggle").addEventListener("click", () => {
+      const tbl = $("eaglebox-prob-table");
+      const btn = $("eaglebox-prob-toggle");
+      if (!tbl) return;
+      const isHidden = tbl.style.display === "none";
+      tbl.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "📊 확률표 숨기기" : "📊 확률표 보기";
+    });
+  }
+}
+
+function rollEagleBoxes(n) {
+  const counts = EAGLEBOX_DROPS.map(() => 0);
+  for (let i = 0; i < n; i++) {
+    let r = Math.floor(Math.random() * EAGLEBOX_TOTAL_WEIGHT);
+    for (let j = 0; j < EAGLEBOX_DROPS.length; j++) {
+      r -= EAGLEBOX_DROPS[j].weight;
+      if (r < 0) { counts[j]++; break; }
+    }
+  }
+  return counts;
+}
+
+function renderEagleBoxIdle() {
+  const slot = $("eaglebox-result-slot");
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="result-card" style="text-align:center;">
+      <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+        <p class="txt-dim" style="margin:0;font-size:13.5px;line-height:1.9;">
+          🦅 보유 수량을 입력하고<br>
+          ✅ <b>확인하기</b> 버튼을 눌러주세요.
+        </p>
+      </div>
+    </div>`;
+}
+
+function renderEagleBoxResult(n, rowCounts) {
+  const slot = $("eaglebox-result-slot");
+  if (!slot) return;
+
+  const got = [];
+  rowCounts.forEach((c, i) => {
+    if (c > 0) got.push({ ...EAGLEBOX_DROPS[i], count: c, total: c * EAGLEBOX_DROPS[i].qty });
+  });
+  got.sort((a, b) => b.count - a.count);
+
+  let rows = "";
+  if (got.length === 0) {
+    rows = `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:18px 0;">아무 것도 못 받았습니다 🥲</td></tr>`;
+  } else {
+    for (const g of got) {
+      const c = g.color || "var(--text)";
+      rows += `<tr>
+        <td><b style="color:${c};">${g.label}</b></td>
+        <td class="value">${fmt(g.count)}회</td>
+        <td class="value amber"><b>${fmt(g.total)}개</b></td>
+      </tr>`;
+    }
+  }
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:var(--amber);">
+      <div class="card-title" style="color:var(--amber);text-align:center;">◆ 시뮬레이션 결과 (${fmt(n)}상자 개봉)</div>
+      <div class="tbl-wrap" style="margin-top:8px;"><table class="tbl">
+        <thead><tr>
+          <th style="text-align:left;">아이템</th>
+          <th>받은 횟수</th>
+          <th>총 갯수</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p style="margin:14px 0 0;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--red);text-align:left;">
+        ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+      </p>
+    </div>`;
+}
+
 function renderFruitBoxResult(n, rowCounts) {
   const slot = $("fruitbox-result-slot");
   if (!slot) return;
@@ -1857,6 +1964,7 @@ const TAB_GROUPS = {
     tabs: [
       { id: "t-fruitbox",   icon: "🌰", label: "열매상자" },
       { id: "t-mysterybox", icon: "🎁", label: "미스테리박스" },
+      { id: "t-eaglebox",   icon: "🦅", label: "이글아이 보물상자" },
     ],
   },
 };
@@ -2090,6 +2198,7 @@ function applySettingsPayload(p) {
   buildSkillExpTab();
   buildFruitBoxTab();
   buildMysteryBoxTab();
+  buildEagleBoxTab();
 }
 
 // 커스텀 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 가 차단되는 경우 대응
@@ -3236,6 +3345,7 @@ async function bootstrap() {
     buildSkillExpTab();
     buildFruitBoxTab();
     buildMysteryBoxTab();
+    buildEagleBoxTab();
     updateInventorySummary();
     autoCalculate();
     // 게시판 초기화
