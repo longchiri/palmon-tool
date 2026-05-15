@@ -2834,6 +2834,51 @@ function startAdvBanner() {
 }
 startAdvBanner();
 
+// =====================================================
+// 사용법 탭 — 최신 업데이트 3개 자동 표시
+// =====================================================
+function renderLatestUpdates() {
+  const listEl = document.getElementById("latest-updates-list");
+  const verEl = document.getElementById("latest-updates-version");
+  const moreEl = document.getElementById("latest-updates-more");
+  if (!listEl) return;
+
+  // changelog 탭의 첫번째 entry (= 최신 버전)에서 항목 3개 가져오기
+  const firstEntry = document.querySelector("#t-changelog .changelog-entry");
+  if (!firstEntry) return;
+
+  // 버전 타이틀
+  const titleEl = firstEntry.querySelector(".group-title");
+  if (verEl && titleEl) verEl.textContent = `(${titleEl.textContent})`;
+
+  // 최신 3개 항목
+  const items = firstEntry.querySelectorAll(".cl-item");
+  listEl.innerHTML = "";
+  const max = Math.min(3, items.length);
+  for (let i = 0; i < max; i++) {
+    const cloned = items[i].cloneNode(true);
+    listEl.appendChild(cloned);
+  }
+  if (items.length === 0) {
+    listEl.innerHTML = `<p class="txt-dim" style="font-size:13px;margin:8px 0;">아직 업데이트 내역이 없습니다.</p>`;
+  }
+
+  // 전체 보기 링크 → 업데이트 현황 탭으로 이동
+  if (moreEl) {
+    moreEl.onclick = (e) => {
+      e.preventDefault();
+      activateTab("t-changelog");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+  }
+}
+// 페이지 로드 후 즉시 실행 (DOMContentLoaded 이후)
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderLatestUpdates);
+} else {
+  renderLatestUpdates();
+}
+
 // 헤더 높이를 CSS 변수로 노출 → 탭바 sticky 위치 자동 계산
 function updateHeaderHeight() {
   const h = document.querySelector(".header")?.offsetHeight || 56;

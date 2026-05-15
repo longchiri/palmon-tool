@@ -971,6 +971,34 @@ input[type="checkbox"] {
   .col-target-select { font-size: 18px !important; padding: 12px !important; }
 }
 
+/* 사용법 탭의 최신 업데이트 카드 — 약간 강조 */
+#latest-updates-card {
+  border-color: rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.03);
+}
+#latest-updates-card .group-title {
+  background: var(--tab-active);
+  color: var(--amber);
+}
+.latest-updates-version {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 600;
+  margin-left: 4px;
+}
+.latest-updates-more {
+  font-size: 12.5px;
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.latest-updates-more:hover {
+  background: rgba(96,165,250,0.1);
+  text-decoration: underline;
+}
+
 /* ════════════════════════════════════════════════════
    업데이트 현황 (Changelog) 탭
    ════════════════════════════════════════════════════ */
