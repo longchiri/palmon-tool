@@ -1,0 +1,2665 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>팰몬 자리배치도</title>
+<script>
+  // 임베드 모드(iframe 안에서 로드)면 헤더/링크 숨기기
+  (function () {
+    try {
+      const isEmbed = location.search.includes("embed=1") || window !== window.top;
+      if (isEmbed) {
+        document.documentElement.classList.add("embed-mode");
+      }
+    } catch (_) {}
+  })();
+</script>
+<!-- PDF 저장용 라이브러리 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0b1220;
+  --bg-card: #111827;
+  --border: #243043;
+  --border-strong: #334155;
+  --text: #e5e7eb;
+  --text-dim: #94a3b8;
+  --text-mute: #64748b;
+  --amber: #fbbf24;
+  --blue: #60a5fa;
+  --green: #34d399;
+  --purple: #a78bfa;
+  --red: #f87171;
+  --orange: #fb923c;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 24px 18px;
+  min-height: 100vh;
+}
+h1 { color: var(--amber); margin: 0 0 6px; font-size: 22px; }
+.subtitle { color: var(--text-dim); font-size: 13px; margin-bottom: 22px; }
+
+/* 임베드 모드 — Palmon Tool 메인 사이트의 iframe 안에서 로드 시 */
+html.embed-mode body { padding: 14px 12px; }
+html.embed-mode #page-h1,
+html.embed-mode .subtitle,
+html.embed-mode .back-link {
+  display: none !important;
+}
+html.embed-mode .info-panel {
+  /* 우측 정보 패널은 임베드에서도 보임 */
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+.map-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+}
+.map-title {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.map-title .title-text { color: var(--text); font-weight: 700; font-size: 15px; }
+.map-title .grid-info {
+  font-size: 11px;
+  color: var(--text-mute);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.view { display: none; }
+.view.active { display: block; animation: fade-in 0.18s ease-out; }
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 줌 컨트롤 — 모바일 친화적 큰 버튼 */
+.zoom-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  touch-action: manipulation;
+}
+.zoom-btn:hover, .zoom-btn:active { background: rgba(255,255,255,0.18); }
+@media (max-width: 639px) {
+  .zoom-btn { width: 44px; height: 44px; font-size: 20px; }
+}
+.zoom-level {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+}
+
+svg.map-grid {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0f1729;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  user-select: none;
+  touch-action: none;
+}
+svg.map-grid.panning { cursor: grabbing !important; }
+svg.map-grid:not(.panning) { cursor: grab; }
+svg.map-grid .cell {
+  fill: rgba(96, 165, 250, 0.04);
+  stroke: rgba(96, 165, 250, 0.18);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: fill 0.1s;
+}
+svg.map-grid .cell:hover {
+  fill: rgba(251, 191, 36, 0.18);
+  stroke: var(--amber);
+  stroke-width: 2;
+}
+svg.map-grid .cell-label {
+  fill: rgba(255, 255, 255, 0.35);
+  font-size: 9px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+/* 메인 뷰 — 작은 오브젝트 마커 (클릭 가능) */
+.obj-marker-main {
+  filter: drop-shadow(0 0 6px currentColor);
+  transition: transform 0.1s;
+}
+.obj-marker-main:hover {
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+/* 디테일 뷰 (100×100 픽셀) */
+svg.pixel-grid {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0a0f1e;
+  border: 2px solid var(--border-strong);
+  border-radius: 8px;
+  user-select: none;
+  cursor: crosshair;
+  touch-action: none;
+}
+svg.pixel-grid.placing { cursor: cell; }
+svg.pixel-grid.painting { cursor: crosshair; }
+svg.pixel-grid.panning { cursor: grabbing !important; }
+svg.pixel-grid .pixel-bg { fill: #0f1729; }
+svg.pixel-grid .crosshair-line {
+  stroke: var(--amber);
+  stroke-width: 0.5;
+  pointer-events: none;
+  opacity: 0;
+}
+svg.pixel-grid.has-hover .crosshair-line { opacity: 0.5; }
+svg.pixel-grid .hover-cell {
+  fill: rgba(251,191,36,0.4);
+  pointer-events: none;
+}
+svg.pixel-grid .ghost-rect {
+  fill: rgba(52,211,153,0.3);
+  stroke: var(--green);
+  stroke-width: 0.4;
+  stroke-dasharray: 1,1;
+  pointer-events: none;
+}
+svg.pixel-grid .ghost-rect.invalid {
+  fill: rgba(248,113,113,0.3);
+  stroke: var(--red);
+}
+svg.pixel-grid .placed-obj {
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+svg.pixel-grid .placed-obj:hover { opacity: 0.7; }
+svg.pixel-grid .axis-tick {
+  fill: var(--text-mute);
+  font-size: 5px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  pointer-events: none;
+}
+
+/* 디테일 뷰 헤더 */
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.detail-header .btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.detail-header .btn:hover { background: rgba(255,255,255,0.12); }
+.detail-cell-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.detail-cell-info b { color: var(--amber); }
+
+.mode-banner {
+  background: rgba(52,211,153,0.08);
+  border: 1px solid rgba(52,211,153,0.4);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--green);
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.mode-banner.active { display: flex; }
+.mode-banner .cancel-btn {
+  margin-left: auto;
+  background: rgba(248,113,113,0.15);
+  border: 1px solid rgba(248,113,113,0.4);
+  color: var(--red);
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* 정보 패널 */
+.info-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  align-self: start;
+}
+.info-panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--amber); }
+.info-panel h3 { margin: 16px 0 8px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* 📝 메뉴 설명글 / 📖 상세 설명서 공통 */
+.info-section {
+  margin-bottom: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.info-section.menu-intro-section {
+  background: rgba(96,165,250,0.06);
+  border: 1px solid rgba(96,165,250,0.35);
+  padding: 14px 16px;
+}
+.info-section.menu-intro-section .info-section-title {
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.info-section.menu-intro-section .info-section-body {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.75;
+}
+.info-section.menu-intro-section .info-section-body b {
+  color: var(--amber);
+}
+
+/* 📖 상세 설명서 — 접기/펼치기 */
+.info-section.manual-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+}
+.info-section.manual-section .info-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+.info-section.manual-section .info-section-header:hover {
+  background: rgba(255,255,255,0.05);
+}
+.info-section.manual-section .info-section-header .info-caret {
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.info-section.manual-section:not(.collapsed) .info-section-header .info-caret {
+  transform: rotate(90deg);
+}
+.info-section.manual-section .info-section-title {
+  color: var(--amber);
+  font-size: 14px;
+  font-weight: 800;
+}
+.info-section.manual-section .info-section-hint {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-mute);
+  font-weight: 600;
+}
+.info-section.manual-section.collapsed .info-section-body { display: none; }
+.info-section.manual-section:not(.collapsed) .info-section-hint::after { content: " (다시 클릭해서 접기)"; }
+.info-section.manual-section .info-section-body {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+}
+.manual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 720px) { .manual-grid { grid-template-columns: 1fr; } }
+.manual-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.55;
+}
+.manual-item b { color: var(--amber); font-size: 13px; }
+.manual-step {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(251,191,36,0.18);
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+}
+.manual-desc {
+  color: var(--text-dim);
+  font-size: 12px;
+  display: block;
+  margin-top: 3px;
+  line-height: 1.55;
+}
+
+/* 배치된 오브젝트 섹션 (접기/검색) */
+.placed-section {
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.placed-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  flex-wrap: wrap;
+}
+.placed-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+}
+.placed-toggle:hover { background: rgba(255,255,255,0.05); }
+.placed-toggle .caret {
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.placed-section.collapsed .placed-toggle .caret { transform: rotate(-90deg); }
+.placed-count-inline {
+  color: var(--text-mute);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.placed-search {
+  flex: 1;
+  min-width: 180px;
+  background: #0f1729;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 7px 12px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  min-height: 36px;
+}
+.placed-search:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px rgba(251,191,36,0.15);
+}
+.placed-body {
+  max-height: 240px;
+  overflow-y: auto;
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  background: rgba(0,0,0,0.15);
+}
+.placed-section.collapsed .placed-body { display: none; }
+.placed-list-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.placed-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  font-size: 12.5px;
+}
+.placed-row:hover {
+  background: rgba(251,191,36,0.08);
+  border-color: rgba(251,191,36,0.4);
+  transform: translateX(2px);
+}
+.placed-row.current-cell {
+  background: rgba(52,211,153,0.1);
+  border-color: rgba(52,211,153,0.5);
+}
+.placed-row .row-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1.5px solid #fff;
+}
+.placed-row .row-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--text);
+}
+.placed-row .row-type {
+  color: var(--text-mute);
+  font-size: 10.5px;
+  margin-left: 4px;
+  font-weight: 500;
+}
+.placed-row .row-pos {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text-dim);
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.placed-row .row-goto {
+  font-size: 11px;
+  color: var(--blue);
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.placed-row:hover .row-goto { opacity: 1; }
+.placed-empty-detail {
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 12px;
+  padding: 14px;
+}
+/* 신전 행 — 황금색 강조 */
+.placed-row.shrine-row {
+  border-color: rgba(252,211,77,0.4);
+  background: rgba(252,211,77,0.05);
+}
+.placed-row.shrine-row:hover {
+  background: rgba(252,211,77,0.12);
+  border-color: var(--amber);
+}
+.placed-row.shrine-row .row-type {
+  color: var(--amber);
+  font-weight: 700;
+}
+
+/* 서버명 입력 모달 */
+.server-modal-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,0,0.7);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.15s ease-out;
+}
+.server-modal {
+  background: var(--bg-card-strong, #1a2336);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+}
+.server-modal-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+.server-modal-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.server-modal-desc code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.server-modal-desc code b { color: var(--amber); }
+.server-modal-input {
+  width: 100%;
+  background: #0f1729;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+  outline: none;
+}
+.server-modal-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.2);
+}
+.server-modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 디테일 뷰 — 가로 일렬 오브젝트 종류 바 */
+.obj-types-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+  padding: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.obj-types-bar .obj-type-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid var(--border);
+  border-radius: 22px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
+  touch-action: manipulation;
+  min-height: 40px;
+}
+.obj-types-bar .obj-type-pill:hover,
+.obj-types-bar .obj-type-pill:active {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+@media (max-width: 639px) {
+  .obj-types-bar .obj-type-pill { padding: 11px 16px; font-size: 14px; min-height: 44px; }
+}
+.obj-types-bar .obj-type-pill.active {
+  background: rgba(52,211,153,0.15);
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 0 3px rgba(52,211,153,0.12);
+}
+/* 지형 페인트 알약 — 파란 계열로 구분 */
+.obj-types-bar .obj-type-pill.terrain-pill {
+  border-color: rgba(96,165,250,0.4);
+  color: var(--blue);
+}
+.obj-types-bar .obj-type-pill.terrain-pill.active {
+  background: rgba(96,165,250,0.18);
+  border-color: var(--blue);
+  color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+}
+.obj-types-bar .obj-type-pill .pill-icon { font-size: 15px; }
+.obj-types-bar .obj-type-pill .pill-size {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  margin-left: 2px;
+}
+.obj-types-bar .obj-type-pill.active .pill-size { color: var(--green); }
+
+/* 우측 패널 오브젝트 종류 선택 버튼 */
+.obj-types {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.obj-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s, border-color 0.15s;
+}
+.obj-type-btn:hover {
+  background: rgba(255,255,255,0.08);
+}
+.obj-type-btn.active {
+  background: rgba(52,211,153,0.12);
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: 0 0 0 3px rgba(52,211,153,0.1);
+}
+.obj-type-btn .icon { font-size: 18px; }
+.obj-type-btn .name { flex: 1; font-weight: 700; }
+.obj-type-btn .size {
+  font-size: 11px;
+  color: var(--text-mute);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+.obj-type-btn.active .size { color: var(--green); }
+
+/* 배치된 오브젝트 리스트 */
+.placed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.placed-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+}
+.placed-item .icon { font-size: 14px; }
+.placed-item .info { flex: 1; }
+.placed-item .info .name { font-weight: 700; color: var(--text); }
+.placed-item .info .pos {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: var(--text-dim);
+  font-size: 10.5px;
+}
+.placed-item .del-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-mute);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+}
+.placed-item .del-btn:hover { color: var(--red); }
+.placed-empty {
+  color: var(--text-mute);
+  font-size: 12px;
+  text-align: center;
+  padding: 12px;
+}
+
+.coord-display {
+  background: #0f1729;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  text-align: center;
+}
+.coord-display .small { color: var(--text-mute); font-size: 10px; }
+.coord-display .big {
+  color: var(--amber);
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 4px;
+}
+
+.note {
+  background: rgba(96,165,250,0.06);
+  border-left: 3px solid var(--blue);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-size: 11.5px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-top: 14px;
+}
+.note b { color: var(--text); }
+
+.back-link {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--blue);
+  font-size: 13px;
+  text-decoration: none;
+}
+.back-link:hover { text-decoration: underline; }
+
+.clear-all-btn {
+  width: 100%;
+  margin-top: 8px;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.35);
+  color: var(--red);
+  padding: 7px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+.clear-all-btn:hover { background: rgba(248,113,113,0.18); }
+
+/* ════════════════════════════════════════════
+   인게임 스타일 오브젝트 팝업
+   ════════════════════════════════════════════ */
+.obj-popup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fade-in 0.15s ease-out;
+}
+.obj-popup {
+  background: #f5f0e8;
+  border: 3px solid #b8a98c;
+  border-radius: 18px;
+  padding: 18px 22px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+  position: relative;
+  color: #2d2419;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+}
+.obj-popup-close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 3px solid #fff;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.obj-popup-close:hover { background: #dc2626; }
+.obj-popup-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed #b8a98c;
+}
+.obj-popup-icon-wrap {
+  width: 56px;
+  height: 56px;
+  background: #fbbf24;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  border: 2px solid #d97706;
+  flex-shrink: 0;
+}
+.obj-popup-info { flex: 1; min-width: 0; }
+.obj-popup-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #2d2419;
+  margin: 0 0 4px;
+}
+.obj-popup-sub {
+  font-size: 12px;
+  color: #6b5b3e;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+/* 이름 입력 행 */
+.obj-popup-label-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.obj-popup-label-text {
+  font-size: 13px;
+  font-weight: 800;
+  color: #6b5b3e;
+  flex-shrink: 0;
+}
+.obj-popup-name-input {
+  flex: 1;
+  background: #fff;
+  border: 2px solid #b8a98c;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #2d2419;
+  font-family: inherit;
+  outline: none;
+}
+.obj-popup-name-input:focus {
+  border-color: #fbbf24;
+  box-shadow: 0 0 0 3px rgba(251,191,36,0.2);
+}
+
+.obj-popup-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.obj-popup-btn.save {
+  background: #fbbf24;
+  color: #2d2419;
+  box-shadow: 0 3px 0 #d97706;
+  font-size: 13px;
+}
+.obj-popup-btn.save:hover { background: #f59e0b; }
+.obj-popup-btn.save:active { transform: translateY(2px); box-shadow: 0 1px 0 #d97706; }
+.obj-popup-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.obj-popup-btn.primary {
+  background: #34d399;
+  color: #fff;
+  box-shadow: 0 3px 0 #059669;
+}
+.obj-popup-btn.primary:hover { background: #10b981; }
+.obj-popup-btn.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #059669; }
+.obj-popup-btn.danger {
+  background: #ef4444;
+  color: #fff;
+  box-shadow: 0 3px 0 #b91c1c;
+  flex: 0 0 auto;
+  padding: 10px 14px;
+}
+.obj-popup-btn.danger:hover { background: #dc2626; }
+.obj-popup-btn.danger:active { transform: translateY(2px); box-shadow: 0 1px 0 #b91c1c; }
+
+/* 편집(설정) 모드 — 기존 오브젝트 깜빡 표시 */
+@keyframes editing-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.placed-obj.editing { animation: editing-pulse 1.2s ease-in-out infinite; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <div>
+    <h1 id="page-h1">🗺️ 팰몬 자리배치도</h1>
+    <p class="subtitle">셀 클릭 → 100×100 픽셀 줌인 → 건물 선택 후 배치 · <span style="color:var(--blue);">💡 터치: 한 손가락 드래그 = 이동 / 두 손가락 핀치 = 확대·축소</span></p>
+
+    <div class="map-wrap">
+
+      <!-- 메인 뷰 -->
+      <div class="view active" id="view-main">
+        <div class="map-title">
+          <span class="title-text">🗺️ 팰몬 자리배치도</span>
+          <span class="grid-info">1300 × 1300 px · 13 × 13 셀</span>
+        </div>
+
+        <!-- 📝 메뉴 설명글 (메인용) -->
+        <div class="info-section menu-intro-section">
+          <div class="info-section-title">📝 메뉴 설명글</div>
+          <div class="info-section-body">
+            <b>Palmon Map</b>은 게임 내 건물 자리배치를 시각적으로 설계할 수 있는 도구입니다.<br>
+            🗺️ <b>메인 지도</b>는 1300×1300 픽셀의 전체 맵을 13×13 셀로 나눠 보여줍니다.<br>
+            📍 셀을 클릭하면 100×100 픽셀의 <b>상세 지도</b>로 들어가서 건물을 정확한 픽셀 위치에 배치할 수 있어요.<br>
+            🔍 검색창에 이름이나 종류를 입력하면 배치된 건물을 빠르게 찾을 수 있고, 클릭하면 그 위치로 자동 이동합니다.
+          </div>
+        </div>
+
+        <!-- 배치된 건물 조회 (메인용 — 접기/검색/네비게이션) -->
+        <div class="placed-section" id="placed-section-main">
+          <div class="placed-header">
+            <button class="placed-toggle" id="placed-toggle-main" type="button">
+              <span class="caret">▼</span>
+              <span>🏗️ 배치된 건물 조회</span>
+              <span class="placed-count-inline" id="placed-count-inline-main">(0개)</span>
+            </button>
+            <input type="search" id="placed-search-main" class="placed-search" placeholder="🔍 이름/타입 검색..." autocomplete="off">
+          </div>
+          <div class="placed-body">
+            <div class="placed-list-detail" id="placed-list-main"></div>
+          </div>
+        </div>
+
+        <div class="zoom-controls">
+          <button class="zoom-btn" data-zoom="in" title="확대">＋</button>
+          <button class="zoom-btn" data-zoom="out" title="축소">－</button>
+          <button class="zoom-btn" data-zoom="reset" title="원래대로">⟲</button>
+          <span class="zoom-level" id="zoom-level-main">100%</span>
+        </div>
+        <svg class="map-grid" id="map-svg" viewBox="-5 -5 1310 1310" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+      <!-- 디테일 뷰 -->
+      <div class="view" id="view-detail">
+        <div class="detail-header">
+          <button class="btn" id="btn-back">← 메인으로</button>
+          <button class="btn" id="btn-save-pdf" style="background:rgba(96,165,250,0.15);border-color:rgba(96,165,250,0.4);color:var(--blue);">📄 PDF 저장</button>
+          <span class="detail-cell-info" id="detail-info"></span>
+        </div>
+        <!-- 📖 상세 설명서 (접기/펼치기) -->
+        <div class="info-section manual-section collapsed" id="manual-section">
+          <button class="info-section-header" id="manual-toggle" type="button">
+            <span class="info-caret">▶</span>
+            <span class="info-section-title">📖 상세 설명서</span>
+            <span class="info-section-hint">클릭해서 펼치기</span>
+          </button>
+          <div class="info-section-body">
+            <div class="manual-grid">
+              <div class="manual-item">
+                <div class="manual-step">①</div>
+                <div>
+                  <b>건물 종류 선택</b><br>
+                  <span class="manual-desc">아래 알약 버튼(🌾 자원지 / 📦 상자 / 👹 팰몬엘리트 / 🐾 팰몬무리 / ⚙️ 길드발전기 / 🏠 캠프 / 🏛️ 성전) 중 하나를 클릭하면 배치 모드 활성</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">②</div>
+                <div>
+                  <b>픽셀 클릭으로 배치</b><br>
+                  <span class="manual-desc">100×100 그리드 안에 원하는 픽셀을 클릭하면 그 자리에 건물이 들어감. 다른 건물/신전/지형과 겹치는 위치는 빨간색으로 표시되고 배치 불가</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">③</div>
+                <div>
+                  <b>배치된 건물 클릭 → 설정/제거/이름 변경</b><br>
+                  <span class="manual-desc">배치된 건물 클릭 시 팝업이 떠서 이름 입력 + ⚙️ 설정(위치 이동) + 🗑️ 제거 가능</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">④</div>
+                <div>
+                  <b>🌊 지형 페인트로 호수/장애물 표시</b><br>
+                  <span class="manual-desc">호수, 얼음, 숲 등 게임 내 장애물을 픽셀 단위로 칠해두면 그 위에는 건물이 배치되지 않음. 드래그로 연속 페인트 가능. 지우개로 제거</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">⑤</div>
+                <div>
+                  <b>📄 PDF 저장</b><br>
+                  <span class="manual-desc">상단 "PDF 저장" 버튼 → 서버명 입력 → 2페이지 PDF 자동 생성. 1페이지=상세지도, 2페이지=캠프/길드발전기 이동 요청 리스트</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">⑥</div>
+                <div>
+                  <b>🛡️ 신전은 고정</b><br>
+                  <span class="manual-desc">맵 중앙(646,646)에 9×9 신전이 항상 고정. 이동/삭제 불가. 다른 건물은 신전 위에 못 놓음</span>
+                </div>
+              </div>
+              <div class="manual-item">
+                <div class="manual-step">⑦</div>
+                <div>
+                  <b>확대/축소/이동</b><br>
+                  <span class="manual-desc">+/- 버튼이나 마우스 휠로 줌. 드래그로 이동. 모바일에서는 핀치 줌 + 한 손가락 드래그. 페인트 모드에선 페인트만 동작</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 건물 종류 선택 — 가로 일렬 -->
+        <div class="obj-types-bar" id="obj-types-bar"></div>
+
+        <!-- 배치된 건물 조회 (접기/검색/네비게이션) -->
+        <div class="placed-section" id="placed-section">
+          <div class="placed-header">
+            <button class="placed-toggle" id="placed-toggle" type="button">
+              <span class="caret" id="placed-caret">▼</span>
+              <span>🏗️ 배치된 건물 조회</span>
+              <span class="placed-count-inline" id="placed-count-inline">(0개)</span>
+            </button>
+            <input type="search" id="placed-search" class="placed-search" placeholder="🔍 이름/타입 검색..." autocomplete="off">
+          </div>
+          <div class="placed-body" id="placed-body">
+            <div class="placed-list-detail" id="placed-list-detail"></div>
+          </div>
+        </div>
+
+        <div class="mode-banner" id="mode-banner">
+          <span id="mode-banner-text"></span>
+          <button class="cancel-btn" id="btn-cancel-mode">취소</button>
+        </div>
+        <div class="zoom-controls">
+          <button class="zoom-btn" data-zoom-pixel="in" title="확대">＋</button>
+          <button class="zoom-btn" data-zoom-pixel="out" title="축소">－</button>
+          <button class="zoom-btn" data-zoom-pixel="reset" title="원래대로">⟲</button>
+          <span class="zoom-level" id="zoom-level-pixel">100%</span>
+        </div>
+        <svg class="pixel-grid" id="pixel-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+
+    </div>
+
+    <a href="index.html" class="back-link">← Palmon Tool 메인으로</a>
+  </div>
+
+  <!-- 정보 패널 -->
+  <div class="info-panel">
+    <h2>⚙️ 건물 배치</h2>
+
+    <h3>건물 종류 선택</h3>
+    <div class="obj-types" id="obj-types"></div>
+
+    <h3>배치된 건물 <span id="placed-count" style="color:var(--text-mute);font-weight:600;font-size:11px;"></span></h3>
+    <div class="placed-list" id="placed-list"></div>
+    <button class="clear-all-btn" id="btn-clear-all" style="display:none;">🗑️ 전체 제거</button>
+
+    <div class="coord-display" id="coord-display">
+      <div class="small">호버 위치</div>
+      <div class="big" id="coord-text">— 셀 위에 마우스를 올려보세요 —</div>
+      <div class="small" id="coord-sub" style="margin-top:4px;"></div>
+    </div>
+
+    <div class="note">
+      <b>💡 사용법은 메인 지도와 상세 화면에 안내되어 있습니다.</b><br>
+      상세 화면 상단의 <b style="color:var(--amber);">📖 상세 설명서</b> 를 펼쳐서 자세한 가이드를 확인하세요.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const GRID_N = 13;
+const CELL_SIZE = 100;
+const MAP_SIZE = GRID_N * CELL_SIZE;   // 1300
+const NS = "http://www.w3.org/2000/svg";
+
+// 🛡️ 신전 — 맵 중앙 고정 (이동/삭제 불가, 사용자 배치 X)
+const SHRINE_FIXED = {
+  name: "신전",
+  w: 9, h: 9,
+  // 1300×1300 의 정중앙: (646~655) → 정확히 가운데 (650이 중심)
+  worldX: 646,
+  worldY: 646,
+  color: "#fcd34d",   // 황금색
+};
+
+// 오브젝트 종류 정의 (w, h: 픽셀 단위)
+const OBJECT_TYPES = {
+  resource: { name: "자원지",       icon: "🌾", w: 1, h: 1, color: "#fbbf24" },
+  box:      { name: "상자",         icon: "📦", w: 1, h: 1, color: "#a78bfa" },
+  elite:    { name: "팰몬(엘리트)", icon: "👹", w: 1, h: 1, color: "#f87171" },
+  group:    { name: "팰몬무리",     icon: "🐾", w: 3, h: 3, color: "#fb923c" },
+  guildgen: { name: "길드발전기",   icon: "⚙️", w: 6, h: 6, color: "#ec4899" },
+  hq:       { name: "캠프",         icon: "🏠", w: 3, h: 3, color: "#60a5fa" },
+  temple:   { name: "성전",         icon: "🏛️", w: 9, h: 9, color: "#34d399" },
+};
+
+// 상태
+let placedObjects = [];   // [{ id, type, worldX, worldY }] worldX/Y = 왼쪽 아래 모서리
+let currentCell = null;
+let activeType = null;    // 배치 모드 — null 이면 비활성
+let editingObjectId = null;   // 설정(이동) 중인 오브젝트 id
+let terrainPixels = new Set();   // "x,y" 형식 — 지형(장애물) 픽셀
+let terrainMode = false;     // 지형 페인트 모드 (true=페인트, false=오브젝트)
+let terrainEraser = false;   // 지우개 모드
+let terrainDragging = false; // 드래그 페인트 중인지
+let terrainDragErasing = false; // 드래그 시작 픽셀이 칠해진 곳이면 지우기 모드
+
+// localStorage 복원
+try {
+  const saved = JSON.parse(localStorage.getItem("palmon_map_objects") || "null");
+  if (Array.isArray(saved)) placedObjects = saved;
+  // 지형 픽셀 복원
+  const terr = JSON.parse(localStorage.getItem("palmon_map_terrain") || "null");
+  if (Array.isArray(terr)) terrainPixels = new Set(terr);
+  // 호환: 옛 templePos 도 가져옴
+  const oldTemple = JSON.parse(localStorage.getItem("palmon_map_temple") || "null");
+  if (oldTemple && typeof oldTemple.worldX === "number") {
+    if (!placedObjects.some((o) => o.type === "temple" && o.worldX === oldTemple.worldX && o.worldY === oldTemple.worldY)) {
+      placedObjects.push({ id: genId(), type: "temple", worldX: oldTemple.worldX, worldY: oldTemple.worldY });
+    }
+    localStorage.removeItem("palmon_map_temple");
+    saveObjects();
+  }
+} catch {}
+
+function genId() { return "obj_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function saveObjects() {
+  try { localStorage.setItem("palmon_map_objects", JSON.stringify(placedObjects)); } catch {}
+}
+function saveTerrain() {
+  try { localStorage.setItem("palmon_map_terrain", JSON.stringify(Array.from(terrainPixels))); } catch {}
+}
+
+// ───────────────────────────────────────────
+// 메인 뷰 — 13×13 셀
+// ───────────────────────────────────────────
+const mapSvg = document.getElementById("map-svg");
+
+function buildMainGrid() {
+  mapSvg.innerHTML = "";
+  for (let row = 0; row < GRID_N; row++) {
+    for (let col = 0; col < GRID_N; col++) {
+      const svgX = col * CELL_SIZE;
+      const svgY = row * CELL_SIZE;
+      const gameXStart = col * CELL_SIZE;
+      const gameYStart = (GRID_N - 1 - row) * CELL_SIZE;
+      const gameXEnd = (col + 1) * CELL_SIZE;
+      const gameYEnd = (GRID_N - row) * CELL_SIZE;
+
+      const rect = document.createElementNS(NS, "rect");
+      rect.setAttribute("class", "cell");
+      rect.setAttribute("x", svgX);
+      rect.setAttribute("y", svgY);
+      rect.setAttribute("width", CELL_SIZE);
+      rect.setAttribute("height", CELL_SIZE);
+      rect.dataset.col = col;
+      rect.dataset.row = row;
+      rect.dataset.gameX = gameXStart;
+      rect.dataset.gameY = gameYStart;
+      rect.dataset.gameXEnd = gameXEnd;
+      rect.dataset.gameYEnd = gameYEnd;
+      rect.addEventListener("mouseenter", () => onMainCellHover(gameXStart, gameYStart, gameXEnd, gameYEnd, col, row));
+      mapSvg.appendChild(rect);
+
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("class", "cell-label");
+      lbl.setAttribute("x", svgX + CELL_SIZE / 2);
+      lbl.setAttribute("y", svgY + CELL_SIZE / 2 + 3);
+      lbl.textContent = `${gameXStart},${gameYStart}`;
+      mapSvg.appendChild(lbl);
+    }
+  }
+
+  // 🌊 지형 픽셀 — 먼저 그려서 오브젝트보다 뒤에 위치
+  drawTerrainOnMain();
+
+  // 🛡️ 신전 (고정) — 맵 중앙
+  {
+    const s = SHRINE_FIXED;
+    const svgX = s.worldX;
+    const svgY = MAP_SIZE - s.worldY - s.h;
+    const shrineRect = document.createElementNS(NS, "rect");
+    shrineRect.setAttribute("class", "shrine-fixed");
+    shrineRect.setAttribute("x", svgX);
+    shrineRect.setAttribute("y", svgY);
+    shrineRect.setAttribute("width", s.w);
+    shrineRect.setAttribute("height", s.h);
+    shrineRect.setAttribute("fill", s.color);
+    shrineRect.setAttribute("stroke", "#92400e");
+    shrineRect.setAttribute("stroke-width", "0.8");
+    shrineRect.setAttribute("pointer-events", "none");
+    shrineRect.style.filter = `drop-shadow(0 0 8px ${s.color})`;
+    mapSvg.appendChild(shrineRect);
+
+    // 신전 이름 (메인)
+    const lbl = document.createElementNS(NS, "text");
+    lbl.setAttribute("x", svgX + s.w / 2);
+    lbl.setAttribute("y", svgY + s.h / 2 + 1.5);
+    lbl.setAttribute("text-anchor", "middle");
+    lbl.setAttribute("font-size", "3.5");
+    lbl.setAttribute("font-weight", "800");
+    lbl.setAttribute("fill", "#78350f");
+    lbl.setAttribute("stroke", "#fff");
+    lbl.setAttribute("stroke-width", "0.4");
+    lbl.setAttribute("paint-order", "stroke");
+    lbl.setAttribute("pointer-events", "none");
+    lbl.textContent = s.name;
+    mapSvg.appendChild(lbl);
+  }
+
+  // 배치된 오브젝트들을 위에 그리기
+  for (const obj of placedObjects) {
+    const t = OBJECT_TYPES[obj.type];
+    if (!t) continue;
+    const svgX = obj.worldX;
+    const svgY = MAP_SIZE - obj.worldY - t.h;   // Y 반전 + 높이 보정
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", "obj-marker-main");
+    r.setAttribute("x", svgX);
+    r.setAttribute("y", svgY);
+    r.setAttribute("width", t.w);
+    r.setAttribute("height", t.h);
+    r.setAttribute("fill", t.color);
+    r.setAttribute("stroke", "#fff");
+    r.setAttribute("stroke-width", Math.max(0.6, t.w * 0.1));
+    r.style.color = t.color;
+    r.style.cursor = "pointer";
+    r.style.pointerEvents = "auto";
+    r.addEventListener("click", (e) => {
+      if (_panSuppressMain) return;
+      e.stopPropagation();
+      navigateToObject(obj);
+    });
+    mapSvg.appendChild(r);
+
+    // 큰 오브젝트(3×3 이상)는 이름 라벨도 표시 (메인 맵, 커스텀 이름 우선)
+    if (t.w >= 3 && t.h >= 3) {
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("x", svgX + t.w / 2);
+      lbl.setAttribute("y", svgY - 1);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.setAttribute("font-size", t.w >= 6 ? "4" : "3");
+      lbl.setAttribute("font-weight", "800");
+      lbl.setAttribute("fill", "#fff");
+      lbl.setAttribute("stroke", "#000");
+      lbl.setAttribute("stroke-width", "0.6");
+      lbl.setAttribute("paint-order", "stroke");
+      lbl.setAttribute("pointer-events", "none");
+      lbl.textContent = obj.label || t.name;
+      mapSvg.appendChild(lbl);
+    }
+  }
+}
+
+function onMainCellHover(gameX, gameY, gameXEnd, gameYEnd, col, row) {
+  document.getElementById("coord-text").textContent = `(${gameX}, ${gameY})`;
+  document.getElementById("coord-sub").textContent =
+    `셀 [${col}, ${row}] · 범위 x[${gameX}~${gameXEnd}] y[${gameY}~${gameYEnd}]`;
+}
+
+// 메인 셀 클릭은 줌/팬에서 movedDistance 보고 선별 처리
+function onMainCellClick(col, row, gameXStart, gameYStart, gameXEnd, gameYEnd) {
+  currentCell = { col, row, gameXStart, gameYStart, gameXEnd, gameYEnd };
+  showDetailView();
+}
+
+// ───────────────────────────────────────────
+// 디테일 뷰 — 100×100 픽셀
+// ───────────────────────────────────────────
+const pixelSvg = document.getElementById("pixel-svg");
+let hoverCellEl = null;
+let ghostRectEl = null;
+let crosshairV = null, crosshairH = null;
+
+function buildPixelGrid() {
+  pixelSvg.innerHTML = "";
+
+  const bg = document.createElementNS(NS, "rect");
+  bg.setAttribute("class", "pixel-bg");
+  bg.setAttribute("x", 0);
+  bg.setAttribute("y", 0);
+  bg.setAttribute("width", 100);
+  bg.setAttribute("height", 100);
+  pixelSvg.appendChild(bg);
+
+  // 격자
+  for (let i = 1; i < 100; i++) {
+    const v = document.createElementNS(NS, "line");
+    v.setAttribute("x1", i); v.setAttribute("y1", 0);
+    v.setAttribute("x2", i); v.setAttribute("y2", 100);
+    v.setAttribute("stroke", "rgba(255,255,255," + (i % 10 === 0 ? "0.25" : "0.06") + ")");
+    v.setAttribute("stroke-width", i % 10 === 0 ? "0.3" : "0.1");
+    v.setAttribute("pointer-events", "none");
+    pixelSvg.appendChild(v);
+    const h = document.createElementNS(NS, "line");
+    h.setAttribute("x1", 0); h.setAttribute("y1", i);
+    h.setAttribute("x2", 100); h.setAttribute("y2", i);
+    h.setAttribute("stroke", "rgba(255,255,255," + (i % 10 === 0 ? "0.25" : "0.06") + ")");
+    h.setAttribute("stroke-width", i % 10 === 0 ? "0.3" : "0.1");
+    h.setAttribute("pointer-events", "none");
+    pixelSvg.appendChild(h);
+  }
+
+  const border = document.createElementNS(NS, "rect");
+  border.setAttribute("x", 0); border.setAttribute("y", 0);
+  border.setAttribute("width", 100); border.setAttribute("height", 100);
+  border.setAttribute("fill", "none");
+  border.setAttribute("stroke", "rgba(251,191,36,0.5)");
+  border.setAttribute("stroke-width", "0.5");
+  border.setAttribute("pointer-events", "none");
+  pixelSvg.appendChild(border);
+
+  for (let i = 0; i <= 100; i += 20) {
+    const xt = document.createElementNS(NS, "text");
+    xt.setAttribute("class", "axis-tick");
+    xt.setAttribute("x", i); xt.setAttribute("y", -1);
+    xt.setAttribute("text-anchor", "middle");
+    xt.textContent = i;
+    pixelSvg.appendChild(xt);
+    const yt = document.createElementNS(NS, "text");
+    yt.setAttribute("class", "axis-tick");
+    yt.setAttribute("x", -1); yt.setAttribute("y", 100 - i + 1);
+    yt.setAttribute("text-anchor", "end");
+    yt.textContent = i;
+    pixelSvg.appendChild(yt);
+  }
+
+  // 호버 / ghost
+  hoverCellEl = document.createElementNS(NS, "rect");
+  hoverCellEl.setAttribute("class", "hover-cell");
+  hoverCellEl.setAttribute("width", 1);
+  hoverCellEl.setAttribute("height", 1);
+  hoverCellEl.style.display = "none";
+  pixelSvg.appendChild(hoverCellEl);
+
+  ghostRectEl = document.createElementNS(NS, "rect");
+  ghostRectEl.setAttribute("class", "ghost-rect");
+  ghostRectEl.style.display = "none";
+  pixelSvg.appendChild(ghostRectEl);
+
+  // 조준점(crosshair) 제거 — 인게임처럼 깔끔하게
+  crosshairV = null;
+  crosshairH = null;
+
+  drawObjectsOnDetail();
+
+  pixelSvg.addEventListener("mousemove", onPixelMouseMove);
+  pixelSvg.addEventListener("mouseleave", onPixelMouseLeave);
+  pixelSvg.addEventListener("click", onPixelClick);
+
+  // 페인트 모드 — 드래그 페인트 (마우스 + 터치)
+  pixelSvg.addEventListener("mousedown", onPaintMouseDown);
+  pixelSvg.addEventListener("touchstart", onPaintTouchStart, { passive: false });
+  pixelSvg.addEventListener("touchmove", onPaintTouchMove, { passive: false });
+  pixelSvg.addEventListener("touchend", onPaintMouseUp);
+  window.addEventListener("mousemove", onPaintMouseMoveWindow);
+  window.addEventListener("mouseup", onPaintMouseUp);
+
+  // 지형도 그리기
+  drawTerrainOnDetail();
+}
+
+function onPaintMouseDown(e) {
+  if (!terrainMode) return;
+  if (e.button !== 0) return;
+  const p = eventToPixel(e);
+  if (!p) return;
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  // 클릭한 픽셀이 이미 칠해져있으면 → 드래그 = 지우기 (에라서 모드면 그대로 지우기)
+  const key = `${worldX},${worldY}`;
+  const alreadyPainted = terrainPixels.has(key);
+  // 명시적 지우개 모드 OR 칠해진 곳을 다시 클릭 → 지우기 동작
+  terrainDragErasing = terrainEraser || alreadyPainted;
+  terrainDragging = true;
+  paintTerrainPixel(worldX, worldY, terrainDragErasing);
+  drawTerrainOnDetail();
+  e.preventDefault();
+}
+
+function onPaintMouseMoveWindow(e) {
+  if (!terrainDragging) return;
+  const p = eventToPixel(e);
+  if (!p) return;
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  paintTerrainPixel(worldX, worldY, terrainDragErasing);
+  drawTerrainOnDetail();
+}
+
+function onPaintMouseUp() {
+  if (!terrainDragging) return;
+  terrainDragging = false;
+  saveTerrain();
+  // 메인 맵에도 반영
+  buildMainGrid();
+  rebindCellClicks();
+}
+
+// 터치 페인트 — 모바일에서 손가락 드래그로 칠하기
+function onPaintTouchStart(e) {
+  if (!terrainMode || e.touches.length !== 1) return;
+  const p = eventToPixel(e);
+  if (!p) return;
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  const key = `${worldX},${worldY}`;
+  terrainDragErasing = terrainEraser || terrainPixels.has(key);
+  terrainDragging = true;
+  paintTerrainPixel(worldX, worldY, terrainDragErasing);
+  drawTerrainOnDetail();
+  e.preventDefault();
+}
+function onPaintTouchMove(e) {
+  if (!terrainDragging || e.touches.length !== 1) return;
+  const p = eventToPixel(e);
+  if (!p) return;
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  paintTerrainPixel(worldX, worldY, terrainDragErasing);
+  drawTerrainOnDetail();
+  e.preventDefault();
+}
+
+function drawObjectsOnDetail() {
+  // 기존에 그려진 오브젝트(rect + 텍스트) 전부 제거
+  pixelSvg.querySelectorAll(".placed-obj, .placed-obj-text, .placed-obj-label, .shrine-fixed-detail").forEach((n) => n.remove());
+  if (!currentCell) return;
+
+  // 🛡️ 신전 (고정) — 현재 셀과 겹치면 그리기
+  {
+    const s = SHRINE_FIXED;
+    const sRight = s.worldX + s.w;
+    const sTop = s.worldY + s.h;
+    if (!(sRight <= currentCell.gameXStart || s.worldX >= currentCell.gameXEnd ||
+          sTop <= currentCell.gameYStart || s.worldY >= currentCell.gameYEnd)) {
+      const localX = s.worldX - currentCell.gameXStart;
+      const localYBottom = s.worldY - currentCell.gameYStart;
+      const svgX = localX;
+      const svgY = 100 - localYBottom - s.h;
+      const r = document.createElementNS(NS, "rect");
+      r.setAttribute("class", "shrine-fixed-detail");
+      r.setAttribute("x", svgX);
+      r.setAttribute("y", svgY);
+      r.setAttribute("width", s.w);
+      r.setAttribute("height", s.h);
+      r.setAttribute("fill", s.color);
+      r.setAttribute("stroke", "#92400e");
+      r.setAttribute("stroke-width", "0.4");
+      r.setAttribute("pointer-events", "none");
+      r.style.filter = `drop-shadow(0 0 2px ${s.color})`;
+      pixelSvg.appendChild(r);
+
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("class", "shrine-fixed-detail");
+      lbl.setAttribute("x", svgX + s.w / 2);
+      lbl.setAttribute("y", svgY + s.h / 2 + 1);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.setAttribute("font-size", "2.5");
+      lbl.setAttribute("font-weight", "800");
+      lbl.setAttribute("fill", "#78350f");
+      lbl.setAttribute("stroke", "#fff");
+      lbl.setAttribute("stroke-width", "0.3");
+      lbl.setAttribute("paint-order", "stroke");
+      lbl.setAttribute("pointer-events", "none");
+      lbl.textContent = s.name;
+      pixelSvg.appendChild(lbl);
+    }
+  }
+
+  for (const obj of placedObjects) {
+    const t = OBJECT_TYPES[obj.type];
+    if (!t) continue;
+    // 오브젝트 영역이 현재 셀과 겹치는지 확인
+    const objRight = obj.worldX + t.w;
+    const objTop = obj.worldY + t.h;
+    if (objRight <= currentCell.gameXStart || obj.worldX >= currentCell.gameXEnd ||
+        objTop <= currentCell.gameYStart || obj.worldY >= currentCell.gameYEnd) continue;
+
+    // 셀 좌표계로 변환
+    const localX = obj.worldX - currentCell.gameXStart;
+    const localYBottom = obj.worldY - currentCell.gameYStart;
+    // SVG: Y 반전, 위쪽이 0
+    const svgX = localX;
+    const svgY = 100 - localYBottom - t.h;
+
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", "placed-obj");
+    r.setAttribute("x", svgX);
+    r.setAttribute("y", svgY);
+    r.setAttribute("width", t.w);
+    r.setAttribute("height", t.h);
+    r.setAttribute("fill", t.color);
+    r.setAttribute("stroke", "#fff");
+    r.setAttribute("stroke-width", "0.3");
+    r.dataset.id = obj.id;
+    if (editingObjectId === obj.id) r.classList.add("editing");
+    r.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openObjectPopup(obj);
+    });
+    pixelSvg.appendChild(r);
+
+    // 디테일 뷰 — 이모지 없이 이름만 표시
+    // - 3×3 이상 (팰몬무리/본부/성전): 칸 내부 가운데에 이름
+    // - 1×1 (자원지/상자/엘리트): 칸 위에 라벨
+    const displayName = obj.label || t.name;
+    if (t.w >= 3 && t.h >= 3) {
+      const inner = document.createElementNS(NS, "text");
+      inner.setAttribute("class", "placed-obj-text");
+      inner.setAttribute("x", svgX + t.w / 2);
+      inner.setAttribute("y", svgY + t.h / 2 + 0.9);
+      inner.setAttribute("text-anchor", "middle");
+      inner.setAttribute("font-size", t.w >= 6 ? "2.8" : "2.2");
+      inner.setAttribute("font-weight", "800");
+      inner.setAttribute("fill", "#fff");
+      inner.setAttribute("stroke", "#000");
+      inner.setAttribute("stroke-width", "0.4");
+      inner.setAttribute("paint-order", "stroke");
+      inner.setAttribute("pointer-events", "none");
+      inner.textContent = displayName;
+      pixelSvg.appendChild(inner);
+    } else {
+      // 1×1 — 칸 위에 라벨
+      const lbl = document.createElementNS(NS, "text");
+      lbl.setAttribute("class", "placed-obj-label");
+      lbl.setAttribute("x", svgX + t.w / 2);
+      lbl.setAttribute("y", svgY - 0.6);
+      lbl.setAttribute("text-anchor", "middle");
+      lbl.setAttribute("font-size", "1.8");
+      lbl.setAttribute("font-weight", "800");
+      lbl.setAttribute("fill", "#fff");
+      lbl.setAttribute("stroke", "#000");
+      lbl.setAttribute("stroke-width", "0.35");
+      lbl.setAttribute("stroke-linejoin", "round");
+      lbl.setAttribute("paint-order", "stroke");
+      lbl.setAttribute("pointer-events", "none");
+      lbl.textContent = displayName;
+      pixelSvg.appendChild(lbl);
+    }
+  }
+}
+
+// 지형 페인트 — 한 픽셀 칠하기/지우기 + DOM 갱신
+function paintTerrainPixel(worldX, worldY, erase) {
+  if (worldX < 0 || worldX >= MAP_SIZE || worldY < 0 || worldY >= MAP_SIZE) return;
+  // 신전 영역은 페인트 금지
+  const s = SHRINE_FIXED;
+  if (worldX >= s.worldX && worldX < s.worldX + s.w && worldY >= s.worldY && worldY < s.worldY + s.h) return;
+  const key = `${worldX},${worldY}`;
+  if (erase) terrainPixels.delete(key);
+  else terrainPixels.add(key);
+}
+
+function drawTerrainOnDetail() {
+  pixelSvg.querySelectorAll(".terrain-pixel").forEach((n) => n.remove());
+  if (!currentCell) return;
+  for (const key of terrainPixels) {
+    const [wx, wy] = key.split(",").map(Number);
+    if (wx < currentCell.gameXStart || wx >= currentCell.gameXEnd ||
+        wy < currentCell.gameYStart || wy >= currentCell.gameYEnd) continue;
+    const localX = wx - currentCell.gameXStart;
+    const localY = wy - currentCell.gameYStart;
+    const svgX = localX;
+    const svgY = 99 - localY;
+    const r = document.createElementNS(NS, "rect");
+    r.setAttribute("class", "terrain-pixel");
+    r.setAttribute("x", svgX);
+    r.setAttribute("y", svgY);
+    r.setAttribute("width", 1);
+    r.setAttribute("height", 1);
+    r.setAttribute("fill", "#1e40af");
+    r.setAttribute("fill-opacity", "0.75");
+    r.setAttribute("pointer-events", "none");
+    pixelSvg.appendChild(r);
+  }
+}
+
+function drawTerrainOnMain() {
+  mapSvg.querySelectorAll(".terrain-pixel-main").forEach((n) => n.remove());
+  if (terrainPixels.size === 0) return;
+  // 픽셀이 많을 수 있으니 path 로 일괄 그리기 (성능)
+  let d = "";
+  for (const key of terrainPixels) {
+    const [wx, wy] = key.split(",").map(Number);
+    const svgX = wx;
+    const svgY = MAP_SIZE - wy - 1;
+    d += `M${svgX} ${svgY}h1v1h-1z`;
+  }
+  const path = document.createElementNS(NS, "path");
+  path.setAttribute("class", "terrain-pixel-main");
+  path.setAttribute("d", d);
+  path.setAttribute("fill", "#1e40af");
+  path.setAttribute("fill-opacity", "0.7");
+  path.setAttribute("pointer-events", "none");
+  mapSvg.appendChild(path);
+}
+
+function eventToPixel(e) {
+  const pt = pixelSvg.createSVGPoint();
+  pt.x = e.clientX;
+  pt.y = e.clientY;
+  const ctm = pixelSvg.getScreenCTM();
+  if (!ctm) return null;
+  const loc = pt.matrixTransform(ctm.inverse());
+  const px = Math.floor(loc.x);
+  const py = Math.floor(loc.y);
+  if (px < 0 || px >= 100 || py < 0 || py >= 100) return null;
+  return { svgX: px, svgY: py, localX: px, localY: 99 - py };
+}
+
+function onPixelMouseMove(e) {
+  const p = eventToPixel(e);
+  if (!p) {
+    pixelSvg.classList.remove("has-hover");
+    hoverCellEl.style.display = "none";
+    if (ghostRectEl) ghostRectEl.style.display = "none";
+    return;
+  }
+  pixelSvg.classList.add("has-hover");
+  hoverCellEl.style.display = "";
+  hoverCellEl.setAttribute("x", p.svgX);
+  hoverCellEl.setAttribute("y", p.svgY);
+
+  // 페인트 모드면 ghost 끄기
+  if (terrainMode) {
+    if (ghostRectEl) ghostRectEl.style.display = "none";
+    const worldX = currentCell.gameXStart + p.localX;
+    const worldY = currentCell.gameYStart + p.localY;
+    document.getElementById("detail-info").innerHTML =
+      `픽셀 <b>(${p.localX}, ${p.localY})</b> · 절대 <b>(${worldX}, ${worldY})</b> · ${terrainEraser ? "🧽 지우개" : "🌊 페인트"}`;
+    return;
+  }
+
+  // 배치 모드면 미리보기 (ghost) 표시 — 겹치거나 범위 벗어나면 빨간색
+  if (activeType && ghostRectEl) {
+    const t = OBJECT_TYPES[activeType];
+    const ghostSvgX = p.localX;
+    const ghostSvgY = 100 - p.localY - t.h;
+    ghostRectEl.setAttribute("x", ghostSvgX);
+    ghostRectEl.setAttribute("y", ghostSvgY);
+    ghostRectEl.setAttribute("width", t.w);
+    ghostRectEl.setAttribute("height", t.h);
+    ghostRectEl.style.display = "";
+
+    // 유효성 검사
+    const worldX = currentCell.gameXStart + p.localX;
+    const worldY = currentCell.gameYStart + p.localY;
+    const outOfBounds = worldX + t.w > MAP_SIZE || worldY + t.h > MAP_SIZE || worldX < 0 || worldY < 0;
+    const ovr = !outOfBounds ? hasOverlap(worldX, worldY, t.w, t.h, editingObjectId) : null;
+    if (outOfBounds || ovr) ghostRectEl.classList.add("invalid");
+    else ghostRectEl.classList.remove("invalid");
+  } else if (ghostRectEl) {
+    ghostRectEl.style.display = "none";
+  }
+
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  const sizeText = activeType ? ` · ${OBJECT_TYPES[activeType].name} (${OBJECT_TYPES[activeType].w}×${OBJECT_TYPES[activeType].h})` : "";
+  document.getElementById("detail-info").innerHTML =
+    `픽셀 <b>(${p.localX}, ${p.localY})</b> · 절대 <b>(${worldX}, ${worldY})</b>${sizeText}`;
+}
+
+function onPixelMouseLeave() {
+  pixelSvg.classList.remove("has-hover");
+  if (hoverCellEl) hoverCellEl.style.display = "none";
+  if (ghostRectEl) ghostRectEl.style.display = "none";
+  document.getElementById("detail-info").textContent = "";
+  updateDetailHeader();
+}
+
+// 겹침 검사 — 새 오브젝트가 신전/오브젝트/지형 픽셀과 겹치는지
+function hasOverlap(newX, newY, newW, newH, excludeId = null) {
+  // 신전(고정) 충돌 검사
+  const s = SHRINE_FIXED;
+  if (newX < s.worldX + s.w && newX + newW > s.worldX &&
+      newY < s.worldY + s.h && newY + newH > s.worldY) {
+    return { label: s.name, type: "shrine" };
+  }
+  // 사용자 배치 오브젝트 검사
+  for (const obj of placedObjects) {
+    if (excludeId && obj.id === excludeId) continue;
+    const t = OBJECT_TYPES[obj.type];
+    if (!t) continue;
+    if (newX < obj.worldX + t.w && newX + newW > obj.worldX &&
+        newY < obj.worldY + t.h && newY + newH > obj.worldY) {
+      return obj;
+    }
+  }
+  // 지형 픽셀 검사 — 새 오브젝트의 모든 픽셀이 지형과 겹치는지
+  for (let dx = 0; dx < newW; dx++) {
+    for (let dy = 0; dy < newH; dy++) {
+      if (terrainPixels.has(`${newX + dx},${newY + dy}`)) {
+        return { label: "지형(장애물)", type: "terrain" };
+      }
+    }
+  }
+  return null;
+}
+
+function onPixelClick(e) {
+  if (!activeType) return;
+  if (e.target.classList && e.target.classList.contains("placed-obj")) return; // 기존 오브젝트는 자체 핸들러
+  const p = eventToPixel(e);
+  if (!p) return;
+  const t = OBJECT_TYPES[activeType];
+  const worldX = currentCell.gameXStart + p.localX;
+  const worldY = currentCell.gameYStart + p.localY;
+  // 맵 범위 검사
+  if (worldX + t.w > MAP_SIZE || worldY + t.h > MAP_SIZE || worldX < 0 || worldY < 0) {
+    alert(`범위를 벗어났습니다.\n${t.name} 은 ${t.w}×${t.h} 크기여서 이 위치에 들어가지 않습니다.`);
+    return;
+  }
+  // 겹침 검사 — 편집(이동) 모드면 자기 자신은 제외
+  const overlapping = hasOverlap(worldX, worldY, t.w, t.h, editingObjectId);
+  if (overlapping) {
+    const ot = OBJECT_TYPES[overlapping.type];
+    const oname = overlapping.label || (ot ? ot.name :
+      overlapping.type === "shrine" ? "신전" :
+      overlapping.type === "terrain" ? "지형(장애물)" : "건물");
+    alert(`⚠️ ${oname}와 겹치는 위치입니다.\n다른 자리를 선택해주세요.`);
+    return;
+  }
+  if (editingObjectId) {
+    // 설정(이동) 모드 — 기존 오브젝트 위치 변경
+    const obj = placedObjects.find((o) => o.id === editingObjectId);
+    if (obj) { obj.worldX = worldX; obj.worldY = worldY; }
+    editingObjectId = null;
+    setActiveType(null);
+  } else {
+    placedObjects.push({ id: genId(), type: activeType, worldX, worldY });
+  }
+  saveObjects();
+  drawObjectsOnDetail();
+  buildMainGrid();
+  rebindCellClicks();
+  renderPlacedList();
+}
+
+// ─── 인게임 스타일 오브젝트 팝업 ───
+function openObjectPopup(obj) {
+  closeObjectPopup();
+  const t = OBJECT_TYPES[obj.type];
+  if (!t) return;
+  const currentLabel = obj.label || t.name;
+  const overlay = document.createElement("div");
+  overlay.className = "obj-popup-overlay";
+  overlay.id = "__obj-popup";
+  overlay.innerHTML = `
+    <div class="obj-popup">
+      <button class="obj-popup-close" type="button" aria-label="닫기">×</button>
+      <div class="obj-popup-head">
+        <div class="obj-popup-icon-wrap" style="background:${t.color};border-color:${t.color}aa;">${t.icon}</div>
+        <div class="obj-popup-info">
+          <div class="obj-popup-title">${currentLabel}</div>
+          <div class="obj-popup-sub">${t.name} · 위치 (${obj.worldX}, ${obj.worldY}) · ${t.w}×${t.h}px</div>
+        </div>
+      </div>
+      <div class="obj-popup-label-row">
+        <label class="obj-popup-label-text">이름</label>
+        <input type="text" class="obj-popup-name-input" id="__popup-name" maxlength="20"
+               placeholder="${t.name}" value="${(obj.label || "").replace(/"/g, "&quot;")}">
+      </div>
+      <div class="obj-popup-actions">
+        <button class="obj-popup-btn save" data-act="save-name">💾 이름 저장</button>
+        <button class="obj-popup-btn primary" data-act="settings">⚙️ 설정</button>
+        <button class="obj-popup-btn danger" data-act="remove">🗑️</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  const close = () => closeObjectPopup();
+  overlay.querySelector(".obj-popup-close").addEventListener("click", close);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) close(); });
+
+  const nameInput = overlay.querySelector("#__popup-name");
+  // 자동 포커스 + 텍스트 전체 선택
+  setTimeout(() => { try { nameInput.focus(); nameInput.select(); } catch (_) {} }, 60);
+
+  const saveName = () => {
+    const v = nameInput.value.trim();
+    if (v) obj.label = v;
+    else delete obj.label;
+    saveObjects();
+    drawObjectsOnDetail();
+    buildMainGrid();
+    rebindCellClicks();
+    renderPlacedList();
+    closeObjectPopup();
+  };
+
+  // Enter 키로 저장
+  nameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); saveName(); }
+  });
+
+  overlay.querySelector('[data-act="save-name"]').addEventListener("click", saveName);
+
+  overlay.querySelector('[data-act="settings"]').addEventListener("click", () => {
+    // 입력 중인 이름도 함께 저장
+    const v = nameInput.value.trim();
+    if (v) obj.label = v;
+    else delete obj.label;
+    saveObjects();
+    closeObjectPopup();
+    editingObjectId = obj.id;
+    setActiveType(obj.type);
+    drawObjectsOnDetail();
+  });
+  overlay.querySelector('[data-act="remove"]').addEventListener("click", () => {
+    closeObjectPopup();
+    if (confirm(`${t.icon} ${currentLabel} 을(를) 제거할까요?`)) {
+      removeObject(obj.id);
+    }
+  });
+
+  const onKey = (e) => { if (e.key === "Escape") { close(); document.removeEventListener("keydown", onKey); } };
+  document.addEventListener("keydown", onKey);
+}
+function closeObjectPopup() {
+  document.getElementById("__obj-popup")?.remove();
+}
+
+function removeObject(id) {
+  placedObjects = placedObjects.filter((o) => o.id !== id);
+  saveObjects();
+  drawObjectsOnDetail();
+  buildMainGrid();
+  rebindCellClicks();
+  renderPlacedList();
+}
+
+// ───────────────────────────────────────────
+// 뷰 전환
+// ───────────────────────────────────────────
+function showMainView() {
+  document.getElementById("view-main").classList.add("active");
+  document.getElementById("view-detail").classList.remove("active");
+  currentCell = null;
+  buildMainGrid();
+  rebindCellClicks();
+}
+
+function showDetailView() {
+  document.getElementById("view-main").classList.remove("active");
+  document.getElementById("view-detail").classList.add("active");
+  buildPixelGrid();
+  updateDetailHeader();
+  initPixelZoom();
+  pixelZoom?.reset();
+  renderPlacedListDetail();
+}
+
+function updateDetailHeader() {
+  if (!currentCell) return;
+  const c = currentCell;
+  document.getElementById("detail-info").innerHTML =
+    `셀 <b>[${c.col}, ${c.row}]</b> · 좌표 범위 x[${c.gameXStart}~${c.gameXEnd}] y[${c.gameYStart}~${c.gameYEnd}]`;
+}
+
+// ───────────────────────────────────────────
+// 정보 패널 — 종류 버튼 / 배치 리스트
+// ───────────────────────────────────────────
+function renderObjTypes() {
+  // 1) 우측 패널 (큰 버튼)
+  const wrap = document.getElementById("obj-types");
+  wrap.innerHTML = "";
+  for (const [key, t] of Object.entries(OBJECT_TYPES)) {
+    const b = document.createElement("button");
+    b.className = "obj-type-btn" + (activeType === key ? " active" : "");
+    b.dataset.type = key;
+    b.innerHTML = `
+      <span class="icon">${t.icon}</span>
+      <span class="name">${t.name}</span>
+      <span class="size">${t.w}×${t.h}px</span>
+    `;
+    b.addEventListener("click", () => setActiveType(activeType === key ? null : key));
+    wrap.appendChild(b);
+  }
+
+  // 2) 디테일 헤더 가로 바 (컴팩트 알약)
+  const bar = document.getElementById("obj-types-bar");
+  if (bar) {
+    bar.innerHTML = "";
+    for (const [key, t] of Object.entries(OBJECT_TYPES)) {
+      const p = document.createElement("button");
+      p.className = "obj-type-pill" + (activeType === key ? " active" : "");
+      p.dataset.type = key;
+      p.innerHTML = `
+        <span class="pill-icon">${t.icon}</span>
+        <span>${t.name}</span>
+        <span class="pill-size">${t.w}×${t.h}</span>
+      `;
+      p.addEventListener("click", () => setActiveType(activeType === key ? null : key));
+      bar.appendChild(p);
+    }
+    // 구분선
+    const sep = document.createElement("span");
+    sep.style.cssText = "width:1px;background:var(--border);align-self:stretch;margin:0 2px;";
+    bar.appendChild(sep);
+    // 지형 페인트 알약
+    const paintBtn = document.createElement("button");
+    paintBtn.className = "obj-type-pill terrain-pill" + (terrainMode && !terrainEraser ? " active" : "");
+    paintBtn.innerHTML = `<span class="pill-icon">🌊</span><span>지형 페인트</span>`;
+    paintBtn.addEventListener("click", () => setTerrainMode(!(terrainMode && !terrainEraser), false));
+    bar.appendChild(paintBtn);
+    // 지우개 알약
+    const eraseBtn = document.createElement("button");
+    eraseBtn.className = "obj-type-pill terrain-pill" + (terrainMode && terrainEraser ? " active" : "");
+    eraseBtn.innerHTML = `<span class="pill-icon">🧽</span><span>지형 지우개</span>`;
+    eraseBtn.addEventListener("click", () => setTerrainMode(!(terrainMode && terrainEraser), true));
+    bar.appendChild(eraseBtn);
+  }
+}
+
+function setTerrainMode(enabled, erase) {
+  terrainMode = enabled;
+  terrainEraser = enabled && erase;
+  if (enabled) {
+    // 오브젝트 배치 모드 비활성화
+    setActiveType(null);
+    terrainMode = true;
+    terrainEraser = erase;
+    pixelSvg.classList.add("painting");
+    const banner = document.getElementById("mode-banner");
+    document.getElementById("mode-banner-text").innerHTML = erase
+      ? `🧽 <b>지형 지우개 모드</b> — 칠해진 픽셀을 클릭/드래그해서 지우세요`
+      : `🌊 <b>지형 페인트 모드</b> — 픽셀을 클릭/드래그해서 칠하세요 (호수/얼음/장애물 등)`;
+    banner.classList.add("active");
+  } else {
+    pixelSvg.classList.remove("painting");
+    document.getElementById("mode-banner").classList.remove("active");
+  }
+  renderObjTypes();
+}
+
+function setActiveType(type) {
+  activeType = type;
+  if (type) {
+    // 지형 모드 비활성화
+    terrainMode = false;
+    terrainEraser = false;
+    pixelSvg.classList.remove("painting");
+  }
+  renderObjTypes();
+  const banner = document.getElementById("mode-banner");
+  if (type) {
+    const t = OBJECT_TYPES[type];
+    const modeLabel = editingObjectId ? "설정 (이동)" : "배치";
+    document.getElementById("mode-banner-text").innerHTML =
+      `${t.icon} <b>${t.name}</b> ${modeLabel} 모드 (${t.w}×${t.h}px) — 새 위치를 클릭하세요`;
+    banner.classList.add("active");
+    pixelSvg.classList.add("placing");
+  } else if (!terrainMode) {
+    banner.classList.remove("active");
+    pixelSvg.classList.remove("placing");
+    editingObjectId = null;
+    if (ghostRectEl) ghostRectEl.style.display = "none";
+    drawObjectsOnDetail();
+  }
+}
+
+function renderPlacedList() {
+  // 디테일 뷰의 리스트도 같이 갱신
+  renderPlacedListDetail();
+  const list = document.getElementById("placed-list");
+  const cnt = document.getElementById("placed-count");
+  cnt.textContent = `(${placedObjects.length}개)`;
+  document.getElementById("btn-clear-all").style.display = placedObjects.length > 0 ? "" : "none";
+  if (placedObjects.length === 0) {
+    list.innerHTML = `<div class="placed-empty">아직 배치된 건물이 없습니다</div>`;
+    return;
+  }
+  list.innerHTML = "";
+  for (const obj of placedObjects) {
+    const t = OBJECT_TYPES[obj.type];
+    if (!t) continue;
+    const item = document.createElement("div");
+    item.className = "placed-item";
+    const displayName = obj.label || t.name;
+    const showTypeLabel = obj.label && obj.label !== t.name;
+    item.innerHTML = `
+      <span class="icon">${t.icon}</span>
+      <div class="info">
+        <div class="name" style="color:${t.color};">${displayName}${showTypeLabel ? ` <span style="color:var(--text-mute);font-size:10px;font-weight:400;">(${t.name})</span>` : ""}</div>
+        <div class="pos">(${obj.worldX}, ${obj.worldY}) · ${t.w}×${t.h}px</div>
+      </div>
+      <button class="del-btn" data-id="${obj.id}" title="제거">×</button>
+    `;
+    item.querySelector(".del-btn").addEventListener("click", () => removeObject(obj.id));
+    list.appendChild(item);
+  }
+}
+
+// ─── 배치 리스트 (메인 + 디테일 양쪽) ───
+let _placedSearchQuery = "";
+let _placedSearchQueryMain = "";
+
+function renderListInto(wrapId, countId, query) {
+  const wrap = document.getElementById(wrapId);
+  const cntEl = document.getElementById(countId);
+  if (!wrap) return;
+
+  const q = (query || "").trim().toLowerCase();
+
+  // 신전(고정)을 가상 항목으로 리스트 맨 위에 추가
+  const shrineItem = {
+    id: "__shrine",
+    type: "shrine",
+    isShrine: true,
+    label: SHRINE_FIXED.name,
+    worldX: SHRINE_FIXED.worldX,
+    worldY: SHRINE_FIXED.worldY,
+    _typeName: SHRINE_FIXED.name,
+    _color: SHRINE_FIXED.color,
+    _w: SHRINE_FIXED.w,
+    _h: SHRINE_FIXED.h,
+  };
+  const allItems = [shrineItem, ...placedObjects];
+
+  const filtered = allItems.filter((o) => {
+    if (!q) return true;
+    const tname = o.isShrine ? SHRINE_FIXED.name : (OBJECT_TYPES[o.type] ? OBJECT_TYPES[o.type].name : "");
+    const name = (o.label || tname).toLowerCase();
+    return name.includes(q) || tname.toLowerCase().includes(q);
+  });
+
+  const totalCount = allItems.length;
+  if (cntEl) cntEl.textContent = q ? `(${filtered.length}/${totalCount}개)` : `(${totalCount}개)`;
+
+  if (filtered.length === 0) {
+    wrap.innerHTML = `<div class="placed-empty-detail">검색 결과가 없습니다</div>`;
+    return;
+  }
+
+  wrap.innerHTML = "";
+  for (const obj of filtered) {
+    let typeName, color;
+    if (obj.isShrine) {
+      typeName = SHRINE_FIXED.name;
+      color = SHRINE_FIXED.color;
+    } else {
+      const t = OBJECT_TYPES[obj.type];
+      if (!t) continue;
+      typeName = t.name;
+      color = t.color;
+    }
+    const displayName = obj.label || typeName;
+    const isCurrent = currentCell &&
+      obj.worldX >= currentCell.gameXStart && obj.worldX < currentCell.gameXEnd &&
+      obj.worldY >= currentCell.gameYStart && obj.worldY < currentCell.gameYEnd;
+
+    const row = document.createElement("div");
+    row.className = "placed-row" + (isCurrent ? " current-cell" : "") + (obj.isShrine ? " shrine-row" : "");
+    const typeBadge = obj.isShrine
+      ? `<span class="row-type">🛡️ 고정</span>`
+      : (obj.label && obj.label !== typeName ? `<span class="row-type">(${typeName})</span>` : "");
+    row.innerHTML = `
+      <span class="row-swatch" style="background:${color};"></span>
+      <span class="row-name">${escapeHTML(displayName)}${typeBadge}</span>
+      <span class="row-pos">(${obj.worldX},${obj.worldY})</span>
+      <span class="row-goto">→ 이동</span>
+    `;
+    row.addEventListener("click", () => navigateToObject(obj));
+    wrap.appendChild(row);
+  }
+}
+
+function renderPlacedListDetail() {
+  // 디테일 뷰
+  renderListInto("placed-list-detail", "placed-count-inline", _placedSearchQuery);
+  // 메인 뷰
+  renderListInto("placed-list-main", "placed-count-inline-main", _placedSearchQueryMain);
+}
+
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function navigateToObject(obj) {
+  const t = OBJECT_TYPES[obj.type];
+  if (!t) return;
+  // 오브젝트가 속한 셀 계산 (왼쪽 아래 모서리 기준)
+  const col = Math.floor(obj.worldX / CELL_SIZE);
+  const row = GRID_N - 1 - Math.floor(obj.worldY / CELL_SIZE);
+  if (col < 0 || col >= GRID_N || row < 0 || row >= GRID_N) return;
+  const gameXStart = col * CELL_SIZE;
+  const gameYStart = (GRID_N - 1 - row) * CELL_SIZE;
+  currentCell = {
+    col, row, gameXStart, gameYStart,
+    gameXEnd: gameXStart + CELL_SIZE,
+    gameYEnd: gameYStart + CELL_SIZE,
+  };
+  // 메인에서 검색하던 검색어를 디테일로 동기화
+  const wasFromMain = document.getElementById("view-main").classList.contains("active");
+  if (wasFromMain && _placedSearchQueryMain) {
+    _placedSearchQuery = _placedSearchQueryMain;
+    const detailSearchInput = document.getElementById("placed-search");
+    if (detailSearchInput) detailSearchInput.value = _placedSearchQuery;
+    syncSectionState("placed-section", _placedSearchQuery);
+  }
+  // 디테일 뷰 갱신
+  if (!document.getElementById("view-detail").classList.contains("active")) {
+    showDetailView();
+  } else {
+    buildPixelGrid();
+    updateDetailHeader();
+    pixelZoom?.reset();
+  }
+  renderPlacedListDetail();
+}
+
+// 항상 접힌 상태에서 시작 — 검색어가 있을 때만 펼침
+document.getElementById("placed-section").classList.add("collapsed");
+document.getElementById("placed-section-main")?.classList.add("collapsed");
+
+// 접기 토글 — 수동 클릭은 그대로 작동 (검색어 없으면 닫고 싶을 때)
+document.getElementById("placed-toggle").addEventListener("click", () => {
+  document.getElementById("placed-section").classList.toggle("collapsed");
+});
+document.getElementById("placed-toggle-main")?.addEventListener("click", () => {
+  document.getElementById("placed-section-main").classList.toggle("collapsed");
+});
+
+function syncSectionState(sectionId, query) {
+  const sec = document.getElementById(sectionId);
+  if (!sec) return;
+  if (query.trim()) sec.classList.remove("collapsed");
+  else sec.classList.add("collapsed");
+}
+
+// 검색 입력 — 디테일 (검색어 있으면 펼침, 없으면 접힘)
+document.getElementById("placed-search").addEventListener("input", (e) => {
+  _placedSearchQuery = e.target.value;
+  syncSectionState("placed-section", _placedSearchQuery);
+  renderPlacedListDetail();
+});
+// 검색 입력 — 메인
+document.getElementById("placed-search-main")?.addEventListener("input", (e) => {
+  _placedSearchQueryMain = e.target.value;
+  syncSectionState("placed-section-main", _placedSearchQueryMain);
+  renderPlacedListDetail();
+});
+
+document.getElementById("btn-clear-all").addEventListener("click", () => {
+  if (confirm("배치된 모든 건물을 제거할까요?")) {
+    placedObjects = [];
+    saveObjects();
+    buildMainGrid();
+    rebindCellClicks();
+    if (currentCell) drawObjectsOnDetail();
+    renderPlacedList();
+  }
+});
+
+document.getElementById("btn-back").addEventListener("click", showMainView);
+
+// 📖 상세 설명서 접기/펼치기
+document.getElementById("manual-toggle")?.addEventListener("click", () => {
+  const sec = document.getElementById("manual-section");
+  sec.classList.toggle("collapsed");
+  try {
+    localStorage.setItem("palmon_map_manual_collapsed", sec.classList.contains("collapsed") ? "1" : "0");
+  } catch {}
+});
+// 상태 복원 — 기본은 접힘
+try {
+  if (localStorage.getItem("palmon_map_manual_collapsed") !== "0") {
+    document.getElementById("manual-section")?.classList.add("collapsed");
+  } else {
+    document.getElementById("manual-section")?.classList.remove("collapsed");
+  }
+} catch {}
+
+// ─── PDF 저장 ───
+function askServerName(defaultValue = "") {
+  return new Promise((resolve) => {
+    document.getElementById("__server-modal")?.remove();
+    const overlay = document.createElement("div");
+    overlay.id = "__server-modal";
+    overlay.className = "server-modal-overlay";
+    overlay.innerHTML = `
+      <div class="server-modal">
+        <div class="server-modal-title">📄 PDF 저장</div>
+        <div class="server-modal-desc">파일명: <code>PAL_<b>서버명</b>_자리배치도_${new Date().toISOString().slice(0,10)}.pdf</code></div>
+        <input type="text" class="server-modal-input" id="__server-name" maxlength="20" placeholder="예) 147" value="${(defaultValue || "").replace(/"/g, "&quot;")}" autocomplete="off">
+        <div class="server-modal-actions">
+          <button class="btn" id="__server-cancel" style="background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:7px;cursor:pointer;">취소</button>
+          <button class="btn" id="__server-ok" style="background:#34d399;border:1px solid #059669;color:#fff;padding:8px 20px;border-radius:7px;cursor:pointer;font-weight:700;">📄 저장</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const input = overlay.querySelector("#__server-name");
+    setTimeout(() => { input.focus(); input.select(); }, 60);
+    const close = (val) => {
+      overlay.remove();
+      document.removeEventListener("keydown", onKey);
+      resolve(val);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close(null);
+      if (e.key === "Enter") close(input.value);
+    };
+    document.addEventListener("keydown", onKey);
+    overlay.querySelector("#__server-ok").addEventListener("click", () => close(input.value));
+    overlay.querySelector("#__server-cancel").addEventListener("click", () => close(null));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) close(null); });
+  });
+}
+
+// SVG 를 PNG dataURL 로 렌더 (html2canvas 가 SVG content 잘 못 잡는 경우 대비)
+async function renderSvgToDataURL(svg, sizePx = 1400) {
+  const clone = svg.cloneNode(true);
+  clone.setAttribute("viewBox", "0 0 100 100");   // 전체 100x100 표시
+  clone.setAttribute("width", String(sizePx));
+  clone.setAttribute("height", String(sizePx));
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  // 호버/임시 요소 제거
+  clone.querySelectorAll(".hover-cell, .ghost-rect, .crosshair-line").forEach((n) => n.remove());
+
+  const svgStr = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+
+  const img = new Image();
+  img.src = url;
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sizePx;
+  canvas.height = sizePx;
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+  ctx.fillStyle = "#0a0f1e";
+  ctx.fillRect(0, 0, sizePx, sizePx);
+  ctx.drawImage(img, 0, 0, sizePx, sizePx);
+  URL.revokeObjectURL(url);
+
+  return canvas.toDataURL("image/png");
+}
+
+async function captureTempHTML(html, width, height) {
+  const tempWrap = document.createElement("div");
+  tempWrap.style.cssText = `position: fixed; left: -99999px; top: 0; width: ${width}px; height: ${height}px;`;
+  tempWrap.innerHTML = html;
+  document.body.appendChild(tempWrap);
+  // 폰트/이미지 로드 대기
+  await new Promise((r) => setTimeout(r, 100));
+  const canvas = await html2canvas(tempWrap.firstElementChild, {
+    backgroundColor: null,
+    scale: 2,
+    useCORS: true,
+    logging: false,
+    width, height,
+  });
+  tempWrap.remove();
+  return canvas;
+}
+
+async function saveDetailAsPDF() {
+  if (!window.html2canvas || !window.jspdf) {
+    alert("PDF 라이브러리 로드 실패");
+    return;
+  }
+  const storedServer = localStorage.getItem("palmon_map_server") || "";
+  const input = await askServerName(storedServer);
+  if (input === null) return;
+  const server = input.trim().replace(/[\s/\\:*?"<>|]+/g, "_");
+  if (!server) { alert("서버명을 입력해주세요"); return; }
+  localStorage.setItem("palmon_map_server", server);
+
+  const btn = document.getElementById("btn-save-pdf");
+  const orig = btn.innerHTML;
+  btn.innerHTML = "⏳ 저장 중...";
+  btn.disabled = true;
+
+  try {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const dateStr = `${yyyy}-${mm}-${dd}`;
+
+    // === 페이지 1: 상세지도 (꽉차게) ===
+    // SVG 를 미리 PNG 로 변환
+    const svgPngURL = await renderSvgToDataURL(pixelSvg, 1400);
+    const c = currentCell;
+    const cellLabel = c ? `셀 [${c.col}, ${c.row}] · 좌표 x[${c.gameXStart}~${c.gameXEnd}] y[${c.gameYStart}~${c.gameYEnd}]` : "";
+    const todayKr = `${yyyy}년 ${mm}월 ${dd}일`;
+
+    // A4 portrait = 210:297 비율. 800 × 1131 (대략 같은 비율)
+    const PAGE_W = 800, PAGE_H = 1131;
+    const page1HTML = `
+      <div style="
+        width: ${PAGE_W}px; height: ${PAGE_H}px;
+        background: #0b1220; color: #e5e7eb;
+        font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        padding: 36px 36px 24px;
+        box-sizing: border-box;
+      ">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 14px;">
+          <div>
+            <h1 style="color:#fbbf24;margin:0 0 4px;font-size:30px;font-weight:800;">🗺️ Palmon 자리배치도</h1>
+            <div style="color:#94a3b8;font-size:14px;">서버 <b style="color:#fbbf24;">${escapeHTML(server)}</b> · ${todayKr}</div>
+          </div>
+          <div style="text-align:right;color:#94a3b8;font-size:12px;font-family:ui-monospace,monospace;">${cellLabel}</div>
+        </div>
+        <div style="
+          flex: 1; background: #0a0f1e;
+          border: 2px solid #fbbf24; border-radius: 12px;
+          padding: 10px;
+          width: ${PAGE_W - 72}px;
+          height: ${PAGE_W - 72}px;
+          margin: 8px auto 0;
+          box-sizing: border-box;
+        ">
+          <img src="${svgPngURL}" style="width:100%; height:100%; display:block; image-rendering: pixelated;">
+        </div>
+        <div style="margin-top: 16px; color: #64748b; font-size: 11px; text-align: center; font-family: ui-monospace, monospace;">
+          Palmon Map · 100×100 px 상세 지도 · 자동 생성
+        </div>
+      </div>
+    `;
+    const page1Canvas = await captureTempHTML(page1HTML, PAGE_W, PAGE_H);
+
+    // === 페이지 2: 캠프 / 길드발전기 리스트 ===
+    const filtered = placedObjects.filter((o) => o.type === "hq" || o.type === "guildgen");
+    let rowsHtml = "";
+    if (filtered.length === 0) {
+      rowsHtml = `<tr><td colspan="4" style="padding:60px;text-align:center;color:#94a3b8;font-size:14px;">배치된 캠프/길드발전기가 없습니다</td></tr>`;
+    } else {
+      for (const o of filtered) {
+        const t = OBJECT_TYPES[o.type];
+        const name = o.label || t.name;
+        rowsHtml += `
+          <tr>
+            <td style="padding:12px 14px;border-bottom:1px solid #334155;background:${t.color}22;color:${t.color};font-weight:700;font-size:14px;">${t.icon} ${escapeHTML(t.name)}</td>
+            <td style="padding:12px 14px;border-bottom:1px solid #334155;font-weight:700;font-size:15px;color:#fff;">${escapeHTML(name)}</td>
+            <td style="padding:12px 14px;border-bottom:1px solid #334155;text-align:center;font-family:ui-monospace,monospace;font-size:14px;color:#fbbf24;">(${o.worldX}, ${o.worldY})</td>
+            <td style="padding:12px 14px;border-bottom:1px solid #334155;text-align:center;color:#f87171;font-weight:800;font-size:14px;">📍 이동 바람</td>
+          </tr>
+        `;
+      }
+    }
+    const page2HTML = `
+      <div style="
+        width: ${PAGE_W}px; height: ${PAGE_H}px;
+        background: #0b1220; color: #e5e7eb;
+        font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        padding: 40px;
+        box-sizing: border-box;
+      ">
+        <h1 style="color:#fbbf24;margin:0 0 6px;font-size:28px;font-weight:800;">🏗️ 캠프 / 길드발전기 위치</h1>
+        <div style="color:#94a3b8;font-size:14px;margin-bottom:24px;">서버 <b style="color:#fbbf24;">${escapeHTML(server)}</b> · ${todayKr} · 총 ${filtered.length}개</div>
+        <table style="width:100%;border-collapse:collapse;background:#111827;border:1px solid #334155;border-radius:10px;overflow:hidden;">
+          <thead>
+            <tr style="background:linear-gradient(135deg,#1e3a8a,#1e40af);">
+              <th style="padding:14px 14px;text-align:left;color:#fff;font-size:13px;font-weight:800;border-right:1px solid #334155;">종류</th>
+              <th style="padding:14px 14px;text-align:left;color:#fff;font-size:13px;font-weight:800;border-right:1px solid #334155;">이름</th>
+              <th style="padding:14px 14px;text-align:center;color:#fff;font-size:13px;font-weight:800;border-right:1px solid #334155;">좌표 (X, Y)</th>
+              <th style="padding:14px 14px;text-align:center;color:#fff;font-size:13px;font-weight:800;">상태</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+        <div style="margin-top:24px;background:rgba(96,165,250,0.08);border-left:4px solid #60a5fa;padding:14px 16px;border-radius:6px;color:#cbd5e1;font-size:13px;line-height:1.7;">
+          <b style="color:#60a5fa;">📋 안내</b><br>
+          위 목록에 표시된 캠프/길드발전기는 <b style="color:#f87171;">"이동 바람"</b> 상태입니다.<br>
+          각 좌표로 이동 부탁드립니다. (X, Y 는 좌측 아래 모서리 기준)
+        </div>
+        <div style="margin-top: 32px; color: #64748b; font-size: 11px; text-align: center; font-family: ui-monospace, monospace;">
+          Palmon Map · 캠프/길드발전기 이동 요청 리스트
+        </div>
+      </div>
+    `;
+    const page2Canvas = await captureTempHTML(page2HTML, PAGE_W, PAGE_H);
+
+    // === PDF 조립 ===
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+
+    pdf.addImage(page1Canvas.toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+    pdf.addPage();
+    pdf.addImage(page2Canvas.toDataURL("image/png"), "PNG", 0, 0, pageW, pageH);
+
+    const filename = `PAL_${server}_자리배치도_${dateStr}.pdf`;
+    pdf.save(filename);
+  } catch (e) {
+    console.error(e);
+    alert("PDF 저장 실패: " + (e.message || e));
+  } finally {
+    btn.innerHTML = orig;
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("btn-save-pdf").addEventListener("click", saveDetailAsPDF);
+document.getElementById("btn-cancel-mode").addEventListener("click", () => setActiveType(null));
+
+// ───────────────────────────────────────────
+// 줌/팬
+// ───────────────────────────────────────────
+function makeZoomPan(svg, initial, zoomLevelEl, opts = {}) {
+  const minZoom = opts.minZoom || 0.5;
+  const maxZoom = opts.maxZoom || 20;
+  const state = { vb: { ...initial }, initial: { ...initial } };
+  const onClickGuard = opts.onClickGuard;
+  let dragging = false, dragStart = null, dragVB = null, movedDistance = 0;
+  let lastTouchDist = 0;
+
+  function applyVB() {
+    svg.setAttribute("viewBox", `${state.vb.x} ${state.vb.y} ${state.vb.w} ${state.vb.h}`);
+    if (zoomLevelEl) {
+      const z = state.initial.w / state.vb.w;
+      zoomLevelEl.textContent = `${Math.round(z * 100)}%`;
+    }
+  }
+  applyVB();
+
+  function svgPointFromEvent(e) {
+    const pt = svg.createSVGPoint();
+    const c = (e.touches && e.touches[0]) || e;
+    pt.x = c.clientX; pt.y = c.clientY;
+    const ctm = svg.getScreenCTM();
+    return ctm ? pt.matrixTransform(ctm.inverse()) : null;
+  }
+
+  function zoomBy(factor, anchor) {
+    const newW = state.vb.w / factor;
+    const newH = state.vb.h / factor;
+    const minW = state.initial.w / maxZoom;
+    const maxW = state.initial.w / minZoom;
+    if (newW < minW || newW > maxW) return;
+    if (anchor) {
+      state.vb.x = anchor.x - (anchor.x - state.vb.x) * (newW / state.vb.w);
+      state.vb.y = anchor.y - (anchor.y - state.vb.y) * (newH / state.vb.h);
+    }
+    state.vb.w = newW;
+    state.vb.h = newH;
+    applyVB();
+  }
+
+  function reset() { state.vb = { ...state.initial }; applyVB(); }
+
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const p = svgPointFromEvent(e);
+    if (!p) return;
+    zoomBy(e.deltaY < 0 ? 1.15 : 1 / 1.15, p);
+  }, { passive: false });
+
+  svg.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    // 페인트 모드면 픽셀 SVG 에서 팬 비활성화 (페인트만 동작)
+    if (svg === pixelSvg && terrainMode) return;
+    dragging = true;
+    movedDistance = 0;
+    const p = svgPointFromEvent(e);
+    dragStart = p;
+    dragVB = { ...state.vb };
+    svg.classList.add("panning");
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!dragging) return;
+    const p = svgPointFromEvent(e);
+    if (!p || !dragStart) return;
+    const dx = p.x - dragStart.x;
+    const dy = p.y - dragStart.y;
+    movedDistance = Math.max(movedDistance, Math.hypot(dx, dy));
+    state.vb.x = dragVB.x - dx;
+    state.vb.y = dragVB.y - dy;
+    applyVB();
+  });
+  window.addEventListener("mouseup", () => {
+    if (!dragging) return;
+    dragging = false;
+    svg.classList.remove("panning");
+    if (onClickGuard) {
+      if (movedDistance > 2) onClickGuard(true);
+      else setTimeout(() => onClickGuard(false), 0);
+    }
+  });
+
+  svg.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastTouchDist = Math.hypot(dx, dy);
+    } else if (e.touches.length === 1) {
+      // 페인트 모드면 픽셀 SVG 에서 1손가락 팬 비활성화
+      if (svg === pixelSvg && terrainMode) return;
+      dragging = true;
+      const p = svgPointFromEvent(e);
+      dragStart = p;
+      dragVB = { ...state.vb };
+    }
+  }, { passive: true });
+  svg.addEventListener("touchmove", (e) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const d = Math.hypot(dx, dy);
+      if (lastTouchDist > 0) {
+        const cx = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        const cy = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        const pt = svg.createSVGPoint();
+        pt.x = cx; pt.y = cy;
+        const ctm = svg.getScreenCTM();
+        const anchor = ctm ? pt.matrixTransform(ctm.inverse()) : null;
+        zoomBy(d / lastTouchDist, anchor);
+      }
+      lastTouchDist = d;
+      e.preventDefault();
+    } else if (e.touches.length === 1 && dragging) {
+      const p = svgPointFromEvent(e);
+      if (!p || !dragStart) return;
+      const dx = p.x - dragStart.x;
+      const dy = p.y - dragStart.y;
+      state.vb.x = dragVB.x - dx;
+      state.vb.y = dragVB.y - dy;
+      applyVB();
+      e.preventDefault();
+    }
+  }, { passive: false });
+  svg.addEventListener("touchend", () => { dragging = false; lastTouchDist = 0; });
+
+  return { zoomBy, reset };
+}
+
+let _panSuppressMain = false;
+const mainZoom = makeZoomPan(mapSvg, { x: -5, y: -5, w: 1310, h: 1310 },
+  document.getElementById("zoom-level-main"),
+  { onClickGuard: (b) => { _panSuppressMain = b; } });
+document.querySelectorAll('[data-zoom]').forEach((b) => {
+  b.addEventListener("click", () => {
+    const a = b.dataset.zoom;
+    if (a === "in") mainZoom.zoomBy(1.3, { x: 650, y: 650 });
+    else if (a === "out") mainZoom.zoomBy(1 / 1.3, { x: 650, y: 650 });
+    else mainZoom.reset();
+  });
+});
+
+let pixelZoom = null;
+function initPixelZoom() {
+  if (pixelZoom) return;
+  pixelZoom = makeZoomPan(pixelSvg, { x: 0, y: 0, w: 100, h: 100 },
+    document.getElementById("zoom-level-pixel"));
+  document.querySelectorAll('[data-zoom-pixel]').forEach((b) => {
+    b.addEventListener("click", () => {
+      const a = b.dataset.zoomPixel;
+      if (a === "in") pixelZoom.zoomBy(1.3, { x: 50, y: 50 });
+      else if (a === "out") pixelZoom.zoomBy(1 / 1.3, { x: 50, y: 50 });
+      else pixelZoom.reset();
+    });
+  });
+}
+
+function rebindCellClicks() {
+  mapSvg.querySelectorAll(".cell").forEach((rect) => {
+    const col = parseInt(rect.dataset.col);
+    const row = parseInt(rect.dataset.row);
+    const gameX = parseInt(rect.dataset.gameX);
+    const gameY = parseInt(rect.dataset.gameY);
+    const gameXEnd = parseInt(rect.dataset.gameXEnd);
+    const gameYEnd = parseInt(rect.dataset.gameYEnd);
+    rect.onclick = () => {
+      if (_panSuppressMain) return;
+      onMainCellClick(col, row, gameX, gameY, gameXEnd, gameYEnd);
+    };
+  });
+}
+
+// 초기
+buildMainGrid();
+rebindCellClicks();
+renderObjTypes();
+renderPlacedList();
+</script>
+
+</body>
+</html>

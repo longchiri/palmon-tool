@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515a" />
+  <link rel="stylesheet" href="style.css?v=20260515b" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -58,6 +58,7 @@
       <button class="tab" data-tab="t-bead">💎 걸작 구슬</button>
       <button class="tab" data-tab="t-essence">✨ 팰몬 진화</button>
       <button class="tab" data-tab="t-palmon">📊 캠프별 자원상자 비교</button>
+      <button class="tab" data-tab="t-map">🗺️ 자리배치도</button>
       <button class="tab" data-tab="t-changelog">📰 업데이트 현황</button>
     </div>
 
@@ -302,6 +303,23 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 자리배치도 (map.html iframe)                       -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-map">
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🗺️ <b>팰몬 자리배치도</b>는 게임 내 건물 자리배치를 시각적으로 설계할 수 있는 도구입니다.<br>
+          1300×1300 픽셀의 전체 맵을 13×13 셀로 나눠 표시하며, 셀을 클릭하면 100×100 픽셀 상세 화면으로 들어가 정확한 위치에 건물을 배치할 수 있어요.<br>
+          🌊 지형 페인트로 호수/장애물도 표시 가능하고, 📄 PDF로 자리배치도를 저장해서 길드원과 공유할 수 있습니다.
+        </p>
+      </div>
+      <div class="map-iframe-wrap">
+        <iframe id="map-iframe" src="map.html?embed=1" title="팰몬 자리배치도" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 업데이트 현황                                     -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-changelog">
@@ -317,6 +335,11 @@
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🗺️ 자리배치도 탭 추가</b> — 게임 내 건물 자리배치를 시각적으로 설계할 수 있는 도구. 13×13 셀 → 100×100 픽셀 줌인 → 캠프/성전/팰몬무리/길드발전기 등 배치 가능. 🌊 지형 페인트(호수/장애물), 신전 자동 중앙 고정, 검색/네비게이션, 📄 PDF 2페이지 저장 (상세지도 + 이동요청 리스트)</div>
+        </div>
 
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
@@ -824,6 +847,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515a"></script>
+  <script src="app.js?v=20260515b"></script>
 </body>
 </html>
