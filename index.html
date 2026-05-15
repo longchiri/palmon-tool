@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515g" />
+  <link rel="stylesheet" href="style.css?v=20260515h" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -27,11 +27,11 @@
         if (lt && lt !== "t-help" && /^t-[a-z]+$/.test(lt)) {
           var s = document.createElement("style");
           s.id = "__initial-tab-style";
+          // 사용법 탭 숨기고 lastTab 패널만 표시 (그룹 active 처리는 JS 가 담당)
           s.textContent =
             "#t-help{display:none!important;}" +
             "#" + lt + "{display:block!important;}" +
-            ".tab[data-tab='t-help']{background:transparent!important;color:var(--text-dim)!important;}" +
-            ".tab[data-tab='" + lt + "']{background:var(--tab-active)!important;color:var(--text)!important;}";
+            ".tab[data-tab='t-help']{background:transparent!important;color:var(--text-dim)!important;}";
           document.head.appendChild(s);
           window.__INITIAL_TAB = lt;
         }
@@ -970,6 +970,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515g"></script>
+  <script src="app.js?v=20260515h"></script>
 </body>
 </html>

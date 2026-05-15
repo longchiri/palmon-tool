@@ -1471,12 +1471,105 @@ function updateInventorySummary() {
     </div>`;
 }
 
+// ===== 탭 그룹 정의 (2차 메뉴) =====
+const TAB_GROUPS = {
+  "g-construction": {
+    icon: "🏗️",
+    label: "건설 관련",
+    tabs: [
+      { id: "t-result", icon: "🎯", label: "목표캠프계산기" },
+    ],
+  },
+  "g-palmon": {
+    icon: "💎",
+    label: "팰몬 관련",
+    tabs: [
+      { id: "t-bead",     icon: "💎", label: "걸작 구슬" },
+      { id: "t-essence",  icon: "✨", label: "팰몬 진화" },
+      { id: "t-skillexp", icon: "🌰", label: "스킬열매 / 경험치" },
+    ],
+  },
+  "g-resource": {
+    icon: "💰",
+    label: "자원 관련",
+    tabs: [
+      { id: "t-inventory", icon: "📦", label: "보유자원/가속 계산하기" },
+      { id: "t-palmon",    icon: "📊", label: "캠프별 자원상자 비교" },
+    ],
+  },
+};
+// 탭 ID → 그룹 ID 역매핑
+const TAB_TO_GROUP = (() => {
+  const m = {};
+  for (const [gid, g] of Object.entries(TAB_GROUPS)) {
+    for (const t of g.tabs) m[t.id] = gid;
+  }
+  return m;
+})();
+
+// 서브 탭 바 렌더 + 활성화
+function renderSubTabs(groupId, activeTabId) {
+  const wrap = document.getElementById("sub-tabs-wrap");
+  const bc = document.getElementById("sub-breadcrumb");
+  const bar = document.getElementById("sub-tabs");
+  if (!wrap || !bc || !bar) return;
+  const g = TAB_GROUPS[groupId];
+  if (!g) { wrap.style.display = "none"; return; }
+  wrap.style.display = "";
+  const activeTab = g.tabs.find((t) => t.id === activeTabId) || g.tabs[0];
+  bc.innerHTML = `<span class="crumb-group">${g.icon} ${g.label}</span> <span class="crumb-sep">/</span> <span class="crumb-current">${activeTab.icon} ${activeTab.label}</span>`;
+  bar.innerHTML = "";
+  for (const t of g.tabs) {
+    const b = document.createElement("button");
+    b.className = "sub-tab" + (t.id === activeTab.id ? " active" : "");
+    b.textContent = `${t.icon} ${t.label}`;
+    b.addEventListener("click", () => activateTab(t.id));
+    bar.appendChild(b);
+  }
+}
+
 // ===== 탭 전환 =====
 function activateTab(tabId) {
-  $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === tabId));
+  // 1차 탭(그룹 포함)의 active 상태
+  $$(".tab").forEach((t) => {
+    t.classList.remove("active", "group-active");
+    if (t.dataset.tab === tabId) t.classList.add("active");
+  });
+  // 패널 활성화
   $$(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === tabId));
-  // 마지막으로 본 탭 기억 → 새로고침해도 같은 탭 유지
-  try { localStorage.setItem("palmon_last_tab", tabId); } catch (_) {}
+  // 그룹 처리
+  const groupId = TAB_TO_GROUP[tabId];
+  if (groupId) {
+    // 그룹 탭 버튼 강조
+    const gbtn = document.querySelector(`.tab.tab-group[data-group="${groupId}"]`);
+    if (gbtn) gbtn.classList.add("group-active");
+    // 서브 탭 바 렌더
+    renderSubTabs(groupId, tabId);
+  } else {
+    // 단독 탭 — 서브 탭 바 숨김
+    const wrap = document.getElementById("sub-tabs-wrap");
+    if (wrap) wrap.style.display = "none";
+  }
+  // 마지막으로 본 탭 기억
+  try {
+    localStorage.setItem("palmon_last_tab", tabId);
+    // 그룹 내 마지막 탭도 기록
+    if (groupId) localStorage.setItem(`palmon_last_tab_in_${groupId}`, tabId);
+  } catch (_) {}
+}
+
+// 그룹 탭 클릭 핸들러 — 그룹의 마지막 본 탭 또는 첫 번째 탭으로 이동
+function activateGroup(groupId) {
+  const g = TAB_GROUPS[groupId];
+  if (!g) return;
+  // 그룹 내 마지막으로 본 탭 복원
+  let target = null;
+  try {
+    const lastInGroup = localStorage.getItem(`palmon_last_tab_in_${groupId}`);
+    if (lastInGroup && g.tabs.some((t) => t.id === lastInGroup)) target = lastInGroup;
+  } catch {}
+  if (!target) target = g.tabs[0].id;
+  activateTab(target);
 }
 
 // ===== 저장 / 불러오기 (JSON 다운로드 / 업로드) =====
@@ -2706,7 +2799,10 @@ async function bootstrap() {
     applyTooltips();
 
     // 이벤트 바인딩
-    $$(".tab").forEach((t) => t.addEventListener("click", () => activateTab(t.dataset.tab)));
+    $$(".tab").forEach((t) => t.addEventListener("click", () => {
+      if (t.dataset.group) activateGroup(t.dataset.group);
+      else if (t.dataset.tab) activateTab(t.dataset.tab);
+    }));
     $("btn-save").addEventListener("click", saveSettings);
     $("btn-load").addEventListener("click", () => $("file-load").click());
     $("file-load").addEventListener("change", (e) => { if (e.target.files[0]) loadSettings(e.target.files[0]); });
@@ -2757,27 +2853,27 @@ async function bootstrap() {
     autoCalculate();
     // 게시판 초기화
     boardSetupListeners();
-    // 새로고침 시 마지막으로 본 탭 복원 (로고 클릭은 별도 핸들러로 사용법 탭 이동)
-    // 인라인 스타일(head)이 이미 화면을 바꿔뒀으므로 여기선 실제 active 클래스만 동기화
+    // 새로고침 시 마지막으로 본 탭 복원 — activateTab() 호출하여 그룹/서브탭 로직 함께 작동
     try {
       const lastTab = window.__INITIAL_TAB || localStorage.getItem("palmon_last_tab");
+      // 인라인 head 스타일 제거 — 이후 탭 클릭 시 정상 동작
+      const initStyle = document.getElementById("__initial-tab-style");
+      if (initStyle) initStyle.remove();
       if (lastTab && document.getElementById(lastTab) && lastTab !== "t-help") {
-        // active 클래스 동기화 (애니메이션 없이 즉시)
-        $$(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === lastTab));
-        $$(".tab-panel").forEach((p) => {
-          p.classList.toggle("active", p.id === lastTab);
-          // 첫 화면 깜빡임 방지를 위해 fade-in 비활성화
-          p.style.animation = "none";
-        });
-        // 인라인 head 스타일 제거 — 이후 탭 클릭 시 정상 동작
-        const initStyle = document.getElementById("__initial-tab-style");
-        if (initStyle) initStyle.remove();
-        // 다음 프레임에 animation 복구 (이후 탭 전환에는 fade-in 유지)
+        // 애니메이션 임시 비활성 (첫 화면 깜빡임 방지)
+        $$(".tab-panel").forEach((p) => { p.style.animation = "none"; });
+        activateTab(lastTab);
         requestAnimationFrame(() => {
           $$(".tab-panel").forEach((p) => { p.style.animation = ""; });
         });
+      } else {
+        // 사용법 탭 기본 활성 — 그래도 active 클래스는 정렬
+        activateTab("t-help");
       }
-    } catch (_) {}
+    } catch (e) {
+      console.warn("탭 복원 실패:", e);
+      try { activateTab("t-help"); } catch {}
+    }
   } catch (err) {
     console.error(err);
     document.querySelector(".container").innerHTML = `
