@@ -1440,6 +1440,119 @@ function updateSkillExp() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════
+// 🌰 열매상자 시뮬레이터
+// ════════════════════════════════════════════════════════════════
+// 각 row 확률은 1/22 단위 (총 22 weight)
+// 합계: 레전드 8/22 (36.36%), 에픽 10/22 (45.45%), 레어 4/22 (18.19%)
+const FRUITBOX_DROPS = [
+  { tier: "레전드", tierKey: "ur",  qty: 5,  weight: 2, label: "레전드 스킬 열매" },
+  { tier: "레전드", tierKey: "ur",  qty: 10, weight: 4, label: "레전드 스킬 열매" },
+  { tier: "레전드", tierKey: "ur",  qty: 15, weight: 2, label: "레전드 스킬 열매" },
+  { tier: "에픽",   tierKey: "ssr", qty: 5,  weight: 2, label: "에픽 스킬 열매"   },
+  { tier: "에픽",   tierKey: "ssr", qty: 10, weight: 6, label: "에픽 스킬 열매"   },
+  { tier: "에픽",   tierKey: "ssr", qty: 15, weight: 2, label: "에픽 스킬 열매"   },
+  { tier: "레어",   tierKey: "sr",  qty: 5,  weight: 1, label: "레어 스킬 열매"   },
+  { tier: "레어",   tierKey: "sr",  qty: 10, weight: 2, label: "레어 스킬 열매"   },
+  { tier: "레어",   tierKey: "sr",  qty: 15, weight: 1, label: "레어 스킬 열매"   },
+];
+const FRUITBOX_TOTAL_WEIGHT = FRUITBOX_DROPS.reduce((s, d) => s + d.weight, 0);
+
+function buildFruitBoxTab() {
+  if (!$("fruitbox-count")) return;
+  // 초기 결과창 (안내)
+  renderFruitBoxIdle();
+
+  // 확인하기 버튼
+  $("fruitbox-roll").addEventListener("click", () => {
+    const n = Math.max(0, parseInt($("fruitbox-count").value || 0));
+    if (n <= 0) { renderFruitBoxIdle(); return; }
+    const counts = rollFruitBoxes(n);
+    renderFruitBoxResult(n, counts);
+  });
+
+  // 확률표 토글
+  if ($("fruitbox-prob-toggle")) {
+    $("fruitbox-prob-toggle").addEventListener("click", () => {
+      const tbl = $("fruitbox-prob-table");
+      const btn = $("fruitbox-prob-toggle");
+      if (!tbl) return;
+      const isHidden = tbl.style.display === "none";
+      tbl.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "📊 확률표 숨기기" : "📊 확률표 보기";
+    });
+  }
+}
+
+function rollFruitBoxes(n) {
+  // n개 상자 → 각 row 별로 실제 굴린 횟수 카운트
+  const counts = FRUITBOX_DROPS.map(() => 0);
+  for (let i = 0; i < n; i++) {
+    let r = Math.floor(Math.random() * FRUITBOX_TOTAL_WEIGHT);
+    for (let j = 0; j < FRUITBOX_DROPS.length; j++) {
+      r -= FRUITBOX_DROPS[j].weight;
+      if (r < 0) { counts[j]++; break; }
+    }
+  }
+  return counts;
+}
+
+function renderFruitBoxIdle() {
+  const slot = $("fruitbox-result-slot");
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="result-card" style="text-align:center;padding:36px 18px;">
+      <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
+      <p class="txt-dim" style="margin:18px 0 0;font-size:13px;line-height:1.7;">
+        🌰 보유 수량을 입력하고<br>
+        ✅ <b>확인하기</b> 버튼을 눌러주세요.
+      </p>
+    </div>`;
+}
+
+function renderFruitBoxResult(n, rowCounts) {
+  const slot = $("fruitbox-result-slot");
+  if (!slot) return;
+
+  // 등급별 합계
+  const tierSum = { 레전드: 0, 에픽: 0, 레어: 0 };
+  rowCounts.forEach((c, i) => {
+    const d = FRUITBOX_DROPS[i];
+    tierSum[d.tier] += c * d.qty;
+  });
+
+  const tierColor = { 레전드: "var(--amber)", 에픽: "var(--purple)", 레어: "var(--blue)" };
+  const tierEmoji = { 레전드: "🟡", 에픽: "🟣", 레어: "🔵" };
+  const tierImg = {
+    레전드: "fruit_ur.png",
+    에픽:   "fruit_ssr.png",
+    레어:   "fruit_sr.png",
+  };
+
+  // 3행 (UR/SSR/SR) — 이미지 + 갯수
+  let rows = "";
+  for (const t of ["레전드", "에픽", "레어"]) {
+    rows += `
+      <div class="fruit-result-row" style="display:flex;align-items:center;gap:14px;padding:12px 6px;border-top:1px solid #2a3441;">
+        <img src="${tierImg[t]}" alt="${t}" class="fruit-result-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">
+        <span class="fruit-result-img-fallback" style="display:none;width:56px;height:56px;align-items:center;justify-content:center;font-size:32px;background:rgba(255,255,255,0.04);border-radius:8px;flex-shrink:0;">${tierEmoji[t]}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="color:${tierColor[t]};font-weight:800;font-size:14px;">${tierEmoji[t]} ${t} 스킬 열매</div>
+        </div>
+        <div style="color:${tierColor[t]};font-weight:800;font-size:22px;white-space:nowrap;">${fmt(tierSum[t])}<span style="font-size:13px;opacity:0.85;margin-left:2px;">개</span></div>
+      </div>`;
+  }
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:var(--amber);">
+      <div class="card-title" style="color:var(--amber);text-align:center;">◆ 시뮬레이션 결과 (${fmt(n)}상자 개봉)</div>
+      <div style="margin-top:8px;">${rows}</div>
+      <p style="margin:14px 0 0;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--red);text-align:left;">
+        ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+      </p>
+    </div>`;
+}
+
 function updatePalmon() {
   const baseLevel = parseInt($("palmon-camp").value);
   const maxLevel = Math.max(...Object.keys(DB.resource_boxes).map((x) => parseInt(x)));
@@ -1616,6 +1729,13 @@ const TAB_GROUPS = {
     tabs: [
       { id: "t-inventory", icon: "📦", label: "보유자원/가속 계산하기" },
       { id: "t-palmon",    icon: "📊", label: "캠프별 자원상자 비교" },
+    ],
+  },
+  "g-boxsim": {
+    icon: "📦",
+    label: "상자시뮬레이터",
+    tabs: [
+      { id: "t-fruitbox", icon: "🌰", label: "열매상자" },
     ],
   },
 };
@@ -1847,6 +1967,7 @@ function applySettingsPayload(p) {
   updateEssence();
   updatePalmon();
   buildSkillExpTab();
+  buildFruitBoxTab();
 }
 
 // 커스텀 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 가 차단되는 경우 대응
@@ -2991,6 +3112,7 @@ async function bootstrap() {
     updateEssence();
     updatePalmon();
     buildSkillExpTab();
+    buildFruitBoxTab();
     updateInventorySummary();
     autoCalculate();
     // 게시판 초기화

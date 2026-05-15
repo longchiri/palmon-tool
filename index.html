@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515l" />
+  <link rel="stylesheet" href="style.css?v=20260515o" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -57,6 +57,7 @@
       <button class="tab tab-group" data-group="g-construction">🏗️ 건설 관련</button>
       <button class="tab tab-group" data-group="g-palmon">💎 팰몬 관련</button>
       <button class="tab tab-group" data-group="g-resource">💰 자원 관련</button>
+      <button class="tab tab-group" data-group="g-boxsim">📦 상자시뮬레이터</button>
       <button class="tab" data-tab="t-map">🗺️ 자리배치도</button>
       <button class="tab" data-tab="t-changelog">📰 업데이트 현황</button>
     </div>
@@ -391,6 +392,75 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 열매상자 시뮬레이터                                -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-fruitbox">
+
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🌰 <b>열매상자 시뮬레이터</b> — 보유한 열매상자 갯수를 입력하고 <b>확인하기</b>를 누르면 확률에 따라 실제 한 번 굴려본 결과를 보여줍니다.<br>
+          상자 1개당 1번 굴림. 결과는 매번 다르게 나옵니다.
+        </p>
+        <div style="margin-top:10px;">
+          <button type="button" id="fruitbox-prob-toggle" class="btn">📊 확률표 보기</button>
+        </div>
+        <div id="fruitbox-prob-table" style="display:none;margin-top:14px;">
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="text-align:left;">아이템 명칭</th>
+              <th>수량</th>
+              <th>드랍 확률</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><b class="tier-ur">🟡 레전드 스킬 열매</b></td><td class="value">5개</td><td class="value">9.09%</td></tr>
+              <tr><td><b class="tier-ur">🟡 레전드 스킬 열매</b></td><td class="value">10개</td><td class="value">18.18%</td></tr>
+              <tr><td><b class="tier-ur">🟡 레전드 스킬 열매</b></td><td class="value">15개</td><td class="value">9.09%</td></tr>
+              <tr><td><b class="tier-ssr">🟣 에픽 스킬 열매</b></td><td class="value">5개</td><td class="value">9.09%</td></tr>
+              <tr><td><b class="tier-ssr">🟣 에픽 스킬 열매</b></td><td class="value">10개</td><td class="value">27.27%</td></tr>
+              <tr><td><b class="tier-ssr">🟣 에픽 스킬 열매</b></td><td class="value">15개</td><td class="value">9.09%</td></tr>
+              <tr><td><b class="tier-sr">🔵 레어 스킬 열매</b></td><td class="value">5개</td><td class="value">4.55%</td></tr>
+              <tr><td><b class="tier-sr">🔵 레어 스킬 열매</b></td><td class="value">10개</td><td class="value">9.09%</td></tr>
+              <tr><td><b class="tier-sr">🔵 레어 스킬 열매</b></td><td class="value">15개</td><td class="value">4.55%</td></tr>
+              <tr style="border-top:2px solid var(--border);"><td colspan="2"><b>총합</b></td><td class="value amber"><b>100.00%</b></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <p style="margin-top:14px;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:13px;line-height:1.6;color:var(--red);">
+          ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+        </p>
+      </div>
+
+      <!-- Row 1: 입력 + 결과 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🌰 열매상자</div>
+          <img src="fruitbox.png" alt="열매상자" class="bead-img" onerror="this.style.display='none'">
+          <div class="form-row">
+            <label>보유 수량</label>
+            <input type="number" id="fruitbox-count" min="0" value="0" inputmode="numeric">
+          </div>
+          <button type="button" id="fruitbox-roll" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 확인하기</button>
+          <div class="hint" style="margin-top:14px;">예) 100상자 → 확률 기반 랜덤 결과 표시</div>
+        </div>
+
+        <div id="fruitbox-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title">기준값</div>
+          <div style="font-size:13px;line-height:1.7;">
+            <b>상자 1개당 평균 (기대값)</b><br>
+            • <b class="tier-ur">🟡 레전드 스킬 열매</b>: 3.636개<br>
+            • <b class="tier-ssr">🟣 에픽 스킬 열매</b>: 4.545개<br>
+            • <b class="tier-sr">🔵 레어 스킬 열매</b>: 1.818개<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">실제 결과는 랜덤이라 위/아래로 흔들립니다.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
     <!-- TAB: 자리배치도 (map.html iframe)                       -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="tab-panel" id="t-map">
@@ -423,6 +493,11 @@
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>📦 상자시뮬레이터 → 🌰 열매상자 시뮬레이터</b> — UR 만능 팰몬조각과 동일한 UI 레이아웃. 보유 상자 수 입력 → ✅ 확인하기 클릭 → 결과 카드에 <b>UR/SSR/SR 열매 이미지 + 갯수</b> 표시. 메뉴 설명글의 <b>📊 확률표 보기</b> 버튼으로 9행 확률표 토글. 메뉴/결과 양쪽에 <b>"⚠️ 항상 랜덤한 결과입니다. 너무 믿지 마세요"</b> 주의 문구 포함</div>
+        </div>
 
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
@@ -686,6 +761,23 @@
             <li><b>내 캠프 레벨</b> 과 <b>비교 캠프</b> 두 드롭다운 선택</li>
             <li>각 자원(팰몬 경험치/전력/골드/강철/목재)별 SR/SSR/UR 상자 보유 수 입력</li>
             <li>두 캠프 레벨에서 까면 각각 얼마인지 + 증가량/증가율 한눈에 비교</li>
+          </ul>
+
+          <h2 class="help-group">📦 상자시뮬레이터</h2>
+
+          <h3>🌰 열매상자</h3>
+          <p>보유한 열매상자를 한 번에 깠을 때 어떤 결과가 나오는지 확률 기반 랜덤 시뮬레이션.</p>
+          <ul>
+            <li><b>보유 수량 입력</b> → ✅ <b>확인하기</b> 버튼 → 결과창에 <b>UR/SSR/SR 열매 이미지 + 갯수</b> 표시</li>
+            <li>메뉴 설명글의 <b>📊 확률표 보기</b> 버튼으로 9행 상세 확률표 토글</li>
+            <li><b>드롭 확률 (상자 1개당)</b>:
+              <ul>
+                <li>🟡 레전드 스킬 열매 — 5개 9.09% / 10개 18.18% / 15개 9.09% (합 36.36%)</li>
+                <li>🟣 에픽 스킬 열매 — 5개 9.09% / 10개 27.27% / 15개 9.09% (합 45.45%)</li>
+                <li>🔵 레어 스킬 열매 — 5개 4.55% / 10개 9.09% / 15개 4.55% (합 18.19%)</li>
+              </ul>
+            </li>
+            <li><span style="color:var(--red);">⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b></span></li>
           </ul>
 
           <h2 class="help-group">🌐 기타 탭</h2>
@@ -984,6 +1076,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515l"></script>
+  <script src="app.js?v=20260515o"></script>
 </body>
 </html>

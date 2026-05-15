@@ -439,6 +439,20 @@ body { overflow-x: hidden; }
 }
 @media (max-width: 639px) { .bead-img { width: 80px; } }
 
+/* 🌰 열매상자 결과 이미지 (UR/SSR/SR 스킬 열매) */
+.fruit-result-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.04);
+  padding: 4px;
+  flex-shrink: 0;
+}
+@media (max-width: 639px) {
+  .fruit-result-img { width: 48px; height: 48px; }
+}
+
 /* 초기화할 팰몬 같은 작은 서브 타이틀 */
 .reset-subtitle {
   color: var(--text-dim);
