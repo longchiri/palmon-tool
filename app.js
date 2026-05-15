@@ -1315,7 +1315,7 @@ function updateSkillExp() {
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">현재 Lv ${expCur} 누적</td><td class="value">${fmt(expCurVal)}</td></tr>
           <tr><td class="label">목표 Lv ${expTgt} 누적</td><td class="value amber"><b>${fmt(expTgtVal)}</b></td></tr>
-          <tr><td class="label" style="color:${expColor};font-weight:700;">차이 (필요 경험치)</td><td class="value" style="color:${expColor};font-weight:800;">${fmt(expNeeded)}</td></tr>
+          <tr><td class="label" style="color:${expColor};font-weight:700;">필요 경험치</td><td class="value" style="color:${expColor};font-weight:800;">${fmt(expNeeded)}</td></tr>
         </table></div>
       </div>`;
   }
@@ -1336,7 +1336,7 @@ function updateSkillExp() {
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">현재 Lv ${skCur} 누적</td><td class="value">${fmt(skCurVal)}</td></tr>
           <tr><td class="label">목표 Lv ${skTgt} 누적</td><td class="value amber"><b>${fmt(skTgtVal)}</b></td></tr>
-          <tr><td class="label" style="color:${skColor};font-weight:700;">차이 (필요 열매)</td><td class="value" style="color:${skColor};font-weight:800;">${fmt(skNeeded)}개</td></tr>
+          <tr><td class="label" style="color:${skColor};font-weight:700;">필요 갯수</td><td class="value" style="color:${skColor};font-weight:800;">${fmt(skNeeded)}개</td></tr>
         </table></div>
       </div>`;
   }
