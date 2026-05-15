@@ -1274,7 +1274,7 @@ function updatePalmon() {
   const cardBase = `
     <div class="result-card strong" style="border-color:var(--amber);">
       <div class="card-title txt-amber">◆ 캠프 LV${baseLevel} 기준 합산</div>
-      <div class="tbl-wrap"><table class="tbl">${baseRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${baseRows}</table></div>
     </div>`;
 
   // 카드 2: 비교 (필요 시)
@@ -1298,7 +1298,7 @@ function updatePalmon() {
     cardCmp = `
       <div class="result-card" style="border-color:var(--blue);">
         <div class="card-title txt-blue">◆ 캠프 LV${cmpLevel} 기준 (LV${baseLevel} 대비 증가)</div>
-        <div class="tbl-wrap"><table class="tbl">${cmpRows}</table>
+        <div class="tbl-wrap"><table class="tbl">${cmpRows}</table></div>
       </div>`;
   }
 
@@ -1318,7 +1318,7 @@ function updatePalmon() {
   const cardUnit = `
     <div class="result-card">
       <div class="card-title txt-dim">● 단위값 (상자 1개당, LV${baseLevel})</div>
-      <div class="tbl-wrap"><table class="tbl">${unitRows}</table>
+      <div class="tbl-wrap"><table class="tbl">${unitRows}</table></div>
     </div>`;
 
   $("palmon-result").innerHTML = cardBase + cardCmp + cardUnit;
@@ -1569,36 +1569,42 @@ async function saveSettings() {
     }
   }
 
-  // 2차: Web Share API (모바일에서 가장 안정적) — iOS Safari 17+, Android Chrome 등
-  try {
-    const file = new File([blob], filename, { type: "application/json" });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], title: filename, text: filename });
-      toast(`공유 완료: ${filename}`);
-      return;
-    }
-  } catch (e) {
-    if (e.name === "AbortError") { toast("공유 취소됨"); return; }
-    console.warn("Web Share 실패, 다음 방법 시도:", e);
-  }
+  // 모바일: 일반 다운로드 우선 (Android Chrome 매우 안정적, iOS Safari 16+ 도 지원)
+  // 그래도 실패하면 Web Share API → 새 탭 순으로 폴백
+  let attemptedShare = false;
 
-  // 3차: 일반 다운로드 (Android Chrome / 데스크탑 폴백) — DOM 에 잠시 추가 필요 (iOS 호환)
+  // 2차: 일반 다운로드 (Android Chrome / iOS Safari 16+ / 데스크탑 폴백)
   try {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.rel = "noopener";
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       if (a.parentNode) a.parentNode.removeChild(a);
       URL.revokeObjectURL(url);
-    }, 500);
+    }, 1500);
     toast(`저장됨: ${filename}`);
     return;
   } catch (e) {
-    console.warn("다운로드 실패, 최종 폴백:", e);
+    console.warn("다운로드 실패, 공유 시도:", e);
+  }
+
+  // 3차: Web Share API (iOS Safari 17+ 등)
+  try {
+    const file = new File([blob], filename, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      attemptedShare = true;
+      await navigator.share({ files: [file], title: filename, text: filename });
+      toast(`공유 완료: ${filename}`);
+      return;
+    }
+  } catch (e) {
+    if (e.name === "AbortError") { toast("공유 취소됨"); return; }
+    console.warn("Web Share 실패, 최종 폴백:", e);
   }
 
   // 4차 최종 폴백: 새 탭에 열어서 사용자가 직접 저장 (iOS Safari 구버전)
@@ -1606,14 +1612,18 @@ async function saveSettings() {
     const url = URL.createObjectURL(blob);
     const w = window.open(url, "_blank");
     if (!w) {
-      // 팝업 차단 시 본문 클릭으로 처리
       alert("저장 파일을 새 탭에서 열겠습니다.\n(파일을 길게 눌러 '다른 이름으로 저장' 해주세요)");
       location.href = url;
     } else {
       toast("새 탭에서 파일을 길게 눌러 저장해주세요");
     }
   } catch (e) {
-    alert("저장 실패: " + (e.message || e));
+    alert(
+      "저장에 실패했습니다.\n" +
+      "브라우저 설정에서 파일 다운로드 권한을 확인해주세요.\n\n" +
+      "에러: " + (e.message || e) +
+      (attemptedShare ? "\n(공유 시도 후 다운로드 실패)" : "")
+    );
   }
 }
 
