@@ -2087,7 +2087,7 @@ function boardRenderDetail(post) {
   $("board-detail-content").innerHTML = `
     <div class="group-title">📄 게시글</div>
     <div class="board-detail-head">
-      <span class="board-server">[${escapeHtml(post.server || "?")}]</span>
+      <span class="board-server">${escapeHtml(formatServer(post.server))}</span>
       <span class="board-nick">${escapeHtml(post.nick || "익명")}</span>
       ${isMine ? `<button class="btn btn-ghost board-del" data-id="${escapeHtml(post.id)}" style="padding:4px 10px;font-size:12px;margin-left:auto;">🗑️ 삭제</button>` : ""}
     </div>
@@ -2233,7 +2233,7 @@ function boardRenderComments(comments) {
     return `
       <div class="board-comment" data-id="${escapeHtml(c.id || "")}">
         <div class="board-comment-head">
-          <span class="board-server">[${escapeHtml(c.server || "?")}]</span>
+          <span class="board-server">${escapeHtml(formatServer(c.server))}</span>
           <span class="board-nick">${escapeHtml(c.nick || "익명")}</span>
           <span class="board-time">${formatBoardTime(c.t)}</span>
           ${isMine ? `<button class="btn btn-ghost comment-del" data-id="${escapeHtml(c.id || "")}" style="padding:2px 8px;font-size:11px;margin-left:auto;">🗑️</button>` : ""}
@@ -2387,7 +2387,7 @@ function boardRenderPosts(posts) {
         <td class="col-num">${num}</td>
         <td class="col-title">${imgIcon}${escapeHtml(p.title || "")}${cmtIcon}</td>
         <td class="col-author">${escapeHtml(p.nick || "익명")}</td>
-        <td class="col-server">${escapeHtml(p.server || "?")}</td>
+        <td class="col-server">${escapeHtml(formatServer(p.server))}</td>
         <td class="col-views">${views}</td>
         <td class="col-date">${dateStr}</td>
       </tr>`;
@@ -2833,6 +2833,14 @@ function startAdvBanner() {
   }
 }
 startAdvBanner();
+
+// 서버명 표시 헬퍼 — 입력 시 # 안 써도 자동으로 # 붙이고, 이미 있으면 그대로
+function formatServer(s) {
+  const v = (s || "").toString().trim();
+  if (!v) return "#?";
+  // 앞에 있는 # 모두 제거 → 정확히 # 한 개만 붙임
+  return "#" + v.replace(/^#+/, "");
+}
 
 // =====================================================
 // 숫자 입력 클릭 시 기존 값 자동 선택 — 0 위에 1 누르면 10 되는 문제 해결
