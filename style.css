@@ -1214,29 +1214,39 @@ input[type="checkbox"] {
   font-size: 11px;
 }
 
-/* 다시 보기 버튼 — 헤더 인라인 (Palmon Tool 왼쪽에 위치) */
+/* 트로피 — 컨테이너 왼쪽 바깥 여백 영역에 위치 (PC) */
 .event-banner-reopen {
-  /* position: fixed 제거 → 헤더의 sticky 와 함께 자연스럽게 따라감 */
-  width: 36px;
-  height: 36px;
+  position: fixed;
+  /* 컨테이너가 중앙 정렬이므로, viewport 왼쪽 끝에서 약간 안쪽 */
+  left: 24px;
+  /* 탭바와 같은 높이 — 헤더 아래 */
+  top: calc(var(--header-h, 56px) + 56px);
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: rgba(17,24,39,0.92);
   border: 1px solid var(--border-strong, #334155);
   color: var(--amber);
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  z-index: 998;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: transform 0.2s, background 0.2s;
-  flex-shrink: 0;
-  padding: 0;
-  margin-right: 4px;
 }
 .event-banner-reopen:hover {
   transform: scale(1.08);
   background: rgba(17,24,39,1);
+}
+
+/* 넓은 화면 — 컨테이너 좌측 여백을 더 확실하게 활용 */
+@media (min-width: 1280px) {
+  .event-banner-reopen {
+    /* 컨테이너(보통 max-width 1200px)의 왼쪽 바깥 영역 */
+    left: max(24px, calc((100vw - 1200px) / 2 - 50px));
+  }
 }
 
 /* 모바일 — 배너 폭 축소 + 트로피 작게 (옵션 E) */
@@ -1250,9 +1260,11 @@ input[type="checkbox"] {
   .event-icon-lg { font-size: 24px; }
   .event-name { font-size: 14px; }
   .event-banner-reopen {
-    width: 28px;
-    height: 28px;
-    font-size: 13px;
+    left: 10px;
+    top: calc(var(--header-h, 56px) + 52px);
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
     background: rgba(17, 24, 39, 0.7);
     border-color: rgba(251, 191, 36, 0.4);
     backdrop-filter: blur(4px);

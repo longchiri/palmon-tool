@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260514t" />
+  <link rel="stylesheet" href="style.css?v=20260514u" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -42,8 +42,6 @@
 <body>
   <div class="container">
     <div class="header">
-      <!-- 모험가대회 트로피 (헤더 왼쪽 끝, Palmon Tool 옆) -->
-      <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
       <h1 id="logo-link" title="사용법 보기 (클릭)">Palmon Tool</h1>
       <button class="btn" id="btn-save">설정 저장</button>
       <button class="btn" id="btn-load">설정 불러오기</button>
@@ -337,7 +335,7 @@
 
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
-          <div class="cl-text"><b>🏆 모험가대회 트로피 위치 변경</b> — 트로피가 헤더 왼쪽(Palmon Tool 옆)에 인라인으로 위치. 헤더와 함께 스크롤되어 항상 같은 위치에 보임</div>
+          <div class="cl-text"><b>🏆 모험가대회 트로피 위치 변경</b> — 컨테이너 왼쪽 바깥 여백 영역에 고정 (탭바 높이). 스크롤해도 항상 같은 위치에 보임. 넓은 화면에서는 컨테이너 바깥쪽에 자연스럽게 위치</div>
         </div>
 
         <div class="cl-item">
@@ -792,9 +790,10 @@
 
   <div class="toast" id="toast"></div>
 
-  <!-- 모험가대회 배너 — 트로피 클릭 시 펼침 -->
+  <!-- 모험가대회 배너 + 트로피 — 컨테이너 왼쪽 여백 영역에 위치 -->
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
+  <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260514t"></script>
+  <script src="app.js?v=20260514u"></script>
 </body>
 </html>
