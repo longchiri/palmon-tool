@@ -2687,3 +2687,14 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+// 헤더 높이를 CSS 변수로 노출 → 탭바 sticky 위치 자동 계산
+function updateHeaderHeight() {
+  const h = document.querySelector(".header")?.offsetHeight || 56;
+  document.documentElement.style.setProperty("--header-h", h + "px");
+}
+window.addEventListener("load", updateHeaderHeight);
+window.addEventListener("resize", updateHeaderHeight);
+// 폰트 로딩 후에도 갱신
+setTimeout(updateHeaderHeight, 300);
+setTimeout(updateHeaderHeight, 1000);
