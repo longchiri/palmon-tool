@@ -972,6 +972,72 @@ input[type="checkbox"] {
 }
 
 /* ════════════════════════════════════════════════════
+   업데이트 현황 (Changelog) 탭
+   ════════════════════════════════════════════════════ */
+.changelog-entry {
+  position: relative;
+}
+.changelog-entry .group-title {
+  background: var(--tab-active);
+  color: var(--amber);
+}
+.cl-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px dashed rgba(255,255,255,0.05);
+}
+.cl-item:last-child { border-bottom: none; }
+.cl-tag {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  min-width: 78px;
+  justify-content: center;
+}
+.cl-tag.cl-new {
+  background: rgba(52,211,153,0.13);
+  color: var(--green);
+  border: 1px solid rgba(52,211,153,0.35);
+}
+.cl-tag.cl-imp {
+  background: rgba(96,165,250,0.13);
+  color: var(--blue);
+  border: 1px solid rgba(96,165,250,0.35);
+}
+.cl-tag.cl-fix {
+  background: rgba(248,113,113,0.13);
+  color: var(--red);
+  border: 1px solid rgba(248,113,113,0.35);
+}
+.cl-text {
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.cl-text code {
+  background: rgba(255,255,255,0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--amber);
+}
+
+@media (max-width: 639px) {
+  .cl-item { flex-direction: column; gap: 6px; padding: 12px 4px; }
+  .cl-tag { align-self: flex-start; min-width: auto; padding: 2px 8px; font-size: 10.5px; }
+  .cl-text { font-size: 13px; }
+}
+
+/* ════════════════════════════════════════════════════
    모험가대회 배너 — 왼쪽에서 슬라이드 인
    ════════════════════════════════════════════════════ */
 .event-banner {
