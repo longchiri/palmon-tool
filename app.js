@@ -1091,23 +1091,20 @@ function updateBead() {
   const beadTargetCount = beadTargetCost > 0 ? Math.floor(total / beadTargetCost) : 0;
   const beadTargetRemain = total - beadTargetCount * beadTargetCost;
 
+  // 결과 카드 — 선택한 성급 기준으로 표시
+  const targetColor = beadTargetCount > 0 ? "var(--green)" : "var(--red)";
   $("bead-result").innerHTML = `
-    <div class="result-card strong" style="border-color:${color};">
-      <div class="card-title" style="color:${color};text-align:center;">◆ 완성 가능 무기 (5성 기준)</div>
-      <div class="big-number" style="color:${color};">${fmt(possible)}<span class="unit">개</span></div>
+    <div class="result-card strong" style="border-color:${targetColor};">
+      <div class="card-title" style="color:${targetColor};text-align:center;">◆ 완성 가능 무기 (${beadTarget} 기준)</div>
+      <div class="big-number" style="color:${targetColor};">${fmt(beadTargetCount)}<span class="unit">개</span></div>
       <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">보유 구슬</td><td class="value">${fmt(owned)}</td></tr>
         ${resetRows}
         <tr><td class="label">합계</td><td class="value amber"><b>${fmt(total)}</b></td></tr>
-        <tr><td class="label">무기 1개당 필요</td><td class="value">${fmt(BEAD_PER_WEAPON)}</td></tr>
-        <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>
-        <tr><td colspan="2" style="padding:4px 10px;"><hr style="border:none;border-top:1px solid var(--border);margin:2px 0;"></td></tr>
-        <tr><td class="label" style="color:var(--amber);font-weight:700;">🎯 목표한 성급 (${beadTarget})</td><td class="value" style="color:var(--amber);font-weight:800;">${fmt(beadTargetCount)}개 완성 (남은 ${fmt(beadTargetRemain)})</td></tr>
+        <tr><td class="label">${beadTarget} 1개당 필요</td><td class="value">${fmt(beadTargetCost)}</td></tr>
+        <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(beadTargetRemain)}</td></tr>
       </table></div>
     </div>`;
-
-  // 입력 탭의 원하는 성급 박스도 갱신
-  updateBeadTargetResult(total);
 }
 
 function updateBeadTargetResult(total) {
@@ -1190,16 +1187,15 @@ function updateEssence() {
   const evoTargetCount = evoTargetCost > 0 ? Math.floor(evoTotal / evoTargetCost) : 0;
   const evoTargetRemain = evoTotal - evoTargetCount * evoTargetCost;
 
-  const evoColor = evoPeople > 0 ? "var(--green)" : "var(--red)";
+  // 결과 카드 — 선택한 진화 단계 기준으로 표시
+  const evoColor = evoTargetCount > 0 ? "var(--green)" : "var(--red)";
   const evoRows = `
     <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
     ${resetRows}
     <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
-    <tr><td class="label">1명 진화 필요</td><td class="value">${fmt(EVO_PER_PALMON)}</td></tr>
-    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoRemain)}</td></tr>
-    <tr><td colspan="2" style="padding:4px 10px;"><hr style="border:none;border-top:1px solid var(--border);margin:2px 0;"></td></tr>
-    <tr><td class="label" style="color:var(--amber);font-weight:700;">🎯 목표한 진화 (${evoTarget})</td><td class="value" style="color:var(--amber);font-weight:800;">${fmt(evoTargetCount)}마리 완성 (남은 ${fmt(evoTargetRemain)})</td></tr>`;
-  const evoCard = bigCard("진화 가능 팰몬", evoPeople, evoColor, evoRows);
+    <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(evoTargetCost)}</td></tr>
+    <tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`;
+  const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows);
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
   const fullCard = `
@@ -1214,9 +1210,6 @@ function updateEssence() {
   if ($("fullset-result-slot")) $("fullset-result-slot").innerHTML = "";   // 풀세팅 카드 제거
   // 폴백 (구 버전 호환)
   if ($("essence-result")) $("essence-result").innerHTML = promoCard + evoCard;
-
-  // 원하는 진화 필터 결과
-  updateEvoTargetResult(evoTotal);
 }
 
 function updateEvoTargetResult(total) {
@@ -2737,6 +2730,11 @@ function fmtAdvCountdown(ms) {
 
 let _advBannerInterval = null;
 let _advLastRenderedSlot = null;
+let _advAutoShrinkTimer = null;
+const ADV_MOBILE_AUTO_SHRINK_MS = 5000;   // 모바일: 5초 후 자동 축소
+function isAdvMobile() {
+  return window.innerWidth <= 639 || /Mobile|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 function renderAdvBanner({ force = false } = {}) {
   const banner = document.getElementById("event-banner");
@@ -2803,8 +2801,9 @@ function renderAdvBanner({ force = false } = {}) {
   // 슬라이드 인
   setTimeout(() => banner.classList.add("show"), 30);
 
-  // 닫기 버튼
+  // 닫기 버튼 — × 즉시 축소 (모바일/PC 모두)
   banner.querySelector(".event-banner-close").addEventListener("click", () => {
+    if (_advAutoShrinkTimer) { clearTimeout(_advAutoShrinkTimer); _advAutoShrinkTimer = null; }
     banner.classList.remove("show");
     if (reopenBtn) reopenBtn.style.display = "";
     try {
@@ -2814,6 +2813,17 @@ function renderAdvBanner({ force = false } = {}) {
       }));
     } catch {}
   });
+
+  // 모바일: 5초 후 자동으로 트로피로 축소
+  if (_advAutoShrinkTimer) { clearTimeout(_advAutoShrinkTimer); _advAutoShrinkTimer = null; }
+  if (isAdvMobile()) {
+    _advAutoShrinkTimer = setTimeout(() => {
+      banner.classList.remove("show");
+      if (reopenBtn) reopenBtn.style.display = "";
+      _advAutoShrinkTimer = null;
+      // 자동 축소는 "closed" 상태를 저장하지 않음 — 트로피로 다시 열 수 있게
+    }, ADV_MOBILE_AUTO_SHRINK_MS);
+  }
 }
 
 function startAdvBanner() {
@@ -2822,12 +2832,13 @@ function startAdvBanner() {
   // 30초마다 카운트다운/슬롯 변경 체크
   if (_advBannerInterval) clearInterval(_advBannerInterval);
   _advBannerInterval = setInterval(() => renderAdvBanner(), 30000);
-  // 다시 보기 버튼
+  // 다시 보기 버튼 — 트로피 누르면 배너 다시 펼침 (모바일은 다시 5초 후 자동 축소)
   const reopenBtn = document.getElementById("event-banner-reopen");
   if (reopenBtn) {
     reopenBtn.addEventListener("click", () => {
       try { localStorage.removeItem("palmon_adv_banner_closed"); } catch {}
       _advLastRenderedSlot = null;
+      if (_advAutoShrinkTimer) { clearTimeout(_advAutoShrinkTimer); _advAutoShrinkTimer = null; }
       renderAdvBanner({ force: true });
     });
   }

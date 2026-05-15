@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260514p" />
+  <link rel="stylesheet" href="style.css?v=20260514r" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -132,14 +132,8 @@
       <div class="grid-3">
         <div class="group essence-img-card">
           <div class="group-title">걸작 구슬</div>
-          <img src="bead.png" alt="걸작 구슬" class="bead-img" onerror="this.style.display='none'">
-          <div class="form-row">
-            <label>보유 수량</label>
-            <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
-          </div>
-          <div class="hint">예) 보유 100 + 5성 무기 1개 초기화 → 100 + 150 = 250 → 무기 1개 완성 (남은 100)</div>
-          <div class="reset-subtitle">초기화할 무기</div>
-          <div class="target-filter">
+          <!-- 원하는 성급 — 이미지 위로 이동 -->
+          <div class="target-filter target-filter-top">
             <label>원하는 성급</label>
             <select id="bead-target">
               <option value="1성">1성</option>
@@ -154,7 +148,13 @@
               <option value="10성">10성</option>
             </select>
           </div>
-          <div class="target-result" id="bead-target-output">5성 무기 0개 가능</div>
+          <img src="bead.png" alt="걸작 구슬" class="bead-img" onerror="this.style.display='none'">
+          <div class="form-row">
+            <label>보유 수량</label>
+            <input type="number" id="bead-total" min="0" value="0" inputmode="numeric">
+          </div>
+          <div class="hint">예) 보유 100 + 5성 무기 1개 초기화 → 100 + 150 = 250 → 무기 1개 완성 (남은 100)</div>
+          <div class="reset-subtitle">초기화할 무기</div>
           <div class="bead-reset-grid">
             <div class="bead-reset-item"><span class="reset-label">1성</span><input type="number" id="bead-reset-1" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">2성</span><input type="number" id="bead-reset-2" min="0" value="0" inputmode="numeric"></div>
@@ -228,13 +228,8 @@
       <div class="grid-3">
         <div class="group essence-img-card">
           <div class="group-title">진화 정수 (Evolution)</div>
-          <img src="evo.png" alt="진화 정수" class="bead-img" onerror="this.style.display='none'">
-          <div class="form-row">
-            <label>보유 진화 정수</label>
-            <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
-          </div>
-          <div class="reset-subtitle">초기화할 팰몬</div>
-          <div class="target-filter">
+          <!-- 원하는 진화 — 이미지 위로 이동 -->
+          <div class="target-filter target-filter-top">
             <label>원하는 진화</label>
             <select id="evo-target">
               <option value="1진화">1진화</option>
@@ -243,7 +238,12 @@
               <option value="4진화" selected>4진화</option>
             </select>
           </div>
-          <div class="target-result" id="evo-target-output">4진화 0마리 가능</div>
+          <img src="evo.png" alt="진화 정수" class="bead-img" onerror="this.style.display='none'">
+          <div class="form-row">
+            <label>보유 진화 정수</label>
+            <input type="number" id="evo-total" min="0" value="0" inputmode="numeric">
+          </div>
+          <div class="reset-subtitle">초기화할 팰몬</div>
           <div class="bead-reset-grid">
             <div class="bead-reset-item"><span class="reset-label">1진화</span><input type="number" id="evo-reset-1" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">2진화</span><input type="number" id="evo-reset-2" min="0" value="0" inputmode="numeric"></div>
@@ -326,6 +326,16 @@
         <div class="cl-item">
           <span class="cl-tag cl-fix">🐛 버그수정</span>
           <div class="cl-text"><b>숫자 입력 클릭 시 0 자동 선택</b> — 0이 있는 칸을 누르고 1을 치면 10이 되던 문제 해결. 클릭하면 기존 값이 선택되어 바로 새 숫자로 교체됨</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>🏆 모험가대회 배너 — 모바일 자동 축소</b> — 모바일에서 페이지 진입 5초 후 작은 트로피(30px 반투명)로 자동 축소. 본문 가림 최소화. 트로피 누르면 다시 펼침. PC는 변경 없음</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>💎 걸작 구슬 / ✨ 팰몬 진화 UI 정리</b> — "원하는 성급/진화" 선택을 카드 맨 위로 이동(황금색 강조). 결과창이 선택한 성급/진화 기준으로 자동 변경 (기존엔 항상 5성/4진화 고정). 중복되는 "완성 가능" 미리보기 박스 제거</div>
         </div>
 
         <div class="cl-item">
@@ -774,6 +784,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260514p"></script>
+  <script src="app.js?v=20260514r"></script>
 </body>
 </html>
