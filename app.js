@@ -551,6 +551,11 @@ function buildInventoryTab(opts) {
         el("input", { type: "number", id: `${prefix}res-${rk}`, min: "0", value: "0", inputmode: "numeric" }),
       ));
     }
+    // 🥚 경험치 (팰몬 경험치) — RESOURCE_KEYS 외 별도 입력
+    ores.appendChild(el("div", { class: "form-row" },
+      el("label", {}, "🥚 경험치"),
+      el("input", { type: "number", id: `${prefix}res-exp`, min: "0", value: "0", inputmode: "numeric" }),
+    ));
   }
 
   // 자원 상자 — 4열 grid (라벨 + SR + SSR + UR)
@@ -569,6 +574,14 @@ function buildInventoryTab(opts) {
       }
       boxes.appendChild(row);
     }
+    // 🥚 경험치 상자 — RESOURCE_KEYS 외 별도 행
+    const expBoxRow = el("div", { class: "inv-box-grid" },
+      el("div", { class: "rk-label", style: "color:var(--blue);font-weight:700;" }, "🥚 경험치")
+    );
+    for (const tier of BOX_TIERS) {
+      expBoxRow.appendChild(el("input", { type: "number", id: `${prefix}box-exp-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
+    }
+    boxes.appendChild(expBoxRow);
     // 커스텀 박스 — 깔 때 골드/목재/강철 중 선택 가능 (값은 동일)
     const customRow = el("div", { class: "inv-box-grid" },
       el("div", { class: "rk-label", style: "color:var(--amber);font-weight:700;" }, "📦 커스텀상자")
@@ -1317,6 +1330,79 @@ function updateSkillExp() {
   const expCumulTgt = costRange(EXP_PER_LEVEL, 1, expTgt);
   const expNeeded = costRange(EXP_PER_LEVEL, expCur, expTgt);
   const expColor = expNeeded === 0 ? "var(--text-dim)" : "var(--blue)";
+
+  // 🥚 보유자원 탭에서 입력한 경험치 + 상자 데이터 활용
+  const ownedExp = parseInt($("res-exp")?.value || 0);
+  const ownedExpBoxes = {
+    SR: parseInt($("box-exp-SR")?.value || 0),
+    SSR: parseInt($("box-exp-SSR")?.value || 0),
+    UR: parseInt($("box-exp-UR")?.value || 0),
+  };
+  const ownedAnything = ownedExp > 0 || ownedExpBoxes.SR > 0 || ownedExpBoxes.SSR > 0 || ownedExpBoxes.UR > 0;
+
+  // 상자당 EXP — 현재 캠프 레벨 (목표캠프계산기) 또는 기본 LV 20
+  const expCamp = parseInt($("lv-camp")?.value || 20);
+  const rb = (DB && DB.resource_boxes) ? (DB.resource_boxes[String(expCamp)] || DB.resource_boxes["20"]) : null;
+  const perBox = {
+    SR: rb?.SR?.palmon_xp || 140000,
+    SSR: rb?.SSR?.palmon_xp || 1111000,
+    UR: rb?.UR?.palmon_xp || 3358000,
+  };
+
+  // 보유 상자 모두 깠을 때 얻는 EXP
+  const expFromBoxes = ownedExpBoxes.SR * perBox.SR + ownedExpBoxes.SSR * perBox.SSR + ownedExpBoxes.UR * perBox.UR;
+  const totalAvailable = ownedExp + expFromBoxes;
+  const shortage = Math.max(0, expNeeded - totalAvailable);
+
+  // 부족분을 채우기 위한 상자 추천 (그리디: UR → SSR → SR)
+  function recommendBoxes(needed) {
+    if (needed <= 0) return null;
+    let rem = needed;
+    const useUR = Math.min(ownedExpBoxes.UR, Math.ceil(rem / perBox.UR));
+    rem -= useUR * perBox.UR;
+    const useSSR = rem > 0 ? Math.min(ownedExpBoxes.SSR, Math.ceil(rem / perBox.SSR)) : 0;
+    rem -= useSSR * perBox.SSR;
+    const useSR = rem > 0 ? Math.min(ownedExpBoxes.SR, Math.ceil(rem / perBox.SR)) : 0;
+    rem -= useSR * perBox.SR;
+    return { useUR, useSSR, useSR, remaining: Math.max(0, rem) };
+  }
+  // 보유 상자로 채울 수 있는 만큼 추천
+  const rec = recommendBoxes(Math.max(0, expNeeded - ownedExp));
+
+  // 추천 표시 HTML
+  let recommendHtml = "";
+  if (expNeeded > 0 && ownedAnything) {
+    const totalBoxesUsed = (rec?.useUR || 0) + (rec?.useSSR || 0) + (rec?.useSR || 0);
+    const stillShort = rec?.remaining || 0;
+    const okColor = stillShort === 0 ? "var(--green)" : "var(--red)";
+    recommendHtml = `
+      <div class="exp-recommend" style="margin-top:14px;padding:12px 14px;background:rgba(96,165,250,0.06);border:1px solid rgba(96,165,250,0.35);border-radius:10px;">
+        <div style="color:var(--blue);font-weight:800;font-size:13px;margin-bottom:8px;">📦 상자 추천 (LV${expCamp} 기준)</div>
+        <table class="tbl" style="margin:0;">
+          <tr><td class="label">보유 경험치</td><td class="value">${fmt(ownedExp)}</td></tr>
+          <tr><td class="label">📦 상자 추천</td><td class="value" style="font-weight:700;color:var(--blue);">
+            ${rec && totalBoxesUsed > 0 ? [
+              rec.useUR > 0 ? `<span class="tier-ur">UR ${rec.useUR}개</span>` : "",
+              rec.useSSR > 0 ? `<span class="tier-ssr">SSR ${rec.useSSR}개</span>` : "",
+              rec.useSR > 0 ? `<span class="tier-sr">SR ${rec.useSR}개</span>` : "",
+            ].filter(Boolean).join(" + ") : "<span class='txt-dim'>상자 없음</span>"}
+          </td></tr>
+          <tr><td class="label" style="color:${okColor};font-weight:700;">${stillShort === 0 ? "✅ 충분" : "⚠️ 부족"}</td>
+              <td class="value" style="color:${okColor};font-weight:800;">${stillShort === 0 ? "OK" : "${fmt(stillShort)} 더 필요"}</td></tr>
+        </table>
+        <div class="txt-dim" style="font-size:11.5px;margin-top:8px;line-height:1.5;">
+          상자 1개당: <span class="tier-ur">UR ${fmt(perBox.UR)}</span> · <span class="tier-ssr">SSR ${fmt(perBox.SSR)}</span> · <span class="tier-sr">SR ${fmt(perBox.SR)}</span>
+        </div>
+      </div>`;
+    // template literal nested 문제 — `stillShort` 값 직접 삽입
+    recommendHtml = recommendHtml.replace("${fmt(stillShort)} 더 필요", `${fmt(stillShort)} 더 필요`);
+  } else if (expNeeded > 0) {
+    recommendHtml = `
+      <div class="exp-recommend" style="margin-top:14px;padding:10px 14px;background:rgba(148,163,184,0.08);border:1px dashed rgba(148,163,184,0.4);border-radius:10px;font-size:12px;color:var(--text-dim);text-align:center;">
+        💡 <b style="color:var(--text);">📦 보유자원/가속 계산하기</b> 탭에서 경험치 / 상자 보유 수량을 입력하면 여기에 <b style="color:var(--blue);">상자 추천</b>이 표시됩니다.
+      </div>`;
+  }
+
   const expSlot = $("exp-result-slot");
   if (expSlot) {
     expSlot.innerHTML = `
@@ -1328,6 +1414,7 @@ function updateSkillExp() {
           <tr><td class="label">Lv 1 → ${expTgt} 누적</td><td class="value amber"><b>${fmt(expCumulTgt)}</b></td></tr>
           <tr><td class="label" style="color:${expColor};font-weight:700;">필요 경험치 (Lv ${expCur} → ${expTgt})</td><td class="value" style="color:${expColor};font-weight:800;">${fmt(expNeeded)}</td></tr>
         </table></div>
+        ${recommendHtml}
       </div>`;
   }
 
@@ -1456,6 +1543,29 @@ function updateInventorySummary() {
       <td class="value">${fmt(cur)}</td>
       <td class="value">+ ${fmt(added)}</td>
       <td class="value amber">= ${fmt(after)}</td>
+    </tr>`;
+  }
+  // 🥚 경험치 — DB 의 resource_boxes[camp].{SR,SSR,UR}.palmon_xp 사용
+  {
+    const expCur = parseInt($("res-exp")?.value || 0);
+    const expBoxes = {
+      SR: parseInt($("box-exp-SR")?.value || 0),
+      SSR: parseInt($("box-exp-SSR")?.value || 0),
+      UR: parseInt($("box-exp-UR")?.value || 0),
+    };
+    const rb = DB.resource_boxes?.[String(camp)] || DB.resource_boxes?.["20"] || {};
+    const perBox = {
+      SR: rb.SR?.palmon_xp || 0,
+      SSR: rb.SSR?.palmon_xp || 0,
+      UR: rb.UR?.palmon_xp || 0,
+    };
+    const expFromBoxes = expBoxes.SR * perBox.SR + expBoxes.SSR * perBox.SSR + expBoxes.UR * perBox.UR;
+    const expTotal = expCur + expFromBoxes;
+    rows += `<tr>
+      <td class="label" style="color:var(--blue);">🥚 경험치</td>
+      <td class="value">${fmt(expCur)}</td>
+      <td class="value">+ ${fmt(expFromBoxes)}</td>
+      <td class="value" style="color:var(--blue);font-weight:800;">= ${fmt(expTotal)}</td>
     </tr>`;
   }
   let resTable = `<div class="tbl-wrap"><table class="tbl">
@@ -1614,6 +1724,9 @@ function buildSettingsPayload() {
     },
     palmon_res_camp: parseInt($("palmon-camp").value),
     palmon_res_boxes: Object.fromEntries(PALMON_RESOURCE_ORDER.map((rk) => [rk, Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`pbox-${rk}-${t}`).value || 0)]))])),
+    // 🥚 경험치 (팰몬 경험치) 및 EXP 상자 (보유자원/가속 계산하기 탭)
+    owned_exp: parseInt($("res-exp")?.value || 0),
+    owned_exp_boxes: Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`box-exp-${t}`)?.value || 0)])),
   };
 }
 
@@ -1719,6 +1832,14 @@ function applySettingsPayload(p) {
   for (const rk of PALMON_RESOURCE_ORDER) for (const t of BOX_TIERS) {
     const v = p.palmon_res_boxes?.[rk]?.[t];
     if (v != null) $(`pbox-${rk}-${t}`).value = v;
+  }
+  // 🥚 경험치 / EXP 상자 복원
+  if (p.owned_exp != null && $("res-exp")) $("res-exp").value = parseInt(p.owned_exp || 0);
+  if (p.owned_exp_boxes) {
+    for (const t of BOX_TIERS) {
+      const v = p.owned_exp_boxes[t];
+      if (v != null && $(`box-exp-${t}`)) $(`box-exp-${t}`).value = parseInt(v || 0);
+    }
   }
 
   updateInventorySummary();
@@ -2839,10 +2960,20 @@ async function bootstrap() {
     const invIds = [];
     RESOURCE_KEYS.forEach((k) => invIds.push(`res-${k}`));
     RESOURCE_KEYS.forEach((rk) => BOX_TIERS.forEach((t) => invIds.push(`box-${rk}-${t}`)));
+    // 🥚 경험치 — 보유자원 + 상자 입력
+    invIds.push("res-exp");
+    BOX_TIERS.forEach((t) => invIds.push(`box-exp-${t}`));
     const sg = getSpeedupGroupMap();
     SPEEDUP_GROUPS.forEach((grp) => Object.keys(sg[grp.key]).forEach((k) => invIds.push(`spd-${grp.key}-${k}`)));
-    invIds.forEach((id) => $(id) && $(id).addEventListener("input", updateInventorySummary));
-    $("lv-camp").addEventListener("change", updateInventorySummary);
+    invIds.forEach((id) => $(id) && $(id).addEventListener("input", () => {
+      updateInventorySummary();
+      // 경험치 / 경험치 상자 입력 시 EXP 계산기도 자동 갱신
+      if (id === "res-exp" || id.startsWith("box-exp-")) updateSkillExp();
+    }));
+    $("lv-camp").addEventListener("change", () => {
+      updateInventorySummary();
+      updateSkillExp();   // 캠프 변경 시 상자당 EXP 값도 변경됨
+    });
 
     // 목표캠프계산기 탭의 모든 입력 변경 시 자동 계산
     ["input", "change"].forEach((evt) => {

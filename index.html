@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515k" />
+  <link rel="stylesheet" href="style.css?v=20260515l" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -285,6 +285,10 @@
           🌰 <b>경험치</b>와 <b>스킬 레벨업 열매</b>를 현재 레벨에서 목표 레벨까지 올리는 데 필요한 양을 자동 계산합니다.<br>
           현재 레벨과 목표 레벨을 선택하면 <b>필요량 / 증가량 / 누적값</b>이 즉시 표시돼요. <span class="txt-amber">정확히 입력해야 확인이 가능합니다.</span>
         </p>
+        <p class="exp-recommend-tip" style="margin-top:14px;padding:12px 14px;background:rgba(96,165,250,0.1);border-left:4px solid var(--blue);border-radius:6px;font-size:13.5px;line-height:1.7;">
+          💡 <b style="color:var(--blue);">상자 추천도 받고 싶다면?</b><br>
+          <b>💰 자원 관련 → 📦 보유자원/가속 계산하기</b> 탭에서 <b>경험치 상자 SR/SSR/UR</b> 보유 수량을 입력해두면, 이 탭의 <b>필요 경험치</b> 카드 밑에 <b>"보유 상자로 몇 개 까면 충분한지"</b> 자동 추천이 표시됩니다.
+        </p>
       </div>
 
       <!-- Row 1: 경험치 계산기 -->
@@ -423,6 +427,11 @@
         <div class="cl-item">
           <span class="cl-tag cl-imp">🔧 개선</span>
           <div class="cl-text"><b>탭 메뉴 대분류 구조 개편</b> — 🏗️ 건설 관련 / 💎 팰몬 관련 / 💰 자원 관련 3개 대분류로 그룹화. 1차 탭 클릭 → 서브탭(녹색 밑줄) + 브레드크럼(경로) 표시. 마지막으로 본 탭 자동 복원. 사용법 페이지도 같은 구조로 정리</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🥚 경험치 + EXP 상자 → 자동 상자 추천</b> — 보유자원/가속 계산하기 탭에 경험치 / 경험치 상자(SR·SSR·UR) 입력칸 추가. 🌟 경험치 계산기에서 자동으로 <b>보유 상자로 몇 개 까면 충분한지</b> 추천 표시 (UR / SSR / SR 그리디 분배). 캠프 레벨에 따라 상자당 EXP 값 자동 변경</div>
         </div>
 
         <div class="cl-item">
@@ -975,6 +984,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515k"></script>
+  <script src="app.js?v=20260515l"></script>
 </body>
 </html>
