@@ -2752,6 +2752,7 @@ async function bootstrap() {
     updateBead();
     updateEssence();
     updatePalmon();
+    buildSkillExpTab();
     updateInventorySummary();
     autoCalculate();
     // 게시판 초기화
