@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515aa" />
+  <link rel="stylesheet" href="style.css?v=20260515ab" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -79,6 +79,16 @@
         <p>
           <b>보유 자원</b>, <b>보유 자원상자</b>, <b>보유 커스텀상자</b>, <b>가속권</b>을 한꺼번에 계산할 수 있는 계산기입니다.<br>
           해당되는 입력칸에 <b>보유하고 있는 수량</b>을 입력해주세요. <span class="txt-amber">정확히 입력해야 확인이 가능합니다.</span>
+        </p>
+      </div>
+
+      <!-- 🎯 목표캠프계산기로 바로 이동 -->
+      <div class="group" style="background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.4);">
+        <button type="button" class="btn btn-primary" id="goto-result-btn" style="width:100%;font-size:14px;">
+          🎯 목표캠프계산기로 바로 이동
+        </button>
+        <p class="hint" style="margin-top:6px;text-align:center;">
+          → 여기서 입력한 보유 자원/가속 데이터로 목표캠프계산기 탭으로 즉시 이동합니다.
         </p>
       </div>
 
@@ -1473,6 +1483,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515aa"></script>
+  <script src="app.js?v=20260515ab"></script>
 </body>
 </html>

@@ -125,6 +125,52 @@ const $ = (id) => document.getElementById(id);
 const $$ = (sel) => document.querySelectorAll(sel);
 const fmt = (n) => Number(n).toLocaleString("ko-KR");
 
+// 입력칸 옆 한글 힌트 자동 업데이트
+function updateInputKrHint(inputId) {
+  const inp = document.getElementById(inputId);
+  const hint = document.getElementById(inputId + "-kr");
+  if (!inp || !hint) return;
+  hint.textContent = fmtKR(parseInt(inp.value || 0));
+}
+function attachKrHints(ids) {
+  ids.forEach((id) => {
+    const inp = document.getElementById(id);
+    if (!inp || inp.dataset.krAttached) return;
+    inp.dataset.krAttached = "1";
+    inp.addEventListener("input", () => updateInputKrHint(id));
+    updateInputKrHint(id);
+  });
+}
+function refreshAllKrHints() {
+  ["res-gold","res-wood","res-steel","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-exp"].forEach(updateInputKrHint);
+}
+
+// 한글 자릿수 표기 — 1만 이상부터 "3억 5,530만 8천" 식으로
+// 1만 미만이면 빈 문자열 반환
+function fmtKR(n) {
+  n = Number(n) || 0;
+  if (n === 0) return "";
+  const sign = n < 0 ? "-" : "";
+  n = Math.abs(n);
+  if (n < 10000) return "";  // 만 미만은 표시 안 함
+  const jo   = Math.floor(n / 1000000000000);
+  const eok  = Math.floor((n % 1000000000000) / 100000000);
+  const man  = Math.floor((n % 100000000) / 10000);
+  const cheon = Math.floor((n % 10000) / 1000);
+  const parts = [];
+  if (jo > 0) parts.push(`${jo.toLocaleString("ko-KR")}조`);
+  if (eok > 0) parts.push(`${eok.toLocaleString("ko-KR")}억`);
+  if (man > 0) parts.push(`${man.toLocaleString("ko-KR")}만`);
+  if (cheon > 0 && jo === 0 && eok === 0) parts.push(`${cheon}천`);
+  return sign + parts.join(" ");
+}
+
+// 숫자 + 한글 표기 (한글이 있을 때만 괄호로 추가)
+function fmtWithKR(n) {
+  const kr = fmtKR(n);
+  return kr ? `${fmt(n)} <span class="num-kr">(${kr})</span>` : fmt(n);
+}
+
 function toast(msg) {
   const el = $("toast");
   el.textContent = msg;
@@ -558,21 +604,22 @@ function buildInventoryTab(opts) {
   opts = opts || {};
   const prefix = opts.prefix || "";   // e.g. "tg-" for target tab
 
-  // 보유 자원
+  // 보유 자원 — 입력 옆에 한글 자릿수 힌트
   const ores = $(`${prefix}owned-resources`);
   if (ores) {
     ores.innerHTML = "";
+    const mkRow = (label, id) => el("div", { class: "form-row" },
+      el("label", {}, label),
+      el("div", { class: "input-with-kr" },
+        el("input", { type: "number", id, min: "0", value: "0", inputmode: "numeric" }),
+        el("div", { class: "input-kr-hint", id: `${id}-kr` }, ""),
+      ),
+    );
     for (const rk of RESOURCE_KEYS) {
-      ores.appendChild(el("div", { class: "form-row" },
-        el("label", {}, RESOURCE_LABELS[rk]),
-        el("input", { type: "number", id: `${prefix}res-${rk}`, min: "0", value: "0", inputmode: "numeric" }),
-      ));
+      ores.appendChild(mkRow(RESOURCE_LABELS[rk], `${prefix}res-${rk}`));
     }
     // 🥚 경험치 (팰몬 경험치) — RESOURCE_KEYS 외 별도 입력
-    ores.appendChild(el("div", { class: "form-row" },
-      el("label", {}, "🥚 경험치"),
-      el("input", { type: "number", id: `${prefix}res-exp`, min: "0", value: "0", inputmode: "numeric" }),
-    ));
+    ores.appendChild(mkRow("🥚 경험치", `${prefix}res-exp`));
   }
 
   // 자원 상자 — 4열 grid (라벨 + SR + SSR + UR)
@@ -892,6 +939,7 @@ function importInventoryToTarget() {
     }
   }
   autoCalculate();
+  refreshAllKrHints();
   toast("보유자원/가속 데이터를 불러왔습니다");
 }
 
@@ -943,9 +991,9 @@ function renderResult(r) {
     const cls = short > 0 ? "red" : "green";
     resRows += `<tr>
       <td class="label">${RESOURCE_LABELS[k]}</td>
-      <td class="value amber">${fmtN(r.totalFinal[k])}</td>
-      <td class="value">${fmtN(r.totalOwnedWithBoxes[k] || 0)}</td>
-      <td class="value ${cls}">${fmtN(short)}</td>
+      <td class="value amber">${fmtWithKR(r.totalFinal[k])}</td>
+      <td class="value">${fmtWithKR(r.totalOwnedWithBoxes[k] || 0)}</td>
+      <td class="value ${cls}">${fmtWithKR(short)}</td>
     </tr>`;
   }
   // 커스텀 박스 추천 카드 (별도) — 박스 개수로 표시
@@ -2205,7 +2253,7 @@ function updatePalmon() {
   // 카드 1: 합산
   let baseRows = "";
   for (const rk of PALMON_RESOURCE_ORDER) {
-    baseRows += `<tr><td class="label">${PALMON_RESOURCE_LABELS[rk]}</td><td class="value amber">${fmt(baseTotals[rk])}</td></tr>`;
+    baseRows += `<tr><td class="label">${PALMON_RESOURCE_LABELS[rk]}</td><td class="value amber">${fmtWithKR(baseTotals[rk])}</td></tr>`;
   }
   const cardBase = `
     <div class="result-card strong" style="border-color:var(--amber);">
@@ -2226,8 +2274,8 @@ function updatePalmon() {
       const sign = diff >= 0 ? "+" : "−";
       cmpRows += `<tr>
         <td class="label">${PALMON_RESOURCE_LABELS[rk]}</td>
-        <td class="value">${fmt(cmp)}</td>
-        <td class="value ${cls}">${sign}${fmt(Math.abs(diff))}</td>
+        <td class="value">${fmtWithKR(cmp)}</td>
+        <td class="value ${cls}">${sign}${fmtWithKR(Math.abs(diff))}</td>
         <td class="value ${cls}">${pct >= 0 ? "+" : ""}${pct.toFixed(2)}%</td>
       </tr>`;
     }
@@ -2279,7 +2327,7 @@ function updateInventorySummary() {
       <td class="label">${RESOURCE_LABELS[rk]}</td>
       <td class="value">${fmt(cur)}</td>
       <td class="value">+ ${fmt(added)}</td>
-      <td class="value amber">= ${fmt(after)}</td>
+      <td class="value amber">= ${fmtWithKR(after)}</td>
     </tr>`;
   }
   // 🥚 경험치 — DB 의 resource_boxes[camp].{SR,SSR,UR}.palmon_xp 사용
@@ -2300,9 +2348,9 @@ function updateInventorySummary() {
     const expTotal = expCur + expFromBoxes;
     rows += `<tr>
       <td class="label" style="color:var(--blue);">🥚 경험치</td>
-      <td class="value">${fmt(expCur)}</td>
+      <td class="value">${fmtWithKR(expCur)}</td>
       <td class="value">+ ${fmt(expFromBoxes)}</td>
-      <td class="value" style="color:var(--blue);font-weight:800;">= ${fmt(expTotal)}</td>
+      <td class="value" style="color:var(--blue);font-weight:800;">= ${fmtWithKR(expTotal)}</td>
     </tr>`;
   }
   let resTable = `<div class="tbl-wrap"><table class="tbl">
@@ -2627,6 +2675,7 @@ function applySettingsPayload(p) {
   buildSupplyTab();
   buildMysteryBoxTab();
   buildEagleBoxTab();
+  refreshAllKrHints();
 }
 
 // 커스텀 닉네임 입력 모달 — iOS Chrome 등에서 prompt() 가 차단되는 경우 대응
@@ -3707,6 +3756,8 @@ async function bootstrap() {
     buildLevelsTab();              // 레벨/버프는 이제 t-result 안에 있음
     buildInventoryTab();           // 보유자원/가속 계산하기 탭 (#t-inventory)
     buildInventoryTab({ prefix: "tg-" });  // 목표캠프계산기 탭의 자체 인벤토리 (#t-result)
+    // 한글 자릿수 힌트 부착 (보유 자원 입력칸)
+    attachKrHints(["res-gold","res-wood","res-steel","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-exp"]);
     buildPalmonTab();
     applyTooltips();
 
@@ -3720,6 +3771,12 @@ async function bootstrap() {
     $("file-load").addEventListener("change", (e) => { if (e.target.files[0]) loadSettings(e.target.files[0]); });
     $("btn-reset").addEventListener("click", resetAll);
     $("btn-import-inv")?.addEventListener("click", importInventoryToTarget);
+    // 🎯 목표캠프계산기로 바로 이동 (보유자원 탭에서 호출)
+    $("goto-result-btn")?.addEventListener("click", () => {
+      importInventoryToTarget();
+      activateTab("t-result");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
     // 로고 클릭 시 사용법 탭으로 이동
     $("logo-link")?.addEventListener("click", () => activateTab("t-help"));
 
