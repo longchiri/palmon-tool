@@ -1173,6 +1173,105 @@ function updateBeadTargetResult(total) {
   out.classList.toggle("zero", count === 0);
 }
 
+// ===== 팰몬 진화 — 타입/메가 토글 상태 =====
+// palmonType: 'regular' (기존 팰몬, 진화 정수 + 메가 진화석) | 'season' (시즌 팰몬, 오로라의 정수만)
+// megaSupport: true | false  (기존 팰몬일 때 메가진화 지원 여부)
+let __palmonType = "regular";
+let __megaSupport = true;
+
+function applyPalmonModeToDOM() {
+  const card = document.getElementById("evo-card");
+  if (!card) return;
+  // 타입 클래스
+  card.classList.toggle("ptype-season", __palmonType === "season");
+  // 메가 미지원 클래스 (기존 팰몬일 때만 의미 있음)
+  card.classList.toggle("no-mega", __palmonType === "regular" && !__megaSupport);
+
+  // 이미지/라벨 전환
+  const img = document.getElementById("primary-essence-img");
+  const lbl = document.getElementById("primary-essence-label");
+  if (img && lbl) {
+    if (__palmonType === "season") {
+      img.src = "aurora.png";
+      img.alt = "오로라의 정수";
+      lbl.textContent = "오로라의 정수";
+    } else {
+      img.src = "evo.png";
+      img.alt = "진화 정수";
+      lbl.textContent = "진화 정수";
+    }
+  }
+
+  // 힌트 텍스트 전환
+  const hint = document.getElementById("evo-hint");
+  if (hint) {
+    if (__palmonType === "season") {
+      hint.innerHTML = "예) 오로라의 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 시즌 팰몬은 메가진화 없음 (1~4단계만)";
+    } else if (!__megaSupport) {
+      hint.innerHTML = "예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 미지원 모드 (1~4단계만)";
+    } else {
+      hint.innerHTML = "예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 (5~8단계)는 메가 진화석 사용 — 1 / 40 / 80 / 160";
+    }
+  }
+
+  // 카드 제목
+  const title = card.querySelector(".group-title");
+  if (title) {
+    title.textContent = __palmonType === "season"
+      ? "오로라의 정수 (시즌 팰몬)"
+      : "진화 정수 (Evolution)";
+  }
+
+  // 드롭다운 — 메가가 숨겨진 상태에서 5~8 선택돼 있으면 4단계로 리셋
+  const sel = document.getElementById("evo-target");
+  const megaHidden = (__palmonType === "season") || (__palmonType === "regular" && !__megaSupport);
+  if (sel && megaHidden && ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(sel.value)) {
+    sel.value = "진화 4단계";
+  }
+
+  // 메가 지원 토글 라벨
+  const mtBtn = document.getElementById("mega-support-toggle");
+  if (mtBtn) {
+    mtBtn.classList.toggle("active", __megaSupport);
+    mtBtn.textContent = __megaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
+  }
+
+  // 타입 버튼 active 상태
+  document.querySelectorAll(".ptype-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.ptype === __palmonType);
+  });
+}
+
+function setupPalmonModeToggles() {
+  // 타입 버튼
+  document.querySelectorAll(".ptype-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      __palmonType = btn.dataset.ptype || "regular";
+      try { localStorage.setItem("palmon_palmon_type", __palmonType); } catch {}
+      applyPalmonModeToDOM();
+      updateEssence();
+    });
+  });
+  // 메가 지원 토글
+  const mt = document.getElementById("mega-support-toggle");
+  if (mt) {
+    mt.addEventListener("click", () => {
+      __megaSupport = !__megaSupport;
+      try { localStorage.setItem("palmon_mega_support", String(__megaSupport)); } catch {}
+      applyPalmonModeToDOM();
+      updateEssence();
+    });
+  }
+  // 저장된 상태 복원
+  try {
+    const t = localStorage.getItem("palmon_palmon_type");
+    const m = localStorage.getItem("palmon_mega_support");
+    if (t === "regular" || t === "season") __palmonType = t;
+    if (m === "false") __megaSupport = false;
+  } catch {}
+  applyPalmonModeToDOM();
+}
+
 // ===== 팰몬 진화 =====
 function updateEssence() {
   const promoOwned = parseInt($("promo-total").value || 0);
@@ -1242,7 +1341,9 @@ function updateEssence() {
   const resetSum = isMega ? megaResetSum : evoResetSum;
   const resetCounts = isMega ? resetCountsMega : resetCountsRegular;
   const refundTable = isMega ? MEGA_EVO_RESET_REFUND : EVO_RESET_REFUND;
-  const resourceName = isMega ? "메가 진화석" : "진화 정수";
+  // 시즌 팰몬일 때 1~4단계 자원 이름을 "오로라의 정수"로 변경
+  const isSeason = __palmonType === "season";
+  const resourceName = isMega ? "메가 진화석" : (isSeason ? "오로라의 정수" : "진화 정수");
 
   // 초기화 환급 행
   let resetRows = "";
@@ -2360,6 +2461,8 @@ function buildSettingsPayload() {
       ["1성","2성","3성","4성","5성","6성","7성","8성","9성","10성"]
         .map((s, i) => [s, parseInt($(`bead-reset-${i+1}`).value || 0)])
     ),
+    essence_palmon_type: __palmonType,
+    essence_mega_support: __megaSupport,
     essence_promo_total: parseInt($("promo-total").value || 0),
     essence_evo_total: parseInt($("evo-total").value || 0),
     essence_evo_resets: {
@@ -2455,6 +2558,15 @@ function applySettingsPayload(p) {
       if (el) el.value = v;
     }
   }
+
+  // 팰몬 타입 / 메가 지원 복원
+  if (p.essence_palmon_type === "season" || p.essence_palmon_type === "regular") {
+    __palmonType = p.essence_palmon_type;
+  }
+  if (typeof p.essence_mega_support === "boolean") {
+    __megaSupport = p.essence_mega_support;
+  }
+  applyPalmonModeToDOM();
 
   let pt = p.essence_promo_total;
   if (pt == null && p.essence_promo) {
@@ -3667,6 +3779,7 @@ async function bootstrap() {
     buildSupplyTab();
     buildMysteryBoxTab();
     buildEagleBoxTab();
+    setupPalmonModeToggles();
     updateInventorySummary();
     autoCalculate();
     // 게시판 초기화

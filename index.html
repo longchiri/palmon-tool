@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515z" />
+  <link rel="stylesheet" href="style.css?v=20260515aa" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -233,9 +233,21 @@
 
       <!-- Row 2: 진화 정수 -->
       <div class="grid-3">
-        <div class="group essence-img-card">
+        <div class="group essence-img-card" id="evo-card">
           <div class="group-title">진화 정수 (Evolution)</div>
-          <!-- 원하는 진화 — 일반 1~4단계 + 메가 1~4단계 (총 8단계) -->
+
+          <!-- 팰몬 타입 토글: 기존 팰몬 / 시즌 팰몬 -->
+          <div class="palmon-type-toggle">
+            <button type="button" class="ptype-btn active" data-ptype="regular">🐾 기존 팰몬</button>
+            <button type="button" class="ptype-btn" data-ptype="season">⭐ 시즌 팰몬</button>
+          </div>
+
+          <!-- 메가진화 지원 토글 (기존 팰몬만) -->
+          <div class="mega-support-row" id="mega-support-row">
+            <button type="button" id="mega-support-toggle" class="mega-toggle-btn active">메가진화 지원 ✓</button>
+          </div>
+
+          <!-- 원하는 진화 — 일반 1~4단계 + 메가 5~8단계 -->
           <div class="target-filter target-filter-top">
             <label>원하는 진화</label>
             <select id="evo-target">
@@ -243,7 +255,7 @@
               <option value="진화 2단계">진화 2단계</option>
               <option value="진화 3단계">진화 3단계</option>
               <option value="진화 4단계" selected>진화 4단계</option>
-              <optgroup label="── 메가진화 ──">
+              <optgroup label="── 메가진화 ──" id="mega-optgroup">
                 <option value="진화 5단계">진화 5단계</option>
                 <option value="진화 6단계">진화 6단계</option>
                 <option value="진화 7단계">진화 7단계</option>
@@ -252,14 +264,14 @@
             </select>
           </div>
 
-          <!-- 2개 자원 (진화 정수 + 메가 진화석) 나란히 배치 -->
-          <div class="dual-resource">
-            <div class="dual-col">
-              <img src="evo.png" alt="진화 정수" class="bead-img bead-img-dual" onerror="this.style.display='none'">
-              <div class="dual-label">진화 정수</div>
+          <!-- 자원 입력 — 기존: 진화 정수 + 메가 진화석 / 시즌: 오로라의 정수 -->
+          <div class="dual-resource" id="resource-section">
+            <div class="dual-col" id="primary-essence-col">
+              <img id="primary-essence-img" src="evo.png" alt="진화 정수" class="bead-img bead-img-dual" onerror="this.style.display='none'">
+              <div class="dual-label" id="primary-essence-label">진화 정수</div>
               <input type="number" id="evo-total" min="0" value="0" inputmode="numeric" placeholder="보유">
             </div>
-            <div class="dual-col">
+            <div class="dual-col" id="mega-essence-col">
               <img src="mega-evo.png" alt="메가 진화석" class="bead-img bead-img-dual" onerror="this.style.display='none'">
               <div class="dual-label">메가 진화석</div>
               <input type="number" id="mega-evo-total" min="0" value="0" inputmode="numeric" placeholder="보유">
@@ -273,14 +285,16 @@
             <div class="bead-reset-item"><span class="reset-label">진화 3단계</span><input type="number" id="evo-reset-3" min="0" value="0" inputmode="numeric"></div>
             <div class="bead-reset-item"><span class="reset-label">진화 4단계</span><input type="number" id="evo-reset-4" min="0" value="0" inputmode="numeric"></div>
           </div>
-          <div class="reset-subtitle" style="color:var(--amber);margin-top:8px;">── 메가진화 ──</div>
-          <div class="bead-reset-grid">
-            <div class="bead-reset-item"><span class="reset-label">진화 5단계</span><input type="number" id="evo-reset-5" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">진화 6단계</span><input type="number" id="evo-reset-6" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">진화 7단계</span><input type="number" id="evo-reset-7" min="0" value="0" inputmode="numeric"></div>
-            <div class="bead-reset-item"><span class="reset-label">진화 8단계</span><input type="number" id="evo-reset-8" min="0" value="0" inputmode="numeric"></div>
+          <div id="mega-reset-section">
+            <div class="reset-subtitle" style="color:var(--amber);margin-top:8px;">── 메가진화 ──</div>
+            <div class="bead-reset-grid">
+              <div class="bead-reset-item"><span class="reset-label">진화 5단계</span><input type="number" id="evo-reset-5" min="0" value="0" inputmode="numeric"></div>
+              <div class="bead-reset-item"><span class="reset-label">진화 6단계</span><input type="number" id="evo-reset-6" min="0" value="0" inputmode="numeric"></div>
+              <div class="bead-reset-item"><span class="reset-label">진화 7단계</span><input type="number" id="evo-reset-7" min="0" value="0" inputmode="numeric"></div>
+              <div class="bead-reset-item"><span class="reset-label">진화 8단계</span><input type="number" id="evo-reset-8" min="0" value="0" inputmode="numeric"></div>
+            </div>
           </div>
-          <div class="hint">예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 (5~8단계)는 메가 진화석 사용 — 1 / 40 / 80 / 160</div>
+          <div class="hint" id="evo-hint">예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 (5~8단계)는 메가 진화석 사용 — 1 / 40 / 80 / 160</div>
         </div>
 
         <div id="evo-result-slot"></div>
@@ -801,6 +815,11 @@
 
         <div class="cl-item">
           <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🐾 기존 팰몬 / ⭐ 시즌 팰몬 토글 + 메가진화 지원/미지원 토글</b> — 진화 정수 카드 상단에 팰몬 타입 토글 추가. <b>시즌 팰몬</b> 선택 시: 진화 정수 → <b>오로라의 정수</b>로 자동 전환, 메가진화 관련 모두 숨김(1~4단계만). <b>기존 팰몬</b> 선택 시: 메가진화 지원/미지원 토글 추가 표시. 메가진화 미지원 누르면 메가 진화석 + 진화 5~8단계 숨김. 선택 상태는 localStorage 자동 저장</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
           <div class="cl-text"><b>🪖 개선장군 보급 시뮬레이터 추가</b> — 📦 상자시뮬레이터 그룹 (🌰 열매상자와 🎁 미스테리박스 사이). 20종 아이템(🪵⚙️🪙 10K 자원 보물상자 각 23.19% / 💎 다이아 10개 10% / 🎖️ 개선 훈장 / 💠 강화 결정 / 가속권 5종 / 🟡 UR 만능 증표 등) 확률 기반 시뮬레이션. 사진은 미스테리박스와 공유</div>
         </div>
 
@@ -1071,6 +1090,8 @@
           <p>승급 / 진화 정수를 활용해 팰몬을 키울 때.</p>
           <ul>
             <li><b>UR 만능 팰몬조각 (승급)</b> — 보유 수량 입력 → 975 ÷ 1명 → 승급 가능 인원 표시</li>
+            <li><b>🐾 기존 팰몬 / ⭐ 시즌 팰몬 토글</b> — 카드 상단에서 선택. 시즌 팰몬은 <b>오로라의 정수</b> 사용 (진화 1~4단계만), 기존 팰몬은 진화 정수 + 메가 진화석 (8단계)</li>
+            <li><b>메가진화 지원 / 미지원 토글</b> — 기존 팰몬일 때 표시. 미지원 누르면 메가진화 관련 요소(5~8단계) 모두 숨김</li>
             <li><b>진화 정수 + 메가 진화석</b> — 같은 카드에 2개 자원 나란히 입력. 일반(1~4단계)은 진화 정수, 메가진화(5~8단계)는 메가 진화석 사용</li>
             <li>초기화 환급(누적, 일반): 진화 1단계 +20 / 2단계 +60 / 3단계 +140 / 4단계 +300</li>
             <li>초기화 환급(누적, 메가): 진화 <b>5단계 +1</b> / 6단계 +40 / 7단계 +80 / 8단계 +160</li>
@@ -1452,6 +1473,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515z"></script>
+  <script src="app.js?v=20260515aa"></script>
 </body>
 </html>

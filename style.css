@@ -439,6 +439,74 @@ body { overflow-x: hidden; }
 }
 @media (max-width: 639px) { .bead-img { width: 80px; } }
 
+/* 팰몬 타입 토글 (기존 팰몬 / 시즌 팰몬) */
+.palmon-type-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.palmon-type-toggle .ptype-btn {
+  background: rgba(255,255,255,0.03);
+  color: var(--text-dim);
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.palmon-type-toggle .ptype-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.palmon-type-toggle .ptype-btn.active {
+  background: rgba(167,139,250,0.18);
+  border-color: var(--purple);
+  color: #c4b5fd;
+  font-weight: 700;
+}
+
+/* 메가진화 지원 토글 */
+.mega-support-row {
+  margin: 0 0 10px;
+  display: flex;
+  justify-content: center;
+}
+.mega-toggle-btn {
+  background: rgba(255,255,255,0.03);
+  color: var(--text-dim);
+  border: 1px solid #2a3441;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+.mega-toggle-btn:hover { border-color: var(--border-strong); color: var(--text); }
+.mega-toggle-btn.active {
+  background: rgba(251,191,36,0.15);
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* 시즌 팰몬 모드일 때: 메가 관련 요소 숨김 + 단일 자원 카드 */
+#evo-card.ptype-season .mega-support-row,
+#evo-card.ptype-season #mega-essence-col,
+#evo-card.ptype-season #mega-optgroup,
+#evo-card.ptype-season #mega-reset-section { display: none !important; }
+#evo-card.ptype-season #resource-section { grid-template-columns: 1fr; max-width: 60%; margin-left: auto; margin-right: auto; }
+
+/* 기존 팰몬이지만 메가진화 미지원 모드: 메가 관련 숨김 (자원 카드는 그대로 2열 유지) */
+#evo-card.no-mega #mega-essence-col,
+#evo-card.no-mega #mega-optgroup,
+#evo-card.no-mega #mega-reset-section { display: none !important; }
+#evo-card.no-mega #resource-section { grid-template-columns: 1fr; max-width: 60%; margin-left: auto; margin-right: auto; }
+
 /* 진화 정수 + 메가 진화석 — 2열 나란히 배치 */
 .dual-resource {
   display: grid;
