@@ -1230,16 +1230,18 @@ let __megaSupport = true;
 function applyPalmonModeToDOM() {
   const card = document.getElementById("evo-card");
   if (!card) return;
+  const isSeason = __palmonType === "season";
+  const isRegularNoMega = __palmonType === "regular" && !__megaSupport;
+
   // 타입 클래스
-  card.classList.toggle("ptype-season", __palmonType === "season");
-  // 메가 미지원 클래스 (기존 팰몬일 때만 의미 있음)
-  card.classList.toggle("no-mega", __palmonType === "regular" && !__megaSupport);
+  card.classList.toggle("ptype-season", isSeason);
+  card.classList.toggle("no-mega", isRegularNoMega);
 
   // 이미지/라벨 전환
   const img = document.getElementById("primary-essence-img");
   const lbl = document.getElementById("primary-essence-label");
   if (img && lbl) {
-    if (__palmonType === "season") {
+    if (isSeason) {
       img.src = "aurora.png";
       img.alt = "오로라의 정수";
       lbl.textContent = "오로라의 정수";
@@ -1253,9 +1255,9 @@ function applyPalmonModeToDOM() {
   // 힌트 텍스트 전환
   const hint = document.getElementById("evo-hint");
   if (hint) {
-    if (__palmonType === "season") {
-      hint.innerHTML = "예) 오로라의 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 시즌 팰몬은 메가진화 없음 (1~4단계만)";
-    } else if (!__megaSupport) {
+    if (isSeason) {
+      hint.innerHTML = "예) 오로라의 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>🚫 시즌 팰몬 — 진화 5~8단계 (메가진화) <b>아직 미출시</b>. 출시되면 자동 활성화됩니다.";
+    } else if (isRegularNoMega) {
       hint.innerHTML = "예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 미지원 모드 (1~4단계만)";
     } else {
       hint.innerHTML = "예) 진화 정수 100 + 진화 4단계 1마리 초기화 → 100 + 300 = 400 → 1명 완성 (남은 100)<br>📌 메가진화 (5~8단계)는 메가 진화석 사용 — 1 / 40 / 80 / 160";
@@ -1265,17 +1267,35 @@ function applyPalmonModeToDOM() {
   // 카드 제목
   const title = card.querySelector(".group-title");
   if (title) {
-    title.textContent = __palmonType === "season"
-      ? "오로라의 정수 (시즌 팰몬)"
-      : "진화 정수 (Evolution)";
+    title.textContent = isSeason ? "오로라의 정수 (시즌 팰몬)" : "진화 정수 (Evolution)";
   }
 
-  // 드롭다운 — 메가가 숨겨진 상태에서 5~8 선택돼 있으면 4단계로 리셋
+  // 드롭다운 처리:
+  //  - 기존 + 메가 미지원: 5~8단계 hide (CSS)
+  //  - 시즌: 5~8단계 disabled (선택 불가) + optgroup 라벨 "(미출시)"
+  //  - 둘 다 메가가 비활성이면 현재 선택값 5~8단계면 4단계로 리셋
   const sel = document.getElementById("evo-target");
-  const megaHidden = (__palmonType === "season") || (__palmonType === "regular" && !__megaSupport);
-  if (sel && megaHidden && ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(sel.value)) {
+  const megaOpt = document.getElementById("mega-optgroup");
+  const megaInactive = isSeason || isRegularNoMega;
+  if (megaOpt) {
+    megaOpt.label = isSeason ? "── 메가진화 (미출시) ──" : "── 메가진화 ──";
+    Array.from(megaOpt.querySelectorAll("option")).forEach((opt) => {
+      opt.disabled = isSeason;  // 시즌은 비활성, 기존+미지원은 CSS로 숨김
+    });
+  }
+  if (sel && megaInactive && ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(sel.value)) {
     sel.value = "진화 4단계";
   }
+
+  // 메가 입력칸 비활성화 (시즌 모드)
+  const megaInputIds = ["mega-evo-total", "evo-reset-5", "evo-reset-6", "evo-reset-7", "evo-reset-8"];
+  megaInputIds.forEach((id) => {
+    const inp = document.getElementById(id);
+    if (inp) {
+      inp.disabled = isSeason;
+      if (isSeason) inp.value = 0;
+    }
+  });
 
   // 메가 지원 토글 라벨
   const mtBtn = document.getElementById("mega-support-toggle");

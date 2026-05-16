@@ -523,14 +523,39 @@ body { overflow-x: hidden; }
   color: var(--amber);
 }
 
-/* 시즌 팰몬 모드일 때: 메가 관련 요소 숨김 + 단일 자원 카드 */
-#evo-card.ptype-season .mega-support-row,
+/* 시즌 팰몬 모드일 때: 메가 지원 토글 숨김, 5~8단계 관련은 비활성 (보이되 클릭 불가) */
+#evo-card.ptype-season .mega-support-row { display: none !important; }
 #evo-card.ptype-season #mega-essence-col,
-#evo-card.ptype-season #mega-optgroup,
-#evo-card.ptype-season #mega-reset-section { display: none !important; }
-#evo-card.ptype-season #resource-section { grid-template-columns: 1fr; max-width: 60%; margin-left: auto; margin-right: auto; }
+#evo-card.ptype-season #mega-reset-section {
+  opacity: 0.42;
+  pointer-events: none;
+  position: relative;
+}
+#evo-card.ptype-season #mega-essence-col::before,
+#evo-card.ptype-season #mega-reset-section::before {
+  content: "🚫 미출시";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: rgba(248,113,113,0.18);
+  color: var(--red);
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(248,113,113,0.4);
+  z-index: 2;
+  pointer-events: none;
+}
+/* 시즌 + 비활성 입력 시각화 */
+#evo-card.ptype-season #mega-evo-total[disabled],
+#evo-card.ptype-season .bead-reset-item input[disabled] {
+  background: rgba(255,255,255,0.02) !important;
+  color: var(--text-mute) !important;
+  cursor: not-allowed;
+}
 
-/* 기존 팰몬이지만 메가진화 미지원 모드: 메가 관련 숨김 (자원 카드는 그대로 2열 유지) */
+/* 기존 팰몬이지만 메가진화 미지원 모드: 메가 관련 완전 숨김 (자원 카드 1열로) */
 #evo-card.no-mega #mega-essence-col,
 #evo-card.no-mega #mega-optgroup,
 #evo-card.no-mega #mega-reset-section { display: none !important; }
