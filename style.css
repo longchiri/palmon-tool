@@ -439,6 +439,50 @@ body { overflow-x: hidden; }
 }
 @media (max-width: 639px) { .bead-img { width: 80px; } }
 
+/* 진화 정수 + 메가 진화석 — 2열 나란히 배치 */
+.dual-resource {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0 6px;
+}
+.dual-resource .dual-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid #2a3441;
+  border-radius: 8px;
+  padding: 10px 8px 8px;
+}
+.dual-resource .bead-img-dual {
+  width: 64px !important;
+  max-width: 80%;
+  margin: 2px auto 6px;
+}
+.dual-resource .dual-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.dual-resource input[type="number"] {
+  width: 100%;
+  text-align: right;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+@media (max-width: 639px) {
+  .dual-resource { gap: 8px; }
+  .dual-resource .bead-img-dual { width: 52px !important; }
+  .dual-resource .dual-col { padding: 8px 5px 6px; }
+}
+
 /* 🌰 열매상자 결과 이미지 (UR/SSR/SR 스킬 열매) */
 .fruit-result-img {
   width: 56px;
@@ -602,6 +646,27 @@ body { overflow-x: hidden; }
   .bead-reset-item > .reset-label { font-size: 11.5px; }
 }
 
+/* 결과 카드 안의 표를 카드 가운데로 정렬 (팰몬 진화 / 승급 / 걸작구슬 / 경험치 결과) */
+#evo-result-slot .result-card .tbl-wrap,
+#promo-result-slot .result-card .tbl-wrap,
+#bead-result .result-card .tbl-wrap,
+#exp-result-slot .result-card .tbl-wrap,
+#skill-result-slot .result-card .tbl-wrap,
+#energy-result-slot .result-card .tbl-wrap {
+  display: flex;
+  justify-content: center;
+}
+#evo-result-slot .result-card .tbl,
+#promo-result-slot .result-card .tbl,
+#bead-result .result-card .tbl,
+#exp-result-slot .result-card .tbl,
+#skill-result-slot .result-card .tbl,
+#energy-result-slot .result-card .tbl {
+  width: auto;
+  margin: 0 auto;
+  min-width: 70%;
+}
+
 /* 걸작구슬 / 팰몬진화 / 스킬열매·경험치 / 열매상자 / 미스테리박스 탭 — 3컬럼 모두 동일 높이 */
 #t-bead .grid-3,
 #t-essence .grid-3,
@@ -629,6 +694,7 @@ body { overflow-x: hidden; }
 #evo-result-slot,
 #exp-result-slot,
 #skill-result-slot,
+#energy-result-slot,
 #fruitbox-result-slot,
 #mysterybox-result-slot,
 #eaglebox-result-slot {
@@ -640,6 +706,7 @@ body { overflow-x: hidden; }
 #evo-result-slot > .result-card,
 #exp-result-slot > .result-card,
 #skill-result-slot > .result-card,
+#energy-result-slot > .result-card,
 #fruitbox-result-slot > .result-card,
 #mysterybox-result-slot > .result-card,
 #eaglebox-result-slot > .result-card {

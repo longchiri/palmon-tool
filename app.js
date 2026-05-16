@@ -81,6 +81,23 @@ const EVO_VALUES = { "진화 1단계": 20, "진화 2단계": 40, "진화 3단계
 // 초기화 환급 = 그 단계까지의 누적 비용 (해당 팰몬을 그 단계까지 만드는 데 들어간 정수 합)
 const EVO_RESET_REFUND = { "진화 1단계": 20, "진화 2단계": 60, "진화 3단계": 140, "진화 4단계": 300 };
 
+// 메가 진화 (진화 5~8단계) — 메가 진화석 사용
+// 누적 비용 (해당 단계까지 만드는 데 들어간 메가 진화석 총합)
+const MEGA_EVO_PER_PALMON = 160;  // 진화 8단계 1명 완성에 필요한 메가 진화석
+const MEGA_EVO_RESET_REFUND = {
+  "진화 5단계": 1,
+  "진화 6단계": 40,
+  "진화 7단계": 80,
+  "진화 8단계": 160,
+};
+const ALL_EVO_STAGES = [
+  "진화 1단계", "진화 2단계", "진화 3단계", "진화 4단계",
+  "진화 5단계", "진화 6단계", "진화 7단계", "진화 8단계",
+];
+// 5~8단계 = 메가 진화 (메가 진화석 사용)
+const isMegaEvoStage = (s) => ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(s);
+const getEvoStageCost = (s) => isMegaEvoStage(s) ? (MEGA_EVO_RESET_REFUND[s] || 0) : (EVO_RESET_REFUND[s] || 0);
+
 // ───────── 라벨 툴팁 (i 버튼으로 표시될 in-game 출처) ─────────
 const TOOLTIPS = {
   "VIP 레벨": "VIP 레벨",
@@ -1162,20 +1179,30 @@ function updateEssence() {
   const promoPeople = Math.floor(promoOwned / PROMO_PER_PALMON);
   const promoRemain = promoOwned - promoPeople * PROMO_PER_PALMON;
 
-  const evoOwned = parseInt($("evo-total").value || 0);
-
-  // 4단계별 초기화 수량 입력 → 합산
-  const resetCounts = {
-    "진화 1단계": parseInt($("evo-reset-1").value || 0),
-    "진화 2단계": parseInt($("evo-reset-2").value || 0),
-    "진화 3단계": parseInt($("evo-reset-3").value || 0),
-    "진화 4단계": parseInt($("evo-reset-4").value || 0),
+  // 진화 정수 (일반) 입력
+  const evoOwned = parseInt($("evo-total")?.value || 0);
+  const resetCountsRegular = {
+    "진화 1단계": parseInt($("evo-reset-1")?.value || 0),
+    "진화 2단계": parseInt($("evo-reset-2")?.value || 0),
+    "진화 3단계": parseInt($("evo-reset-3")?.value || 0),
+    "진화 4단계": parseInt($("evo-reset-4")?.value || 0),
   };
-  let evoReset = 0;
-  for (const stage in resetCounts) evoReset += resetCounts[stage] * EVO_RESET_REFUND[stage];
-  const evoTotal = evoOwned + evoReset;
+  let evoResetSum = 0;
+  for (const stage in resetCountsRegular) evoResetSum += resetCountsRegular[stage] * EVO_RESET_REFUND[stage];
+  const evoTotal = evoOwned + evoResetSum;
   const evoPeople = Math.floor(evoTotal / EVO_PER_PALMON);
-  const evoRemain = evoTotal - evoPeople * EVO_PER_PALMON;
+
+  // 메가 진화석 입력 (진화 5~8단계)
+  const megaOwned = parseInt($("mega-evo-total")?.value || 0);
+  const resetCountsMega = {
+    "진화 5단계": parseInt($("evo-reset-5")?.value || 0),
+    "진화 6단계": parseInt($("evo-reset-6")?.value || 0),
+    "진화 7단계": parseInt($("evo-reset-7")?.value || 0),
+    "진화 8단계": parseInt($("evo-reset-8")?.value || 0),
+  };
+  let megaResetSum = 0;
+  for (const stage in resetCountsMega) megaResetSum += resetCountsMega[stage] * (MEGA_EVO_RESET_REFUND[stage] || 0);
+  const megaTotal = megaOwned + megaResetSum;
 
   const fullSet = Math.min(promoPeople, evoPeople);
 
@@ -1206,36 +1233,43 @@ function updateEssence() {
     ${promoRemainRow}`;
   const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows, promoShortage);
 
-  // 4단계 초기화 행 추가
+  // 목표한 진화 (원하는 진화 드롭다운 기반) — 일반 vs 메가 자동 분기
+  const evoTarget = $("evo-target")?.value || "진화 4단계";
+  const isMega = isMegaEvoStage(evoTarget);
+  const targetCost = getEvoStageCost(evoTarget);
+  const totalResource = isMega ? megaTotal : evoTotal;
+  const ownedResource = isMega ? megaOwned : evoOwned;
+  const resetSum = isMega ? megaResetSum : evoResetSum;
+  const resetCounts = isMega ? resetCountsMega : resetCountsRegular;
+  const refundTable = isMega ? MEGA_EVO_RESET_REFUND : EVO_RESET_REFUND;
+  const resourceName = isMega ? "메가 진화석" : "진화 정수";
+
+  // 초기화 환급 행
   let resetRows = "";
-  for (const stage of ["진화 1단계", "진화 2단계", "진화 3단계", "진화 4단계"]) {
+  for (const stage of Object.keys(refundTable)) {
     const cnt = resetCounts[stage];
-    if (cnt > 0) {
-      const sub = cnt * EVO_RESET_REFUND[stage];
-      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${EVO_RESET_REFUND[stage]} = +${fmt(sub)}</td></tr>`;
+    const refund = refundTable[stage];
+    if (cnt > 0 && refund > 0) {
+      const sub = cnt * refund;
+      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
     }
   }
-  if (evoReset > 0) {
-    resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(evoReset)}</b></td></tr>`;
+  if (resetSum > 0) {
+    resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(resetSum)}</b></td></tr>`;
   }
 
-  // 목표한 진화 (원하는 진화 드롭다운 기반)
-  const evoTarget = $("evo-target")?.value || "진화 4단계";
-  const evoTargetCost = EVO_RESET_REFUND[evoTarget] || EVO_PER_PALMON;
-  const evoTargetCount = evoTargetCost > 0 ? Math.floor(evoTotal / evoTargetCost) : 0;
-  const evoTargetRemain = evoTotal - evoTargetCount * evoTargetCost;
-
-  // 결과 카드 — 선택한 진화 단계 기준으로 표시
+  const evoTargetCount = targetCost > 0 ? Math.floor(totalResource / targetCost) : 0;
+  const evoTargetRemain = totalResource - evoTargetCount * targetCost;
   const evoColor = evoTargetCount > 0 ? "var(--green)" : "var(--red)";
-  const evoShortage = evoTargetCount === 0 ? Math.max(0, evoTargetCost - evoTotal) : 0;
+  const evoShortage = evoTargetCount === 0 ? Math.max(0, targetCost - totalResource) : 0;
   const evoRemainRow = evoTargetCount > 0
     ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`
     : "";
   const evoRows = `
-    <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
+    <tr><td class="label">보유 ${resourceName}</td><td class="value">${fmt(ownedResource)}</td></tr>
     ${resetRows}
-    <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
-    <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(evoTargetCost)}</td></tr>
+    <tr><td class="label">합계</td><td class="value amber"><b>${fmt(totalResource)}</b></td></tr>
+    <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(targetCost)}</td></tr>
     ${evoRemainRow}`;
   const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows, evoShortage);
 
@@ -1780,6 +1814,172 @@ function renderFruitBoxResult(n, rowCounts) {
     </div>`;
 }
 
+// ════════════════════════════════════════════════════════════════
+// 🔮 에너지 구슬 계산기
+// ════════════════════════════════════════════════════════════════
+// 각 소단계당 에너지 구슬 필요량 (10번 강화 = 표시값)
+const ENERGY_STAGES = [
+  // 진화 1단계 (4 sub-steps) — 30,000
+  { id: "evo1-1", group: "evo1", label: "진화 1단계 1번", cost: 6000  },
+  { id: "evo1-2", group: "evo1", label: "진화 1단계 2번", cost: 7000  },
+  { id: "evo1-3", group: "evo1", label: "진화 1단계 3번", cost: 8000  },
+  { id: "evo1-4", group: "evo1", label: "진화 1단계 4번", cost: 9000  },
+  // 진화 2단계 (6 sub-steps) — 60,000
+  { id: "evo2-1", group: "evo2", label: "진화 2단계 1번", cost: 9000  },
+  { id: "evo2-2", group: "evo2", label: "진화 2단계 2번", cost: 9000  },
+  { id: "evo2-3", group: "evo2", label: "진화 2단계 3번", cost: 10000 },
+  { id: "evo2-4", group: "evo2", label: "진화 2단계 4번", cost: 10000 },
+  { id: "evo2-5", group: "evo2", label: "진화 2단계 5번", cost: 11000 },
+  { id: "evo2-6", group: "evo2", label: "진화 2단계 6번", cost: 11000 },
+  // 진화 3단계 (6 sub-steps) — 90,000
+  { id: "evo3-1", group: "evo3", label: "진화 3단계 1번", cost: 12000 },
+  { id: "evo3-2", group: "evo3", label: "진화 3단계 2번", cost: 13000 },
+  { id: "evo3-3", group: "evo3", label: "진화 3단계 3번", cost: 14000 },
+  { id: "evo3-4", group: "evo3", label: "진화 3단계 4번", cost: 15000 },
+  { id: "evo3-5", group: "evo3", label: "진화 3단계 5번", cost: 17000 },
+  { id: "evo3-6", group: "evo3", label: "진화 3단계 6번", cost: 19000 },
+  // 진화 4단계 (6 sub-steps) — 220,000
+  { id: "evo4-1", group: "evo4", label: "진화 4단계 1번", cost: 22000 },
+  { id: "evo4-2", group: "evo4", label: "진화 4단계 2번", cost: 26000 },
+  { id: "evo4-3", group: "evo4", label: "진화 4단계 3번", cost: 30000 },
+  { id: "evo4-4", group: "evo4", label: "진화 4단계 4번", cost: 38000 },
+  { id: "evo4-5", group: "evo4", label: "진화 4단계 5번", cost: 46000 },
+  { id: "evo4-6", group: "evo4", label: "진화 4단계 6번", cost: 58000 },
+  // 메가 진화 1단계 (3 sub-steps) — 30,000
+  { id: "mega5-1", group: "mega5", label: "메가 진화 1단계 1번", cost: 9000  },
+  { id: "mega5-2", group: "mega5", label: "메가 진화 1단계 2번", cost: 10000 },
+  { id: "mega5-3", group: "mega5", label: "메가 진화 1단계 3번", cost: 11000 },
+  // 메가 진화 2단계 (5 sub-steps) — 60,000
+  { id: "mega6-1", group: "mega6", label: "메가 진화 2단계 1번", cost: 11000 },
+  { id: "mega6-2", group: "mega6", label: "메가 진화 2단계 2번", cost: 11500 },
+  { id: "mega6-3", group: "mega6", label: "메가 진화 2단계 3번", cost: 12000 },
+  { id: "mega6-4", group: "mega6", label: "메가 진화 2단계 4번", cost: 12500 },
+  { id: "mega6-5", group: "mega6", label: "메가 진화 2단계 5번", cost: 13000 },
+  // 메가 진화 3단계 (6 sub-steps) — 90,000
+  { id: "mega7-1", group: "mega7", label: "메가 진화 3단계 1번", cost: 13000 },
+  { id: "mega7-2", group: "mega7", label: "메가 진화 3단계 2번", cost: 13500 },
+  { id: "mega7-3", group: "mega7", label: "메가 진화 3단계 3번", cost: 14000 },
+  { id: "mega7-4", group: "mega7", label: "메가 진화 3단계 4번", cost: 15000 },
+  { id: "mega7-5", group: "mega7", label: "메가 진화 3단계 5번", cost: 16500 },
+  { id: "mega7-6", group: "mega7", label: "메가 진화 3단계 6번", cost: 18000 },
+  // 메가 진화 4단계 (5 sub-steps) — 162,000
+  { id: "mega8-1", group: "mega8", label: "메가 진화 4단계 1번", cost: 22000 },
+  { id: "mega8-2", group: "mega8", label: "메가 진화 4단계 2번", cost: 26000 },
+  { id: "mega8-3", group: "mega8", label: "메가 진화 4단계 3번", cost: 30000 },
+  { id: "mega8-4", group: "mega8", label: "메가 진화 4단계 4번", cost: 38000 },
+  { id: "mega8-5", group: "mega8", label: "메가 진화 4단계 5번", cost: 46000 },
+  // 메가 스킬해금 — 58,000
+  { id: "skill",   group: "skill", label: "메가 스킬해금", cost: 58000 },
+];
+const ENERGY_TOTAL = ENERGY_STAGES.reduce((s, x) => s + x.cost, 0); // 800,000
+
+function buildEnergyTab() {
+  if (!$("energy-current") || !$("energy-target")) return;
+
+  // 드롭다운 옵션 구성:
+  // - 현재 단계: "처음 시작" (idx=-1) + 모든 단계 (idx=0~41)
+  // - 목표 단계: 모든 단계 (idx=0~41)
+  const curSel = $("energy-current");
+  const tgtSel = $("energy-target");
+  curSel.innerHTML = `<option value="-1">처음 시작 (진화 1-1 이전)</option>` +
+    ENERGY_STAGES.map((s, i) => `<option value="${i}">${s.label} 완료</option>`).join("");
+  tgtSel.innerHTML = ENERGY_STAGES.map((s, i) => `<option value="${i}">${s.label}</option>`).join("");
+
+  // 기본값 — 처음 시작 → 메가 스킬해금
+  curSel.value = "-1";
+  tgtSel.value = String(ENERGY_STAGES.length - 1);
+
+  curSel.addEventListener("change", updateEnergy);
+  tgtSel.addEventListener("change", updateEnergy);
+  if ($("energy-owned")) $("energy-owned").addEventListener("input", updateEnergy);
+
+  updateEnergy();
+}
+
+function updateEnergy() {
+  const curIdx = parseInt($("energy-current")?.value ?? -1);
+  const tgtIdx = parseInt($("energy-target")?.value ?? 0);
+  const owned  = parseInt($("energy-owned")?.value || 0);
+
+  // 필요량 = sum from (curIdx+1) to tgtIdx inclusive
+  let needed = 0;
+  const detailRows = [];
+  if (tgtIdx > curIdx) {
+    for (let i = curIdx + 1; i <= tgtIdx && i < ENERGY_STAGES.length; i++) {
+      needed += ENERGY_STAGES[i].cost;
+    }
+  }
+
+  // 그룹별 합산 (현재→목표 구간 내)
+  const groupSums = {};
+  if (tgtIdx > curIdx) {
+    for (let i = curIdx + 1; i <= tgtIdx && i < ENERGY_STAGES.length; i++) {
+      const g = ENERGY_STAGES[i].group;
+      groupSums[g] = (groupSums[g] || 0) + ENERGY_STAGES[i].cost;
+    }
+  }
+  const groupLabels = {
+    evo1: "진화 1단계", evo2: "진화 2단계", evo3: "진화 3단계", evo4: "진화 4단계",
+    mega5: "메가 진화 1단계", mega6: "메가 진화 2단계", mega7: "메가 진화 3단계", mega8: "메가 진화 4단계",
+    skill: "메가 스킬해금",
+  };
+  const groupOrder = ["evo1","evo2","evo3","evo4","mega5","mega6","mega7","mega8","skill"];
+  let groupRowsHtml = "";
+  for (const g of groupOrder) {
+    if (groupSums[g]) {
+      const colorCls = g.startsWith("evo") ? "txt-purple" : (g === "skill" ? "tier-ur" : "tier-ur");
+      groupRowsHtml += `<tr><td class="label ${colorCls}">${groupLabels[g]}</td><td class="value ${colorCls}">${fmt(groupSums[g])}</td></tr>`;
+    }
+  }
+
+  // 결과 카드
+  const slot = $("energy-result-slot");
+  if (!slot) return;
+
+  if (tgtIdx <= curIdx) {
+    slot.innerHTML = `
+      <div class="result-card" style="border-color:var(--green);text-align:center;">
+        <div class="card-title" style="color:var(--green);">◆ 필요 에너지 구슬</div>
+        <div class="big-number" style="color:var(--green);">완료 ✓</div>
+        <p class="txt-dim" style="font-size:13px;margin:10px 0 0;">목표 단계가 현재 단계보다 같거나 이전입니다. 추가 에너지 구슬 불필요.</p>
+      </div>`;
+    return;
+  }
+
+  const enough = owned >= needed;
+  const color = enough ? "var(--green)" : "var(--red)";
+  const shortage = Math.max(0, needed - owned);
+  const surplus = Math.max(0, owned - needed);
+
+  const bigDisplay = enough
+    ? `<div class="big-number" style="color:${color};">${fmt(needed)}<span class="unit">개</span></div>`
+    : `<div class="big-number" style="color:${color};font-size:42px;">부족 <span class="unit" style="color:${color};">${fmt(shortage)}개</span></div>`;
+
+  const surplusRow = enough && owned > 0
+    ? `<tr><td class="label">보유 - 필요 (남는 양)</td><td class="value amber">${fmt(surplus)}</td></tr>`
+    : "";
+  const shortageRow = (!enough)
+    ? `<tr><td class="label" style="color:var(--red);font-weight:700;">부족 갯수</td><td class="value red"><b>${fmt(shortage)}</b></td></tr>`
+    : "";
+
+  const curLabel = curIdx < 0 ? "처음 시작" : `${ENERGY_STAGES[curIdx].label} 완료`;
+  const tgtLabel = ENERGY_STAGES[tgtIdx].label;
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:${color};">
+      <div class="card-title" style="color:${color};text-align:center;">◆ 필요 에너지 구슬</div>
+      <p class="txt-dim" style="font-size:12.5px;text-align:center;margin:4px 0 6px;">${curLabel} → ${tgtLabel}</p>
+      ${bigDisplay}
+      <div class="tbl-wrap"><table class="tbl">
+        <tr><td class="label">필요 합계</td><td class="value amber"><b>${fmt(needed)}</b></td></tr>
+        <tr><td class="label">보유</td><td class="value">${fmt(owned)}</td></tr>
+        ${shortageRow}
+        ${surplusRow}
+        ${groupRowsHtml ? `<tr><td colspan="2" style="padding-top:10px;border-top:1px dashed var(--border);"><b style="color:var(--text-dim);font-size:12px;">단계별 분해</b></td></tr>${groupRowsHtml}` : ""}
+      </table></div>
+    </div>`;
+}
+
 function updatePalmon() {
   const baseLevel = parseInt($("palmon-camp").value);
   const maxLevel = Math.max(...Object.keys(DB.resource_boxes).map((x) => parseInt(x)));
@@ -2071,6 +2271,13 @@ function buildSettingsPayload() {
       "진화 3단계": parseInt($("evo-reset-3").value || 0),
       "진화 4단계": parseInt($("evo-reset-4").value || 0),
     },
+    essence_mega_evo_total: parseInt($("mega-evo-total")?.value || 0),
+    essence_mega_evo_resets: {
+      "진화 5단계": parseInt($("evo-reset-5")?.value || 0),
+      "진화 6단계": parseInt($("evo-reset-6")?.value || 0),
+      "진화 7단계": parseInt($("evo-reset-7")?.value || 0),
+      "진화 8단계": parseInt($("evo-reset-8")?.value || 0),
+    },
     palmon_res_camp: parseInt($("palmon-camp").value),
     palmon_res_boxes: Object.fromEntries(PALMON_RESOURCE_ORDER.map((rk) => [rk, Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`pbox-${rk}-${t}`).value || 0)]))])),
     // 🥚 경험치 (팰몬 경험치) 및 EXP 상자 (보유자원/가속 계산하기 탭)
@@ -2177,6 +2384,16 @@ function applySettingsPayload(p) {
     const c = parseInt(p.essence_evo_reset_filter.count || 0);
     if (s && RESET_IDS[s]) $(RESET_IDS[s]).value = c;
   }
+
+  // 메가 진화석 + 초기화 (진화 5~8단계 = 메가) 복원
+  if ($("mega-evo-total")) $("mega-evo-total").value = parseInt(p.essence_mega_evo_total || 0);
+  const MEGA_RESET_IDS = { "진화 5단계": "evo-reset-5", "진화 6단계": "evo-reset-6", "진화 7단계": "evo-reset-7", "진화 8단계": "evo-reset-8" };
+  if (p.essence_mega_evo_resets) {
+    for (const stage in MEGA_RESET_IDS) {
+      const el = $(MEGA_RESET_IDS[stage]);
+      if (el) el.value = parseInt(p.essence_mega_evo_resets[stage] || 0);
+    }
+  }
   if (p.palmon_res_camp != null) $("palmon-camp").value = p.palmon_res_camp;
   for (const rk of PALMON_RESOURCE_ORDER) for (const t of BOX_TIERS) {
     const v = p.palmon_res_boxes?.[rk]?.[t];
@@ -2196,6 +2413,7 @@ function applySettingsPayload(p) {
   updateEssence();
   updatePalmon();
   buildSkillExpTab();
+  buildEnergyTab();
   buildFruitBoxTab();
   buildMysteryBoxTab();
   buildEagleBoxTab();
@@ -3304,7 +3522,10 @@ async function bootstrap() {
     // 원하는 성급/진화 필터 — 결과 카드까지 함께 갱신
     $("bead-target")?.addEventListener("change", () => updateBead());
     $("evo-target")?.addEventListener("change", () => updateEssence());
-    ["promo-total","evo-total","evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4"].forEach((id) => $(id).addEventListener("input", updateEssence));
+    ["promo-total","evo-total","mega-evo-total",
+     "evo-reset-1","evo-reset-2","evo-reset-3","evo-reset-4",
+     "evo-reset-5","evo-reset-6","evo-reset-7","evo-reset-8"
+    ].forEach((id) => $(id)?.addEventListener("input", updateEssence));
     $("palmon-camp").addEventListener("change", updatePalmon);
     $("palmon-cmp-camp")?.addEventListener("change", updatePalmon);
     PALMON_RESOURCE_ORDER.forEach((rk) => BOX_TIERS.forEach((t) => $(`pbox-${rk}-${t}`).addEventListener("input", updatePalmon)));
@@ -3343,6 +3564,7 @@ async function bootstrap() {
     updateEssence();
     updatePalmon();
     buildSkillExpTab();
+    buildEnergyTab();
     buildFruitBoxTab();
     buildMysteryBoxTab();
     buildEagleBoxTab();
