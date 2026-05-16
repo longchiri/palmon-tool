@@ -1187,7 +1187,8 @@ function updateBead() {
     : "";
   $("bead-result").innerHTML = `
     <div class="result-card strong" style="border-color:${targetColor};">
-      <div class="card-title" style="color:${targetColor};text-align:center;">◆ 완성 가능 무기 (${beadTarget} 기준)</div>
+      <div class="card-title" style="color:${targetColor};text-align:center;">◆ 완성 가능 무기</div>
+      <div style="text-align:center;"><span class="target-badge">🎯 ${beadTarget} 기준</span></div>
       ${beadBigDisplay}
       <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">보유 구슬</td><td class="value">${fmt(owned)}</td></tr>
@@ -1501,7 +1502,8 @@ function updateEssence() {
 
     evoCard = `
       <div class="result-card strong" style="border-color:${color};">
-        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬 (${evoTarget} 기준)</div>
+        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬</div>
+        <div style="text-align:center;"><span class="target-badge">🎯 ${evoTarget} 기준</span></div>
         ${bigDisplay}
         <div class="tbl-wrap"><table class="tbl">
           <tr><td colspan="2" class="txt-purple" style="padding:4px 4px 2px;font-size:11.5px;font-weight:700;">💜 ${evoEssenceName} (4단계 전제)</td></tr>
@@ -1542,7 +1544,8 @@ function updateEssence() {
       : "";
     evoCard = `
       <div class="result-card strong" style="border-color:${color};">
-        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬 (${evoTarget} 기준)</div>
+        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬</div>
+        <div style="text-align:center;"><span class="target-badge ${isSeason ? '' : 'purple'}">🎯 ${evoTarget} 기준</span></div>
         ${bigDisplay}
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">보유 ${evoEssenceName}</td><td class="value">${fmt(evoOwned)}</td></tr>
@@ -1724,7 +1727,8 @@ function updateSkillExp() {
   if (expSlot) {
     expSlot.innerHTML = `
       <div class="result-card strong" style="border-color:${expColor};">
-        <div class="card-title" style="color:${expColor};text-align:center;">🌟 필요 경험치 (Lv ${expCur} → ${expTgt})</div>
+        <div class="card-title" style="color:${expColor};text-align:center;">🌟 필요 경험치</div>
+        <div style="text-align:center;"><span class="target-badge">🎯 Lv ${expCur} → ${expTgt}</span></div>
         <div class="big-number" style="color:${expColor};">${fmt(expNeeded)}</div>
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">Lv 1 → ${expCur} 누적</td><td class="value">${fmt(expCumulCur)}</td></tr>
@@ -1746,7 +1750,8 @@ function updateSkillExp() {
   if (skSlot) {
     skSlot.innerHTML = `
       <div class="result-card strong" style="border-color:${skColor};">
-        <div class="card-title" style="color:${skColor};text-align:center;">🌰 필요 스킬 열매 (Lv ${skCur} → ${skTgt})</div>
+        <div class="card-title" style="color:${skColor};text-align:center;">🌰 필요 스킬 열매</div>
+        <div style="text-align:center;"><span class="target-badge">🎯 Lv ${skCur} → ${skTgt}</span></div>
         <div class="big-number" style="color:${skColor};">${fmt(skNeeded)}<span class="unit">개</span></div>
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">Lv 1 → ${skCur} 누적</td><td class="value">${fmt(skCumulCur)}</td></tr>
@@ -2348,7 +2353,7 @@ function updateEnergy() {
   slot.innerHTML = `
     <div class="result-card strong" style="border-color:${color};">
       <div class="card-title" style="color:${color};text-align:center;">◆ 필요 에너지 구슬</div>
-      <p class="txt-dim" style="font-size:12.5px;text-align:center;margin:4px 0 6px;">${curLabel} → ${tgtLabel}</p>
+      <div style="text-align:center;"><span class="target-badge ${enough ? 'green' : 'red'}">🎯 ${curLabel} → ${tgtLabel}</span></div>
       ${bigDisplay}
       <div class="tbl-wrap"><table class="tbl">
         <tr><td class="label">필요 합계</td><td class="value amber"><b>${fmt(needed)}</b></td></tr>
