@@ -1910,28 +1910,6 @@ function updateEnergy() {
     }
   }
 
-  // 그룹별 합산 (현재→목표 구간 내)
-  const groupSums = {};
-  if (tgtIdx > curIdx) {
-    for (let i = curIdx + 1; i <= tgtIdx && i < ENERGY_STAGES.length; i++) {
-      const g = ENERGY_STAGES[i].group;
-      groupSums[g] = (groupSums[g] || 0) + ENERGY_STAGES[i].cost;
-    }
-  }
-  const groupLabels = {
-    evo1: "진화 1단계", evo2: "진화 2단계", evo3: "진화 3단계", evo4: "진화 4단계",
-    mega5: "메가 진화 1단계", mega6: "메가 진화 2단계", mega7: "메가 진화 3단계", mega8: "메가 진화 4단계",
-    skill: "메가 스킬해금",
-  };
-  const groupOrder = ["evo1","evo2","evo3","evo4","mega5","mega6","mega7","mega8","skill"];
-  let groupRowsHtml = "";
-  for (const g of groupOrder) {
-    if (groupSums[g]) {
-      const colorCls = g.startsWith("evo") ? "txt-purple" : (g === "skill" ? "tier-ur" : "tier-ur");
-      groupRowsHtml += `<tr><td class="label ${colorCls}">${groupLabels[g]}</td><td class="value ${colorCls}">${fmt(groupSums[g])}</td></tr>`;
-    }
-  }
-
   // 결과 카드
   const slot = $("energy-result-slot");
   if (!slot) return;
@@ -1975,7 +1953,6 @@ function updateEnergy() {
         <tr><td class="label">보유</td><td class="value">${fmt(owned)}</td></tr>
         ${shortageRow}
         ${surplusRow}
-        ${groupRowsHtml ? `<tr><td colspan="2" style="padding-top:10px;border-top:1px dashed var(--border);"><b style="color:var(--text-dim);font-size:12px;">단계별 분해</b></td></tr>${groupRowsHtml}` : ""}
       </table></div>
     </div>`;
 }
