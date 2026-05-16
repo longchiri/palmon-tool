@@ -3797,6 +3797,11 @@ async function bootstrap() {
       activateTab("t-result");
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
+    // 📦 보유자원/가속 계산기로 바로 이동 (목표캠프계산기 탭에서 호출)
+    $("goto-inventory-btn")?.addEventListener("click", () => {
+      activateTab("t-inventory");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
     // 로고 클릭 시 사용법 탭으로 이동
     $("logo-link")?.addEventListener("click", () => activateTab("t-help"));
 

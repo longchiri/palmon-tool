@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515ac" />
+  <link rel="stylesheet" href="style.css?v=20260515ad" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -1347,11 +1347,16 @@
       </div>
 
       <div class="group" style="background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.4);">
-        <button class="btn btn-primary" id="btn-import-inv" style="width:100%;font-size:14px;">
-          📥 보유자원/가속 계산하기에서 데이터 불러오기
-        </button>
-        <p class="hint" style="margin-top:6px;text-align:center;">
-          → 보유자원/가속 계산하기 탭에 입력한 값을 여기로 한 번에 가져옵니다.
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="btn btn-primary" id="btn-import-inv" style="width:100%;font-size:14px;">
+            📥 보유자원/가속 데이터 불러오기
+          </button>
+          <button type="button" class="btn" id="goto-inventory-btn" style="width:100%;font-size:14px;border:1px solid var(--amber);color:var(--amber);">
+            📦 보유자원/가속 계산기로 이동
+          </button>
+        </div>
+        <p class="hint" style="margin-top:8px;text-align:center;">
+          ← 보유자원 탭에서 입력한 값을 <b>여기로 가져오기</b> &nbsp;·&nbsp; 보유자원 탭으로 <b>바로 이동해서 적기</b> →
         </p>
       </div>
 
@@ -1483,6 +1488,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515ac"></script>
+  <script src="app.js?v=20260515ad"></script>
 </body>
 </html>
