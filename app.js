@@ -1271,23 +1271,25 @@ function applyPalmonModeToDOM() {
   }
 
   // 드롭다운 처리:
-  //  - 기존 + 메가 미지원: 5~8단계 hide (CSS)
-  //  - 시즌: 5~8단계 disabled (선택 불가) + optgroup 라벨 "(미출시)"
-  //  - 둘 다 메가가 비활성이면 현재 선택값 5~8단계면 4단계로 리셋
+  //  - 시즌: 5~8단계 disabled + optgroup 라벨 "(미출시)"
+  //  - 기존 + 메가 미지원: 5~8단계 disabled + optgroup 라벨 "(미지원)"
+  //  - 메가가 비활성이면 현재 선택값 5~8단계면 4단계로 자동 리셋
   const sel = document.getElementById("evo-target");
   const megaOpt = document.getElementById("mega-optgroup");
   const megaInactive = isSeason || isRegularNoMega;
   if (megaOpt) {
-    megaOpt.label = isSeason ? "── 메가진화 (미출시) ──" : "── 메가진화 ──";
+    megaOpt.label = isSeason ? "── 메가진화 (미출시) ──"
+                  : isRegularNoMega ? "── 메가진화 (미지원) ──"
+                  : "── 메가진화 ──";
     Array.from(megaOpt.querySelectorAll("option")).forEach((opt) => {
-      opt.disabled = isSeason;  // 시즌은 비활성, 기존+미지원은 CSS로 숨김
+      opt.disabled = megaInactive;
     });
   }
   if (sel && megaInactive && ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(sel.value)) {
     sel.value = "진화 4단계";
   }
 
-  // 메가 입력칸 비활성화 (시즌 모드)
+  // 메가 입력칸 비활성화 (시즌 모드만 — 기존+미지원은 카드 자체가 숨겨짐)
   const megaInputIds = ["mega-evo-total", "evo-reset-5", "evo-reset-6", "evo-reset-7", "evo-reset-8"];
   megaInputIds.forEach((id) => {
     const inp = document.getElementById(id);

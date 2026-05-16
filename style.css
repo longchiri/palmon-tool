@@ -555,11 +555,12 @@ body { overflow-x: hidden; }
   cursor: not-allowed;
 }
 
-/* 기존 팰몬이지만 메가진화 미지원 모드: 메가 관련 완전 숨김 (자원 카드 1열로) */
+/* 기존 팰몬이지만 메가진화 미지원 모드: 메가 자원 카드/초기화 섹션은 숨김, 드롭다운은 비활성화로 표시 */
 #evo-card.no-mega #mega-essence-col,
-#evo-card.no-mega #mega-optgroup,
 #evo-card.no-mega #mega-reset-section { display: none !important; }
 #evo-card.no-mega #resource-section { grid-template-columns: 1fr; max-width: 60%; margin-left: auto; margin-right: auto; }
+/* 드롭다운에서 disabled 옵션을 회색으로 (브라우저 기본 스타일이지만 일부 환경에서 더 명확하게) */
+#evo-target option:disabled { color: #555 !important; background: #1a1f2a !important; }
 
 /* 진화 정수 + 메가 진화석 — 2열 나란히 배치 */
 .dual-resource {
