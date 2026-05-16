@@ -672,6 +672,7 @@ body { overflow-x: hidden; }
 #t-essence .grid-3,
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
+#t-supply .grid-3,
 #t-mysterybox .grid-3,
 #t-eaglebox .grid-3 {
   align-items: stretch;
@@ -682,6 +683,7 @@ body { overflow-x: hidden; }
 #t-essence .grid-3 > *,
 #t-skillexp .grid-3 > *,
 #t-fruitbox .grid-3 > *,
+#t-supply .grid-3 > *,
 #t-mysterybox .grid-3 > *,
 #t-eaglebox .grid-3 > * {
   margin-bottom: 0;             /* 그리드 안에서는 margin 제거 (행 높이 계산 정확히) */
@@ -696,6 +698,7 @@ body { overflow-x: hidden; }
 #skill-result-slot,
 #energy-result-slot,
 #fruitbox-result-slot,
+#supply-result-slot,
 #mysterybox-result-slot,
 #eaglebox-result-slot {
   display: flex;
@@ -708,6 +711,7 @@ body { overflow-x: hidden; }
 #skill-result-slot > .result-card,
 #energy-result-slot > .result-card,
 #fruitbox-result-slot > .result-card,
+#supply-result-slot > .result-card,
 #mysterybox-result-slot > .result-card,
 #eaglebox-result-slot > .result-card {
   flex: 1 1 auto;
@@ -722,6 +726,7 @@ body { overflow-x: hidden; }
 #t-essence .grid-3 > .group:last-child,
 #t-skillexp .grid-3 > .group:last-child,
 #t-fruitbox .grid-3 > .group:last-child,
+#t-supply .grid-3 > .group:last-child,
 #t-mysterybox .grid-3 > .group:last-child,
 #t-eaglebox .grid-3 > .group:last-child {
   display: flex;
@@ -733,6 +738,7 @@ body { overflow-x: hidden; }
 #t-essence .grid-3,
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
+#t-supply .grid-3,
 #t-mysterybox .grid-3,
 #t-eaglebox .grid-3 {
   row-gap: 28px;
@@ -742,6 +748,7 @@ body { overflow-x: hidden; }
 #t-essence > .grid-3:not(:last-child),
 #t-skillexp > .grid-3:not(:last-child),
 #t-fruitbox > .grid-3:not(:last-child),
+#t-supply > .grid-3:not(:last-child),
 #t-mysterybox > .grid-3:not(:last-child),
 #t-eaglebox > .grid-3:not(:last-child) {
   margin-bottom: 28px;

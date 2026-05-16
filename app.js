@@ -1665,6 +1665,125 @@ function renderMysteryBoxResult(n, rowCounts) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// 🪖 개선장군 보급 시뮬레이터
+// ════════════════════════════════════════════════════════════════
+// 가중치 base = 10000 (각 확률 × 100), 합계 10001 (반올림 오차 0.01%)
+const SUPPLY_DROPS = [
+  { label: "🟡 UR 팰몬 만능 증표",     qty: 1,     weight: 100,  pct: 1.00,  color: "var(--amber)" },
+  { label: "🥚 팰몬 알",                qty: 10,    weight: 10,   pct: 0.10 },
+  { label: "🥚 팰몬 알",                qty: 1,     weight: 150,  pct: 1.50 },
+  { label: "💎 다이아 (10,000)",        qty: 10000, weight: 1,    pct: 0.01 },
+  { label: "💎 다이아 (500)",           qty: 500,   weight: 10,   pct: 0.10 },
+  { label: "💎 다이아 (50)",            qty: 50,    weight: 250,  pct: 2.50 },
+  { label: "💎 다이아 (10)",            qty: 10,    weight: 1000, pct: 10.00 },
+  { label: "🎖️ 개선 훈장 (1,000)",      qty: 1000,  weight: 8,    pct: 0.08 },
+  { label: "🎖️ 개선 훈장 (200)",        qty: 200,   weight: 10,   pct: 0.10 },
+  { label: "🎖️ 개선 훈장 (10)",         qty: 10,    weight: 500,  pct: 5.00 },
+  { label: "🗿 화려한 조각상 보물상자", qty: 1,     weight: 5,    pct: 0.05 },
+  { label: "💠 강화 결정(소)",          qty: 200,   weight: 500,  pct: 5.00 },
+  { label: "⚡ 5분 일반 가속",          qty: 5,     weight: 100,  pct: 1.00 },
+  { label: "🏗️ 5분 건설 가속",         qty: 5,     weight: 100,  pct: 1.00 },
+  { label: "🩹 5분 의료 가속",          qty: 5,     weight: 100,  pct: 1.00 },
+  { label: "🔬 5분 연구 가속",          qty: 5,     weight: 100,  pct: 1.00 },
+  { label: "⚔️ 5분 훈련 가속",         qty: 5,     weight: 100,  pct: 1.00 },
+  { label: "🪵 목판 레벨 보물상자",     qty: 1,     weight: 2319, pct: 23.19 },
+  { label: "⚙️ 강철 레벨 보물상자",     qty: 1,     weight: 2319, pct: 23.19 },
+  { label: "🪙 골드 레벨 보물상자",     qty: 1,     weight: 2319, pct: 23.19 },
+];
+const SUPPLY_TOTAL_WEIGHT = SUPPLY_DROPS.reduce((s, d) => s + d.weight, 0);
+
+function buildSupplyTab() {
+  if (!$("supply-count")) return;
+  renderSupplyIdle();
+
+  $("supply-roll").addEventListener("click", () => {
+    const n = Math.max(0, parseInt($("supply-count").value || 0));
+    if (n <= 0) { renderSupplyIdle(); return; }
+    const counts = rollSupplyBoxes(n);
+    renderSupplyResult(n, counts);
+  });
+
+  if ($("supply-prob-toggle")) {
+    $("supply-prob-toggle").addEventListener("click", () => {
+      const tbl = $("supply-prob-table");
+      const btn = $("supply-prob-toggle");
+      if (!tbl) return;
+      const isHidden = tbl.style.display === "none";
+      tbl.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "📊 확률표 숨기기" : "📊 확률표 보기";
+    });
+  }
+}
+
+function rollSupplyBoxes(n) {
+  const counts = SUPPLY_DROPS.map(() => 0);
+  for (let i = 0; i < n; i++) {
+    let r = Math.floor(Math.random() * SUPPLY_TOTAL_WEIGHT);
+    for (let j = 0; j < SUPPLY_DROPS.length; j++) {
+      r -= SUPPLY_DROPS[j].weight;
+      if (r < 0) { counts[j]++; break; }
+    }
+  }
+  return counts;
+}
+
+function renderSupplyIdle() {
+  const slot = $("supply-result-slot");
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="result-card" style="text-align:center;">
+      <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+        <p class="txt-dim" style="margin:0;font-size:13.5px;line-height:1.9;">
+          🪖 보유 수량을 입력하고<br>
+          ✅ <b>확인하기</b> 버튼을 눌러주세요.
+        </p>
+      </div>
+    </div>`;
+}
+
+function renderSupplyResult(n, rowCounts) {
+  const slot = $("supply-result-slot");
+  if (!slot) return;
+
+  const got = [];
+  rowCounts.forEach((c, i) => {
+    if (c > 0) got.push({ ...SUPPLY_DROPS[i], count: c, total: c * SUPPLY_DROPS[i].qty });
+  });
+  got.sort((a, b) => b.count - a.count);
+
+  let rows = "";
+  if (got.length === 0) {
+    rows = `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:18px 0;">아무 것도 못 받았습니다 🥲</td></tr>`;
+  } else {
+    for (const g of got) {
+      const c = g.color || "var(--text)";
+      rows += `<tr>
+        <td><b style="color:${c};">${g.label}</b></td>
+        <td class="value">${fmt(g.count)}회</td>
+        <td class="value amber"><b>${fmt(g.total)}개</b></td>
+      </tr>`;
+    }
+  }
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:var(--amber);">
+      <div class="card-title" style="color:var(--amber);text-align:center;">◆ 시뮬레이션 결과 (${fmt(n)}상자 개봉)</div>
+      <div class="tbl-wrap" style="margin-top:8px;"><table class="tbl">
+        <thead><tr>
+          <th style="text-align:left;">아이템</th>
+          <th>받은 횟수</th>
+          <th>총 갯수</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table></div>
+      <p style="margin:14px 0 0;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--red);text-align:left;">
+        ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+      </p>
+    </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════
 // 🦅 이글아이 보물상자 시뮬레이터
 // ════════════════════════════════════════════════════════════════
 // 가중치 base = 10000 (3.35% → 335, 2.79% → 279, 41.9% → 4190)
@@ -2140,6 +2259,7 @@ const TAB_GROUPS = {
     label: "상자시뮬레이터",
     tabs: [
       { id: "t-fruitbox",   icon: "🌰", label: "열매상자" },
+      { id: "t-supply",     icon: "🪖", label: "개선장군 보급" },
       { id: "t-mysterybox", icon: "🎁", label: "미스테리박스" },
       { id: "t-eaglebox",   icon: "🦅", label: "이글아이 보물상자" },
     ],
@@ -2392,6 +2512,7 @@ function applySettingsPayload(p) {
   buildSkillExpTab();
   buildEnergyTab();
   buildFruitBoxTab();
+  buildSupplyTab();
   buildMysteryBoxTab();
   buildEagleBoxTab();
 }
@@ -3543,6 +3664,7 @@ async function bootstrap() {
     buildSkillExpTab();
     buildEnergyTab();
     buildFruitBoxTab();
+    buildSupplyTab();
     buildMysteryBoxTab();
     buildEagleBoxTab();
     updateInventorySummary();
