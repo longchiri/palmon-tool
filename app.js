@@ -1402,47 +1402,159 @@ function updateEssence() {
     ${promoRemainRow}`;
   const promoCard = bigCard("승급 가능 팰몬", promoPeople, promoColor, promoRows, promoShortage);
 
-  // 목표한 진화 (원하는 진화 드롭다운 기반) — 일반 vs 메가 자동 분기
+  // 목표한 진화 (원하는 진화 드롭다운 기반) — 일반(1~4) vs 메가(5~8) 분기
   const evoTarget = $("evo-target")?.value || "진화 4단계";
   const isMega = isMegaEvoStage(evoTarget);
-  const targetCost = getEvoStageCost(evoTarget);
-  const totalResource = isMega ? megaTotal : evoTotal;
-  const ownedResource = isMega ? megaOwned : evoOwned;
-  const resetSum = isMega ? megaResetSum : evoResetSum;
-  const resetCounts = isMega ? resetCountsMega : resetCountsRegular;
-  const refundTable = isMega ? MEGA_EVO_RESET_REFUND : EVO_RESET_REFUND;
-  // 시즌 팰몬일 때 1~4단계 자원 이름을 "오로라의 정수"로 변경
   const isSeason = __palmonType === "season";
-  const resourceName = isMega ? "메가 진화석" : (isSeason ? "오로라의 정수" : "진화 정수");
+  const evoEssenceName = isSeason ? "오로라의 정수" : "진화 정수";
 
-  // 초기화 환급 행
-  let resetRows = "";
-  for (const stage of Object.keys(refundTable)) {
-    const cnt = resetCounts[stage];
-    const refund = refundTable[stage];
-    if (cnt > 0 && refund > 0) {
-      const sub = cnt * refund;
-      resetRows += `<tr><td class="label txt-purple">초기화 ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
+  // 남은 자원으로 가능한 다른 단계 인원 breakdown (1~4단계 기준)
+  function makeBreakdown(remainEvoEssence, skipStage) {
+    if (remainEvoEssence <= 0) return "";
+    const parts = [];
+    for (const stage of ["진화 1단계","진화 2단계","진화 3단계","진화 4단계"]) {
+      if (stage === skipStage) continue;
+      const cost = EVO_RESET_REFUND[stage];
+      if (cost > 0) {
+        const possible = Math.floor(remainEvoEssence / cost);
+        if (possible > 0) parts.push(`${stage} <b>${fmt(possible)}명</b>`);
+      }
     }
-  }
-  if (resetSum > 0) {
-    resetRows += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(resetSum)}</b></td></tr>`;
+    if (parts.length === 0) return "";
+    return `<tr><td colspan="2" style="padding:8px 4px 2px;border-top:1px dashed var(--border);"><div class="txt-dim" style="font-size:11.5px;line-height:1.6;">💡 남은 ${evoEssenceName} <b>${fmt(remainEvoEssence)}</b>로 추가 가능: ${parts.join(" / ")}</div></td></tr>`;
   }
 
-  const evoTargetCount = targetCost > 0 ? Math.floor(totalResource / targetCost) : 0;
-  const evoTargetRemain = totalResource - evoTargetCount * targetCost;
-  const evoColor = evoTargetCount > 0 ? "var(--green)" : "var(--red)";
-  const evoShortage = evoTargetCount === 0 ? Math.max(0, targetCost - totalResource) : 0;
-  const evoRemainRow = evoTargetCount > 0
-    ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(evoTargetRemain)}</td></tr>`
-    : "";
-  const evoRows = `
-    <tr><td class="label">보유 ${resourceName}</td><td class="value">${fmt(ownedResource)}</td></tr>
-    ${resetRows}
-    <tr><td class="label">합계</td><td class="value amber"><b>${fmt(totalResource)}</b></td></tr>
-    <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(targetCost)}</td></tr>
-    ${evoRemainRow}`;
-  const evoCard = bigCard(`진화 가능 팰몬 (${evoTarget} 기준)`, evoTargetCount, evoColor, evoRows, evoShortage);
+  // 초기화 환급 행 - 일반(1~4) 진화 정수
+  function makeEvoResetRows() {
+    let r = "";
+    for (const stage of ["진화 1단계","진화 2단계","진화 3단계","진화 4단계"]) {
+      const cnt = resetCountsRegular[stage];
+      const refund = EVO_RESET_REFUND[stage];
+      if (cnt > 0 && refund > 0) {
+        const sub = cnt * refund;
+        r += `<tr><td class="label txt-purple">↻ ${stage}</td><td class="value txt-purple">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
+      }
+    }
+    if (evoResetSum > 0) {
+      r += `<tr><td class="label txt-purple">초기화 환급 합계</td><td class="value txt-purple"><b>+${fmt(evoResetSum)}</b></td></tr>`;
+    }
+    return r;
+  }
+  // 초기화 환급 행 - 메가(5~8) 메가 진화석
+  function makeMegaResetRows() {
+    let r = "";
+    for (const stage of ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"]) {
+      const cnt = resetCountsMega[stage];
+      const refund = MEGA_EVO_RESET_REFUND[stage];
+      if (cnt > 0 && refund > 0) {
+        const sub = cnt * refund;
+        r += `<tr><td class="label txt-amber">↻ ${stage}</td><td class="value txt-amber">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
+      }
+    }
+    if (megaResetSum > 0) {
+      r += `<tr><td class="label txt-amber">초기화 환급 합계</td><td class="value txt-amber"><b>+${fmt(megaResetSum)}</b></td></tr>`;
+    }
+    return r;
+  }
+
+  let evoCard;
+  if (isMega) {
+    // ━━ 메가 진화 (5~8단계) — 진화 정수(4단계 전제, 300) + 메가 진화석(target cost) 동시 필요 ━━
+    const megaCost = MEGA_EVO_RESET_REFUND[evoTarget] || 0;
+    const evoPrereq = EVO_PER_PALMON;  // 300 = 4단계 1명 = 메가 진입 전제
+    const byEvo  = evoPrereq > 0 ? Math.floor(evoTotal / evoPrereq) : 0;
+    const byMega = megaCost > 0 ? Math.floor(megaTotal / megaCost) : 0;
+    const count = Math.min(byEvo, byMega);
+    const usedEvo = count * evoPrereq;
+    const usedMega = count * megaCost;
+    const remainEvo = evoTotal - usedEvo;
+    const remainMega = megaTotal - usedMega;
+    const color = count > 0 ? "var(--green)" : "var(--red)";
+
+    // 부족 안내 / 추가 가능 안내
+    let limitRow = "";
+    if (count === 0) {
+      const evoLack  = Math.max(0, evoPrereq - evoTotal);
+      const megaLack = Math.max(0, megaCost - megaTotal);
+      const pieces = [];
+      if (evoLack > 0)  pieces.push(`💜 진화 정수 <b>${fmt(evoLack)}개</b> 부족`);
+      if (megaLack > 0) pieces.push(`💎 메가 진화석 <b>${fmt(megaLack)}개</b> 부족`);
+      if (pieces.length) limitRow = `<tr><td colspan="2" style="text-align:center;color:var(--red);padding:8px 0 4px;font-size:13px;border-top:1px dashed var(--border);">⚠️ ${pieces.join(" · ")}</td></tr>`;
+    } else if (byEvo < byMega) {
+      const extra = (byMega - count) * evoPrereq - remainEvo;
+      if (extra > 0) limitRow = `<tr><td colspan="2" style="text-align:center;color:var(--amber);padding:6px 0 4px;font-size:12px;border-top:1px dashed var(--border);">📊 진화 정수 <b>${fmt(extra)}개</b> 더 모으면 +${byMega - count}명 완성 가능</td></tr>`;
+    } else if (byMega < byEvo) {
+      const extra = (byEvo - count) * megaCost - remainMega;
+      if (extra > 0) limitRow = `<tr><td colspan="2" style="text-align:center;color:var(--amber);padding:6px 0 4px;font-size:12px;border-top:1px dashed var(--border);">📊 메가 진화석 <b>${fmt(extra)}개</b> 더 모으면 +${byEvo - count}명 완성 가능</td></tr>`;
+    }
+
+    const bigDisplay = count > 0
+      ? `<div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>`
+      : `<div class="big-number" style="color:${color};font-size:30px;">부족</div>`;
+
+    const evoUsedRow = count > 0
+      ? `<tr><td class="label">사용 / 남음</td><td class="value">-${fmt(usedEvo)} / <span class="amber">${fmt(remainEvo)}</span></td></tr>`
+      : "";
+    const megaUsedRow = count > 0
+      ? `<tr><td class="label">사용 / 남음</td><td class="value">-${fmt(usedMega)} / <span class="amber">${fmt(remainMega)}</span></td></tr>`
+      : "";
+
+    evoCard = `
+      <div class="result-card strong" style="border-color:${color};">
+        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬 (${evoTarget} 기준)</div>
+        ${bigDisplay}
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><td colspan="2" class="txt-purple" style="padding:4px 4px 2px;font-size:11.5px;font-weight:700;">💜 ${evoEssenceName} (4단계 전제)</td></tr>
+          <tr><td class="label">보유</td><td class="value">${fmt(evoOwned)}</td></tr>
+          ${makeEvoResetRows()}
+          <tr><td class="label">합계</td><td class="value txt-purple"><b>${fmt(evoTotal)}</b></td></tr>
+          <tr><td class="label">4단계 1명 필요</td><td class="value">${fmt(evoPrereq)}</td></tr>
+          <tr><td class="label">가능 인원</td><td class="value txt-purple"><b>${fmt(byEvo)}명</b></td></tr>
+          ${evoUsedRow}
+          ${count > 0 ? makeBreakdown(remainEvo, null) : ""}
+
+          <tr><td colspan="2" class="txt-amber" style="padding:10px 4px 2px;font-size:11.5px;font-weight:700;border-top:1px dashed var(--border);">💎 메가 진화석 (${evoTarget})</td></tr>
+          <tr><td class="label">보유</td><td class="value">${fmt(megaOwned)}</td></tr>
+          ${makeMegaResetRows()}
+          <tr><td class="label">합계</td><td class="value txt-amber"><b>${fmt(megaTotal)}</b></td></tr>
+          <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(megaCost)}</td></tr>
+          <tr><td class="label">가능 인원</td><td class="value txt-amber"><b>${fmt(byMega)}명</b></td></tr>
+          ${megaUsedRow}
+
+          ${limitRow}
+        </table></div>
+      </div>`;
+  } else {
+    // ━━ 일반 진화 (1~4단계) — 진화 정수만 ━━
+    const targetCost = EVO_RESET_REFUND[evoTarget] || 0;
+    const count = targetCost > 0 ? Math.floor(evoTotal / targetCost) : 0;
+    const remain = evoTotal - count * targetCost;
+    const color = count > 0 ? "var(--green)" : "var(--red)";
+    const shortage = count === 0 ? Math.max(0, targetCost - evoTotal) : 0;
+    const bigDisplay = count > 0
+      ? `<div class="big-number" style="color:${color};">${fmt(count)}<span class="unit">명</span></div>`
+      : `<div class="big-number" style="color:${color};font-size:42px;">부족 <span class="unit" style="color:${color};">${fmt(shortage)}개</span></div>`;
+    const remainRow = count > 0
+      ? `<tr><td class="label">완성 후 남은 양</td><td class="value amber">${fmt(remain)}</td></tr>`
+      : "";
+    const shortageRow = count === 0
+      ? `<tr><td class="label" style="color:var(--red);font-weight:700;">부족 갯수</td><td class="value red"><b>${fmt(shortage)}</b></td></tr>`
+      : "";
+    evoCard = `
+      <div class="result-card strong" style="border-color:${color};">
+        <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬 (${evoTarget} 기준)</div>
+        ${bigDisplay}
+        <div class="tbl-wrap"><table class="tbl">
+          <tr><td class="label">보유 ${evoEssenceName}</td><td class="value">${fmt(evoOwned)}</td></tr>
+          ${makeEvoResetRows()}
+          <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
+          <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(targetCost)}</td></tr>
+          ${remainRow}
+          ${shortageRow}
+          ${count > 0 ? makeBreakdown(remain, evoTarget) : ""}
+        </table></div>
+      </div>`;
+  }
 
   const fullColor = fullSet > 0 ? "var(--green)" : "var(--red)";
   const fullCard = `
@@ -1727,7 +1839,7 @@ const MYSTERYBOX_DROPS = [
   { label: "✈️ 비행선 갱신권",         qty: 1,    weight: 200,  pct: 2.00  },
   { label: "🥚 팰몬 알",                qty: 1,    weight: 25,   pct: 0.25  },
   { label: "🟡 UR 팰몬 만능 증표",     qty: 1,    weight: 10,   pct: 0.10, color: "var(--amber)" },
-  { label: "💎 다이아 (5,000)",         qty: 5000, weight: 1,    pct: 0.01  },
+  { label: "💎 다이아 (5,000)",         qty: 5000, weight: 1,    pct: 0.01, color: "var(--purple)" },
   { label: "💎 다이아 (50)",            qty: 50,   weight: 10,   pct: 0.10  },
   { label: "💎 다이아 (10)",            qty: 10,   weight: 100,  pct: 1.00  },
   { label: "🗿 화려한 조각상 보물상자", qty: 1,    weight: 10,   pct: 0.10  },
@@ -1843,8 +1955,8 @@ const SUPPLY_DROPS = [
   { label: "🟡 UR 팰몬 만능 증표",     qty: 1,     weight: 100,  pct: 1.00,  color: "var(--amber)" },
   { label: "🥚 팰몬 알",                qty: 10,    weight: 10,   pct: 0.10 },
   { label: "🥚 팰몬 알",                qty: 1,     weight: 150,  pct: 1.50 },
-  { label: "💎 다이아 (10,000)",        qty: 10000, weight: 1,    pct: 0.01 },
-  { label: "💎 다이아 (500)",           qty: 500,   weight: 10,   pct: 0.10 },
+  { label: "💎 다이아 (10,000)",        qty: 10000, weight: 1,    pct: 0.01, color: "var(--purple)" },
+  { label: "💎 다이아 (500)",           qty: 500,   weight: 10,   pct: 0.10, color: "var(--purple)" },
   { label: "💎 다이아 (50)",            qty: 50,    weight: 250,  pct: 2.50 },
   { label: "💎 다이아 (10)",            qty: 10,    weight: 1000, pct: 10.00 },
   { label: "🎖️ 개선 훈장 (1,000)",      qty: 1000,  weight: 8,    pct: 0.08 },

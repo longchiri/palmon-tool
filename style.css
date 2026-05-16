@@ -439,6 +439,11 @@ body { overflow-x: hidden; }
 }
 @media (max-width: 639px) { .bead-img { width: 80px; } }
 
+/* 모바일에서는 "기준값" 카드 전체 숨김 (공간 절약) */
+@media (max-width: 639px) {
+  .group:has(> .ref-card-title) { display: none !important; }
+}
+
 /* 한글 자릿수 표기 — 큰 숫자 옆에 "(3억)" 식으로 작게 표시 */
 .num-kr {
   font-size: 11.5px;
