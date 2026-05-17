@@ -1226,9 +1226,11 @@ function updateBeadTargetResult(total) {
 
 // ===== 팰몬 진화 — 타입/메가 토글 상태 =====
 // palmonType: 'regular' (기존 팰몬, 진화 정수 + 메가 진화석) | 'season' (시즌 팰몬, 오로라의 정수만)
-// megaSupport: true | false  (기존 팰몬일 때 메가진화 지원 여부)
+// megaSupport: 진화 정수 카드용 메가진화 지원 여부
+// energyMegaSupport: 에너지 구슬 카드용 메가진화 지원 여부 (진화 정수와 독립)
 let __palmonType = "regular";
 let __megaSupport = true;
+let __energyMegaSupport = true;
 
 function applyPalmonModeToDOM() {
   const card = document.getElementById("evo-card");
@@ -1302,17 +1304,18 @@ function applyPalmonModeToDOM() {
     }
   });
 
-  // 메가 지원 토글 라벨 (진화 정수 카드 + 에너지 구슬 카드 양쪽)
-  ["mega-support-toggle", "energy-mega-support-toggle"].forEach((id) => {
-    const btn = document.getElementById(id);
-    if (btn) {
-      btn.classList.toggle("active", __megaSupport);
-      btn.textContent = __megaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
-    }
-  });
-  // 시즌 팰몬일 때 에너지 구슬 토글은 숨김 (진화 정수와 동일 처리)
-  const energySupportRow = document.getElementById("energy-mega-support-row");
-  if (energySupportRow) energySupportRow.style.display = (__palmonType === "season") ? "none" : "";
+  // 메가 지원 토글 라벨 — 진화 정수 카드용
+  const mtBtn = document.getElementById("mega-support-toggle");
+  if (mtBtn) {
+    mtBtn.classList.toggle("active", __megaSupport);
+    mtBtn.textContent = __megaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
+  }
+  // 메가 지원 토글 라벨 — 에너지 구슬 카드용 (독립)
+  const emtBtn = document.getElementById("energy-mega-support-toggle");
+  if (emtBtn) {
+    emtBtn.classList.toggle("active", __energyMegaSupport);
+    emtBtn.textContent = __energyMegaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
+  }
 
   // 에너지 구슬 드롭다운에 메가 비활성 상태 반영
   applyEnergyMegaSupport();
@@ -1323,10 +1326,10 @@ function applyPalmonModeToDOM() {
   });
 }
 
-// 에너지 구슬 드롭다운 옵션 — 메가진화 미지원 모드면 mega5~mega8+skill 비활성
+// 에너지 구슬 드롭다운 옵션 — 자체 메가진화 토글(__energyMegaSupport) 또는 시즌 팰몬일 때 비활성
 function applyEnergyMegaSupport() {
   const isSeason = __palmonType === "season";
-  const megaInactive = (!__megaSupport) || isSeason;
+  const megaInactive = (!__energyMegaSupport) || isSeason;
   const curSel = document.getElementById("energy-current");
   const tgtSel = document.getElementById("energy-target");
   if (!curSel || !tgtSel) return;
@@ -1356,7 +1359,7 @@ function applyEnergyMegaSupport() {
   if (hint) {
     if (isSeason) {
       hint.innerHTML = "🚫 시즌 팰몬 — 진화 5~8단계 (메가진화) 미출시. 출시되면 자동 활성화됩니다.";
-    } else if (!__megaSupport) {
+    } else if (!__energyMegaSupport) {
       hint.innerHTML = "📌 메가진화 미지원 모드 — 진화 1단계~4단계만 계산 가능 (총 22 소단계)";
     } else {
       hint.innerHTML = "예) 진화 1단계 1번 → 메가 스킬해금 = 800,000개 필요 · 각 소단계당 10번 강화";
@@ -1374,24 +1377,33 @@ function setupPalmonModeToggles() {
       updateEssence();
     });
   });
-  // 메가 지원 토글 — 진화 정수 카드 + 에너지 구슬 카드 양쪽 버튼 모두 동일 동작
-  ["mega-support-toggle", "energy-mega-support-toggle"].forEach((id) => {
-    const btn = document.getElementById(id);
-    if (btn) {
-      btn.addEventListener("click", () => {
-        __megaSupport = !__megaSupport;
-        try { localStorage.setItem("palmon_mega_support", String(__megaSupport)); } catch {}
-        applyPalmonModeToDOM();
-        updateEssence();
-      });
-    }
-  });
+  // 메가 지원 토글 — 진화 정수 카드 (1~8단계 진화 정수만 영향)
+  const mt = document.getElementById("mega-support-toggle");
+  if (mt) {
+    mt.addEventListener("click", () => {
+      __megaSupport = !__megaSupport;
+      try { localStorage.setItem("palmon_mega_support", String(__megaSupport)); } catch {}
+      applyPalmonModeToDOM();
+      updateEssence();
+    });
+  }
+  // 메가 지원 토글 — 에너지 구슬 카드 (5~8단계 + 메가스킬해금만 영향, 독립)
+  const emt = document.getElementById("energy-mega-support-toggle");
+  if (emt) {
+    emt.addEventListener("click", () => {
+      __energyMegaSupport = !__energyMegaSupport;
+      try { localStorage.setItem("palmon_energy_mega_support", String(__energyMegaSupport)); } catch {}
+      applyPalmonModeToDOM();
+    });
+  }
   // 저장된 상태 복원
   try {
     const t = localStorage.getItem("palmon_palmon_type");
     const m = localStorage.getItem("palmon_mega_support");
+    const em = localStorage.getItem("palmon_energy_mega_support");
     if (t === "regular" || t === "season") __palmonType = t;
     if (m === "false") __megaSupport = false;
+    if (em === "false") __energyMegaSupport = false;
   } catch {}
   applyPalmonModeToDOM();
 }
