@@ -97,6 +97,8 @@ const ALL_EVO_STAGES = [
 // 5~8단계 = 메가 진화 (메가 진화석 사용)
 const isMegaEvoStage = (s) => ["진화 5단계","진화 6단계","진화 7단계","진화 8단계"].includes(s);
 const getEvoStageCost = (s) => isMegaEvoStage(s) ? (MEGA_EVO_RESET_REFUND[s] || 0) : (EVO_RESET_REFUND[s] || 0);
+// 화면 표시용 라벨 — 진화 5~8단계는 "메가진화 5~8단계" 로 보여줌 (내부 데이터 키는 그대로)
+const displayEvoStage = (s) => isMegaEvoStage(s) ? s.replace("진화 ", "메가진화 ") : s;
 
 // ───────── 라벨 툴팁 (i 버튼으로 표시될 in-game 출처) ─────────
 const TOOLTIPS = {
@@ -1449,7 +1451,7 @@ function updateEssence() {
       const refund = MEGA_EVO_RESET_REFUND[stage];
       if (cnt > 0 && refund > 0) {
         const sub = cnt * refund;
-        r += `<tr><td class="label txt-amber">↻ ${stage}</td><td class="value txt-amber">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
+        r += `<tr><td class="label txt-amber">↻ ${displayEvoStage(stage)}</td><td class="value txt-amber">${fmt(cnt)} × ${refund} = +${fmt(sub)}</td></tr>`;
       }
     }
     if (megaResetSum > 0) {
@@ -1503,7 +1505,7 @@ function updateEssence() {
     evoCard = `
       <div class="result-card strong" style="border-color:${color};">
         <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬</div>
-        <div style="text-align:center;"><span class="target-badge">🎯 ${evoTarget} 기준</span></div>
+        <div style="text-align:center;"><span class="target-badge">🎯 ${displayEvoStage(evoTarget)} 기준</span></div>
         ${bigDisplay}
         <div class="tbl-wrap"><table class="tbl">
           <tr><td colspan="2" class="txt-purple" style="padding:4px 4px 2px;font-size:11.5px;font-weight:700;">💜 ${evoEssenceName} (4단계 전제)</td></tr>
@@ -1515,11 +1517,11 @@ function updateEssence() {
           ${evoUsedRow}
           ${count > 0 ? makeBreakdown(remainEvo, null) : ""}
 
-          <tr><td colspan="2" class="txt-amber" style="padding:10px 4px 2px;font-size:11.5px;font-weight:700;border-top:1px dashed var(--border);">💎 메가 진화석 (${evoTarget})</td></tr>
+          <tr><td colspan="2" class="txt-amber" style="padding:10px 4px 2px;font-size:11.5px;font-weight:700;border-top:1px dashed var(--border);">💎 메가 진화석 (${displayEvoStage(evoTarget)})</td></tr>
           <tr><td class="label">보유</td><td class="value">${fmt(megaOwned)}</td></tr>
           ${makeMegaResetRows()}
           <tr><td class="label">합계</td><td class="value txt-amber"><b>${fmt(megaTotal)}</b></td></tr>
-          <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(megaCost)}</td></tr>
+          <tr><td class="label">${displayEvoStage(evoTarget)} 1명 필요</td><td class="value">${fmt(megaCost)}</td></tr>
           <tr><td class="label">가능 인원</td><td class="value txt-amber"><b>${fmt(byMega)}명</b></td></tr>
           ${megaUsedRow}
 
@@ -1545,13 +1547,13 @@ function updateEssence() {
     evoCard = `
       <div class="result-card strong" style="border-color:${color};">
         <div class="card-title" style="color:${color};text-align:center;">◆ 진화 가능 팰몬</div>
-        <div style="text-align:center;"><span class="target-badge ${isSeason ? '' : 'purple'}">🎯 ${evoTarget} 기준</span></div>
+        <div style="text-align:center;"><span class="target-badge ${isSeason ? '' : 'purple'}">🎯 ${displayEvoStage(evoTarget)} 기준</span></div>
         ${bigDisplay}
         <div class="tbl-wrap"><table class="tbl">
           <tr><td class="label">보유 ${evoEssenceName}</td><td class="value">${fmt(evoOwned)}</td></tr>
           ${makeEvoResetRows()}
           <tr><td class="label">합계</td><td class="value amber"><b>${fmt(evoTotal)}</b></td></tr>
-          <tr><td class="label">${evoTarget} 1명 필요</td><td class="value">${fmt(targetCost)}</td></tr>
+          <tr><td class="label">${displayEvoStage(evoTarget)} 1명 필요</td><td class="value">${fmt(targetCost)}</td></tr>
           ${remainRow}
           ${shortageRow}
           ${count > 0 ? makeBreakdown(remain, evoTarget) : ""}
@@ -2252,29 +2254,29 @@ const ENERGY_STAGES = [
   { id: "evo4-4", group: "evo4", label: "진화 4단계 4번", cost: 38000 },
   { id: "evo4-5", group: "evo4", label: "진화 4단계 5번", cost: 46000 },
   { id: "evo4-6", group: "evo4", label: "진화 4단계 6번", cost: 58000 },
-  // 메가 진화 1단계 (3 sub-steps) — 30,000
-  { id: "mega5-1", group: "mega5", label: "메가 진화 1단계 1번", cost: 9000  },
-  { id: "mega5-2", group: "mega5", label: "메가 진화 1단계 2번", cost: 10000 },
-  { id: "mega5-3", group: "mega5", label: "메가 진화 1단계 3번", cost: 11000 },
-  // 메가 진화 2단계 (5 sub-steps) — 60,000
-  { id: "mega6-1", group: "mega6", label: "메가 진화 2단계 1번", cost: 11000 },
-  { id: "mega6-2", group: "mega6", label: "메가 진화 2단계 2번", cost: 11500 },
-  { id: "mega6-3", group: "mega6", label: "메가 진화 2단계 3번", cost: 12000 },
-  { id: "mega6-4", group: "mega6", label: "메가 진화 2단계 4번", cost: 12500 },
-  { id: "mega6-5", group: "mega6", label: "메가 진화 2단계 5번", cost: 13000 },
-  // 메가 진화 3단계 (6 sub-steps) — 90,000
-  { id: "mega7-1", group: "mega7", label: "메가 진화 3단계 1번", cost: 13000 },
-  { id: "mega7-2", group: "mega7", label: "메가 진화 3단계 2번", cost: 13500 },
-  { id: "mega7-3", group: "mega7", label: "메가 진화 3단계 3번", cost: 14000 },
-  { id: "mega7-4", group: "mega7", label: "메가 진화 3단계 4번", cost: 15000 },
-  { id: "mega7-5", group: "mega7", label: "메가 진화 3단계 5번", cost: 16500 },
-  { id: "mega7-6", group: "mega7", label: "메가 진화 3단계 6번", cost: 18000 },
-  // 메가 진화 4단계 (5 sub-steps) — 162,000
-  { id: "mega8-1", group: "mega8", label: "메가 진화 4단계 1번", cost: 22000 },
-  { id: "mega8-2", group: "mega8", label: "메가 진화 4단계 2번", cost: 26000 },
-  { id: "mega8-3", group: "mega8", label: "메가 진화 4단계 3번", cost: 30000 },
-  { id: "mega8-4", group: "mega8", label: "메가 진화 4단계 4번", cost: 38000 },
-  { id: "mega8-5", group: "mega8", label: "메가 진화 4단계 5번", cost: 46000 },
+  // 메가진화 5단계 (3 sub-steps) — 30,000
+  { id: "mega5-1", group: "mega5", label: "메가진화 5단계 1번", cost: 9000  },
+  { id: "mega5-2", group: "mega5", label: "메가진화 5단계 2번", cost: 10000 },
+  { id: "mega5-3", group: "mega5", label: "메가진화 5단계 3번", cost: 11000 },
+  // 메가진화 6단계 (5 sub-steps) — 60,000
+  { id: "mega6-1", group: "mega6", label: "메가진화 6단계 1번", cost: 11000 },
+  { id: "mega6-2", group: "mega6", label: "메가진화 6단계 2번", cost: 11500 },
+  { id: "mega6-3", group: "mega6", label: "메가진화 6단계 3번", cost: 12000 },
+  { id: "mega6-4", group: "mega6", label: "메가진화 6단계 4번", cost: 12500 },
+  { id: "mega6-5", group: "mega6", label: "메가진화 6단계 5번", cost: 13000 },
+  // 메가진화 7단계 (6 sub-steps) — 90,000
+  { id: "mega7-1", group: "mega7", label: "메가진화 7단계 1번", cost: 13000 },
+  { id: "mega7-2", group: "mega7", label: "메가진화 7단계 2번", cost: 13500 },
+  { id: "mega7-3", group: "mega7", label: "메가진화 7단계 3번", cost: 14000 },
+  { id: "mega7-4", group: "mega7", label: "메가진화 7단계 4번", cost: 15000 },
+  { id: "mega7-5", group: "mega7", label: "메가진화 7단계 5번", cost: 16500 },
+  { id: "mega7-6", group: "mega7", label: "메가진화 7단계 6번", cost: 18000 },
+  // 메가진화 8단계 (5 sub-steps) — 162,000
+  { id: "mega8-1", group: "mega8", label: "메가진화 8단계 1번", cost: 22000 },
+  { id: "mega8-2", group: "mega8", label: "메가진화 8단계 2번", cost: 26000 },
+  { id: "mega8-3", group: "mega8", label: "메가진화 8단계 3번", cost: 30000 },
+  { id: "mega8-4", group: "mega8", label: "메가진화 8단계 4번", cost: 38000 },
+  { id: "mega8-5", group: "mega8", label: "메가진화 8단계 5번", cost: 46000 },
   // 메가 스킬해금 — 58,000
   { id: "skill",   group: "skill", label: "메가 스킬해금", cost: 58000 },
 ];
