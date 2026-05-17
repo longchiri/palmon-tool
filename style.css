@@ -1271,9 +1271,9 @@ input[type="checkbox"] {
   flex-shrink: 0;
 }
 .hits-badge:hover { opacity: 1; transform: translateY(-1px); }
-.hits-badge img { display: block; height: 22px; }
+.hits-badge img { display: block; height: 26px; border-radius: 4px; }
 @media (max-width: 480px) {
-  .hits-badge img { height: 18px; }
+  .hits-badge img { height: 20px; }
 }
 
 /* ── 헤더 우측 서명 ──────────────────────────────── */
