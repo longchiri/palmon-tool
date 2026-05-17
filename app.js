@@ -1302,17 +1302,66 @@ function applyPalmonModeToDOM() {
     }
   });
 
-  // 메가 지원 토글 라벨
-  const mtBtn = document.getElementById("mega-support-toggle");
-  if (mtBtn) {
-    mtBtn.classList.toggle("active", __megaSupport);
-    mtBtn.textContent = __megaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
-  }
+  // 메가 지원 토글 라벨 (진화 정수 카드 + 에너지 구슬 카드 양쪽)
+  ["mega-support-toggle", "energy-mega-support-toggle"].forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.classList.toggle("active", __megaSupport);
+      btn.textContent = __megaSupport ? "메가진화 지원 ✓" : "메가진화 미지원";
+    }
+  });
+  // 시즌 팰몬일 때 에너지 구슬 토글은 숨김 (진화 정수와 동일 처리)
+  const energySupportRow = document.getElementById("energy-mega-support-row");
+  if (energySupportRow) energySupportRow.style.display = (__palmonType === "season") ? "none" : "";
+
+  // 에너지 구슬 드롭다운에 메가 비활성 상태 반영
+  applyEnergyMegaSupport();
 
   // 타입 버튼 active 상태
   document.querySelectorAll(".ptype-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.ptype === __palmonType);
   });
+}
+
+// 에너지 구슬 드롭다운 옵션 — 메가진화 미지원 모드면 mega5~mega8+skill 비활성
+function applyEnergyMegaSupport() {
+  const isSeason = __palmonType === "season";
+  const megaInactive = (!__megaSupport) || isSeason;
+  const curSel = document.getElementById("energy-current");
+  const tgtSel = document.getElementById("energy-target");
+  if (!curSel || !tgtSel) return;
+  const megaGroups = new Set(["mega5","mega6","mega7","mega8","skill"]);
+  const isMegaIdx = (idx) => idx >= 0 && idx < ENERGY_STAGES.length && megaGroups.has(ENERGY_STAGES[idx].group);
+
+  // 옵션 disable 처리
+  [curSel, tgtSel].forEach((sel) => {
+    Array.from(sel.querySelectorAll("option")).forEach((opt) => {
+      const v = parseInt(opt.value);
+      if (Number.isFinite(v) && isMegaIdx(v)) opt.disabled = megaInactive;
+    });
+  });
+
+  // 선택된 값이 비활성 메가 단계면 마지막 evo 단계로 리셋
+  const lastEvoIdx = ENERGY_STAGES.findIndex((_, i, arr) =>
+    i === arr.length - 1 || arr[i + 1].group === "mega5"
+  );
+  if (megaInactive) {
+    if (isMegaIdx(parseInt(curSel.value))) curSel.value = String(lastEvoIdx);
+    if (isMegaIdx(parseInt(tgtSel.value))) tgtSel.value = String(lastEvoIdx);
+    updateEnergy();
+  }
+
+  // 힌트 텍스트
+  const hint = document.getElementById("energy-hint");
+  if (hint) {
+    if (isSeason) {
+      hint.innerHTML = "🚫 시즌 팰몬 — 진화 5~8단계 (메가진화) 미출시. 출시되면 자동 활성화됩니다.";
+    } else if (!__megaSupport) {
+      hint.innerHTML = "📌 메가진화 미지원 모드 — 진화 1단계~4단계만 계산 가능 (총 22 소단계)";
+    } else {
+      hint.innerHTML = "예) 진화 1단계 1번 → 메가 스킬해금 = 800,000개 필요 · 각 소단계당 10번 강화";
+    }
+  }
 }
 
 function setupPalmonModeToggles() {
@@ -1325,16 +1374,18 @@ function setupPalmonModeToggles() {
       updateEssence();
     });
   });
-  // 메가 지원 토글
-  const mt = document.getElementById("mega-support-toggle");
-  if (mt) {
-    mt.addEventListener("click", () => {
-      __megaSupport = !__megaSupport;
-      try { localStorage.setItem("palmon_mega_support", String(__megaSupport)); } catch {}
-      applyPalmonModeToDOM();
-      updateEssence();
-    });
-  }
+  // 메가 지원 토글 — 진화 정수 카드 + 에너지 구슬 카드 양쪽 버튼 모두 동일 동작
+  ["mega-support-toggle", "energy-mega-support-toggle"].forEach((id) => {
+    const btn = document.getElementById(id);
+    if (btn) {
+      btn.addEventListener("click", () => {
+        __megaSupport = !__megaSupport;
+        try { localStorage.setItem("palmon_mega_support", String(__megaSupport)); } catch {}
+        applyPalmonModeToDOM();
+        updateEssence();
+      });
+    }
+  });
   // 저장된 상태 복원
   try {
     const t = localStorage.getItem("palmon_palmon_type");
@@ -2302,6 +2353,8 @@ function buildEnergyTab() {
   tgtSel.addEventListener("change", updateEnergy);
   if ($("energy-owned")) $("energy-owned").addEventListener("input", updateEnergy);
 
+  // 메가진화 미지원 상태 동기화 (진화 정수 카드와 공유)
+  if (typeof applyEnergyMegaSupport === "function") applyEnergyMegaSupport();
   updateEnergy();
 }
 

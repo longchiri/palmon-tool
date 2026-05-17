@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515am" />
+  <link rel="stylesheet" href="style.css?v=20260515an" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -329,9 +329,15 @@
 
       <!-- Row 3: 에너지 구슬 (진화 조건) -->
       <div class="grid-3">
-        <div class="group essence-img-card">
+        <div class="group essence-img-card" id="energy-card">
           <div class="group-title">🔮 에너지 구슬 (진화 조건)</div>
           <img src="energy.png" alt="에너지 구슬" class="bead-img" onerror="this.style.display='none'">
+
+          <!-- 메가진화 지원 토글 (진화 정수 카드와 상태 공유) -->
+          <div class="mega-support-row" id="energy-mega-support-row">
+            <button type="button" id="energy-mega-support-toggle" class="mega-toggle-btn active">메가진화 지원 ✓</button>
+          </div>
+
           <div class="target-filter target-filter-top">
             <label>현재 단계</label>
             <select id="energy-current"></select>
@@ -344,7 +350,7 @@
             <label>보유 에너지 구슬</label>
             <input type="number" id="energy-owned" min="0" value="0" inputmode="numeric">
           </div>
-          <div class="hint" style="margin-top:14px;">예) 진화 1단계 1번 → 메가 스킬해금 = 800,000개 필요 · 각 소단계당 10번 강화</div>
+          <div class="hint" style="margin-top:14px;" id="energy-hint">예) 진화 1단계 1번 → 메가 스킬해금 = 800,000개 필요 · 각 소단계당 10번 강화</div>
         </div>
 
         <div id="energy-result-slot"></div>
@@ -1498,6 +1504,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515am"></script>
+  <script src="app.js?v=20260515an"></script>
 </body>
 </html>
