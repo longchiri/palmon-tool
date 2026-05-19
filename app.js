@@ -1015,11 +1015,12 @@ function renderResult(r) {
 
   // 커스텀상자 추천 카드 — 자원상자 추천에 통합됨 (아래 표의 "커스텀" 열 참조)
 
-  // 4. 자원상자 + 📦 커스텀상자 추천 (통합) — 5컬럼 (자원/SR/SSR/UR/초과 자원)
+  // 4. 자원상자 + 📦 커스텀상자 추천 (C-2안 — 행 추가 형식)
+  // 각 자원마다: 1) 일반 박스 행, 2) └ 커스텀 분배 행 (커스텀 갯수 0이 아닐 때만)
   let boxRows = `<tr><th></th><th class="tier tier-sr">SR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-ur">UR</th><th>초과 자원</th></tr>`;
-  // (1) 일반 자원상자 추천 (골드/목재/강철)
   for (const k of RESOURCE_KEYS) {
     const info = r.boxResult[k];
+    // (1) 일반 자원상자 행
     if (info.possible) {
       boxRows += `<tr>
         <td class="label">${RESOURCE_LABELS[k]}</td>
@@ -1035,37 +1036,38 @@ function renderResult(r) {
         <td></td>
       </tr>`;
     }
-  }
-  // (2) 커스텀상자 추천 행 — 자원별로 분리 (사용된 자원만)
-  const customRowsBuilt = [];
-  for (const k of RESOURCE_KEYS) {
+    // (2) 커스텀 분배 sub-row — 커스텀 갯수가 하나라도 있을 때만 추가
     const ca = (r.customAlloc && r.customAlloc[k]) || { SR: 0, SSR: 0, UR: 0 };
     const cTotal = (ca.UR || 0) + (ca.SSR || 0) + (ca.SR || 0);
     if (cTotal > 0) {
-      const resName = { gold: "골드", wood: "목재", steel: "강철" }[k] || k;
-      customRowsBuilt.push(`<tr class="custom-alloc-row" style="background:rgba(251,191,36,0.04);">
-        <td class="label" style="color:var(--amber);font-weight:600;">📦 커스텀 (${resName})</td>
+      boxRows += `<tr class="custom-sub-row" style="background:rgba(251,191,36,0.04);">
+        <td class="label" style="color:var(--amber);font-weight:600;padding-left:24px;">└ 커스텀 분배</td>
         <td class="value tier-sr">${fmtN(ca.SR || 0)}</td>
         <td class="value tier-ssr">${fmtN(ca.SSR || 0)}</td>
         <td class="value tier-ur">${fmtN(ca.UR || 0)}</td>
-        <td class="value"><span class="recommend-badge">추천</span></td>
-      </tr>`);
+        <td class="value txt-dim">-</td>
+      </tr>`;
     }
   }
-  let customSection = "";
-  if (customRowsBuilt.length > 0) {
-    customSection = `<tr class="custom-section-header"><td colspan="5" style="padding:10px 10px;border-top:2px dashed rgba(251,191,36,0.5);border-bottom:1px solid rgba(251,191,36,0.25);color:var(--amber);font-weight:700;font-size:12.5px;background:rgba(251,191,36,0.07);">📦 커스텀상자 추천 (부족분 분배)</td></tr>${customRowsBuilt.join("")}`;
-  }
 
-  const cardBox = `
+  // 상자가 필요 없는지 판단 — 일반/커스텀 모두 0이고 해결 불가도 없으면 카드 통째로 숨김
+  const needAnyBox = RESOURCE_KEYS.some((k) => {
+    const oc = r.boxResult[k]?.open_counts || {};
+    const ca = (r.customAlloc && r.customAlloc[k]) || {};
+    const hasOpen = (oc.SR || 0) + (oc.SSR || 0) + (oc.UR || 0) > 0;
+    const hasCustom = (ca.SR || 0) + (ca.SSR || 0) + (ca.UR || 0) > 0;
+    const unsolvable = r.boxResult[k]?.possible === false;
+    return hasOpen || hasCustom || unsolvable;
+  });
+
+  const cardBox = needAnyBox ? `
     <div class="result-card" style="border-color:var(--blue);">
       <div class="card-title txt-blue">◆ 자원상자 + 커스텀상자 추천</div>
-      <div class="tbl-wrap"><table class="tbl">${boxRows}${customSection}</table></div>
+      <div class="tbl-wrap"><table class="tbl">${boxRows}</table></div>
       <p style="font-size:12.5px;margin:10px 0 0;padding:8px 10px;background:rgba(251,191,36,0.08);border-left:3px solid var(--amber);border-radius:4px;color:var(--amber);">
-        ※ 위 3행 = 일반 자원상자 추천 + 박스 열었을 때 <b>초과 자원</b><br>
-        ※ 아래 <b>📦 커스텀</b> 행 = 커스텀상자(만능) 분배. SR/SSR/UR 갯수가 분배 방법 (SR → SSR → UR 순으로 소진)
+        ※ 각 자원 행 아래의 <b>└ 커스텀 분배</b> = 그 자원에 분배될 커스텀상자 갯수 (SR → SSR → UR 순으로 소진)
       </p>
-    </div>`;
+    </div>` : "";
 
   // 5. 가속권
   const possibleBadge = r.possible
