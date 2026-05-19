@@ -1015,79 +1015,54 @@ function renderResult(r) {
 
   // 커스텀상자 추천 카드 — 자원상자 추천에 통합됨 (아래 표의 "커스텀" 열 참조)
 
-  // 4. 자원상자 + 📦 커스텀상자 추천 (통합)
-  let boxRows = `<tr><th></th><th class="tier tier-sr">SR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-ur">UR</th><th class="tier" style="color:var(--amber);">커스텀</th><th>초과</th></tr>`;
+  // 4. 자원상자 + 📦 커스텀상자 추천 (통합) — 5컬럼 (자원/SR/SSR/UR/초과 자원)
+  let boxRows = `<tr><th></th><th class="tier tier-sr">SR</th><th class="tier tier-ssr">SSR</th><th class="tier tier-ur">UR</th><th>초과 자원</th></tr>`;
+  // (1) 일반 자원상자 추천 (골드/목재/강철)
   for (const k of RESOURCE_KEYS) {
     const info = r.boxResult[k];
-    const ca = (r.customAlloc && r.customAlloc[k]) || { SR: 0, SSR: 0, UR: 0 };
-    const cTotal = (ca.UR || 0) + (ca.SSR || 0) + (ca.SR || 0);
-    const cParts = [];
-    if (ca.UR > 0)  cParts.push(`<span class="tier-ur">UR×${ca.UR}</span>`);
-    if (ca.SSR > 0) cParts.push(`<span class="tier-ssr">SSR×${ca.SSR}</span>`);
-    if (ca.SR > 0)  cParts.push(`<span class="tier-sr">SR×${ca.SR}</span>`);
-    const customCell = cTotal > 0
-      ? `<b style="color:var(--amber);">${cTotal}개</b><br><span style="font-size:11px;">${cParts.join(" ")}</span>`
-      : ``;
     if (info.possible) {
       boxRows += `<tr>
         <td class="label">${RESOURCE_LABELS[k]}</td>
         <td class="value tier-sr">${fmtN(info.open_counts.SR)}</td>
         <td class="value tier-ssr">${fmtN(info.open_counts.SSR)}</td>
         <td class="value tier-ur">${fmtN(info.open_counts.UR)}</td>
-        <td class="value" style="text-align:right;">${customCell}</td>
         <td class="value amber">${fmtN(info.overage)}</td>
       </tr>`;
     } else {
       boxRows += `<tr>
         <td class="label">${RESOURCE_LABELS[k]}</td>
         <td colspan="3" class="value red">해결 불가</td>
-        <td class="value" style="text-align:right;">${customCell}</td>
         <td></td>
       </tr>`;
     }
   }
-
-  // 📦 남은 박스 갯수 행 — 자원별로 보유 - 사용 = 남은 갯수
-  const ownedBoxesForCard = getOwnedBoxes("tg-");
-  const ownedCustomForCard = getCustomBoxes("tg-");
-  // 자원 박스 (gold/wood/steel) 별 남은 갯수
-  const leftoverRows = [];
+  // (2) 커스텀상자 추천 행 — 자원별로 분리 (사용된 자원만)
+  const customRowsBuilt = [];
   for (const k of RESOURCE_KEYS) {
-    const owned = ownedBoxesForCard[k] || { SR: 0, SSR: 0, UR: 0 };
-    const used = r.boxResult[k]?.open_counts || { SR: 0, SSR: 0, UR: 0 };
-    const remSR = Math.max(0, (owned.SR || 0) - (used.SR || 0));
-    const remSSR = Math.max(0, (owned.SSR || 0) - (used.SSR || 0));
-    const remUR = Math.max(0, (owned.UR || 0) - (used.UR || 0));
-    leftoverRows.push({ label: `${RESOURCE_LABELS[k]} (남은)`, SR: remSR, SSR: remSSR, UR: remUR });
-  }
-  // 커스텀 박스 남은 갯수 (이미 r.customRemainBoxes 에 있음)
-  const cRem = (r.customRemainBoxes) || { SR: 0, SSR: 0, UR: 0 };
-  leftoverRows.push({ label: "📦 커스텀 (남은)", SR: cRem.SR || 0, SSR: cRem.SSR || 0, UR: cRem.UR || 0 });
-
-  // 남은 박스가 하나라도 있으면 표시
-  const anyLeftover = leftoverRows.some((row) => row.SR > 0 || row.SSR > 0 || row.UR > 0);
-  let remainingSection = "";
-  if (anyLeftover) {
-    let remRows = `<tr class="leftover-divider"><td colspan="6" style="padding:10px 10px;border-top:2px dashed rgba(251,191,36,0.4);border-bottom:1px solid rgba(251,191,36,0.2);color:var(--amber);font-weight:700;font-size:12.5px;background:rgba(251,191,36,0.06);">📦 남은 박스 갯수 — 추천 사용 후 남은 보유 박스</td></tr>`;
-    for (const row of leftoverRows) {
-      remRows += `<tr class="leftover-row" style="background:rgba(251,191,36,0.04);">
-        <td class="label" style="color:var(--amber);font-weight:600;">${row.label}</td>
-        <td class="value tier-sr" style="font-size:15px;font-weight:700;padding:8px 14px;">${fmtN(row.SR)}</td>
-        <td class="value tier-ssr" style="font-size:15px;font-weight:700;padding:8px 14px;">${fmtN(row.SSR)}</td>
-        <td class="value tier-ur" style="font-size:15px;font-weight:700;padding:8px 14px;">${fmtN(row.UR)}</td>
-        <td></td>
-        <td></td>
-      </tr>`;
+    const ca = (r.customAlloc && r.customAlloc[k]) || { SR: 0, SSR: 0, UR: 0 };
+    const cTotal = (ca.UR || 0) + (ca.SSR || 0) + (ca.SR || 0);
+    if (cTotal > 0) {
+      customRowsBuilt.push(`<tr class="custom-alloc-row" style="background:rgba(251,191,36,0.04);">
+        <td class="label" style="color:var(--amber);font-weight:600;">📦 커스텀 (${RESOURCE_LABELS[k].replace(/^[\W_]+/u, "")})</td>
+        <td class="value tier-sr">${fmtN(ca.SR || 0)}</td>
+        <td class="value tier-ssr">${fmtN(ca.SSR || 0)}</td>
+        <td class="value tier-ur">${fmtN(ca.UR || 0)}</td>
+        <td class="value"><span class="recommend-badge">추천</span></td>
+      </tr>`);
     }
-    remainingSection = remRows;
+  }
+  let customSection = "";
+  if (customRowsBuilt.length > 0) {
+    customSection = `<tr class="custom-section-header"><td colspan="5" style="padding:10px 10px;border-top:2px dashed rgba(251,191,36,0.5);border-bottom:1px solid rgba(251,191,36,0.25);color:var(--amber);font-weight:700;font-size:12.5px;background:rgba(251,191,36,0.07);">📦 커스텀상자 추천 (부족분 분배)</td></tr>${customRowsBuilt.join("")}`;
   }
 
   const cardBox = `
     <div class="result-card" style="border-color:var(--blue);">
       <div class="card-title txt-blue">◆ 자원상자 + 커스텀상자 추천</div>
-      <div class="tbl-wrap"><table class="tbl">${boxRows}${remainingSection}</table></div>
+      <div class="tbl-wrap"><table class="tbl">${boxRows}${customSection}</table></div>
       <p style="font-size:12.5px;margin:10px 0 0;padding:8px 10px;background:rgba(251,191,36,0.08);border-left:3px solid var(--amber);border-radius:4px;color:var(--amber);">
-        ※ <b style="color:var(--amber);">커스텀</b> 열: 부족한 자원에 커스텀상자를 분배한 추천 갯수 (UR → SSR → SR 순)
+        ※ 위 3행 = 일반 자원상자 추천 + 박스 열었을 때 <b>초과 자원</b><br>
+        ※ 아래 <b>📦 커스텀</b> 행 = 커스텀상자(만능) 분배. SR/SSR/UR 갯수가 분배 방법 (UR → SSR → SR 순)
       </p>
     </div>`;
 
