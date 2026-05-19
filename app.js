@@ -848,8 +848,8 @@ function calculate(opts) {
     for (const k of _sortedShort) {
       customAlloc[k] = { SR: 0, SSR: 0, UR: 0 };
       let need = shortages[k];
-      // 큰 박스(UR) 부터 채움 — need 가 박스 값보다 작아질 때까지 사용, 그래도 부족하면 한 개 더 (오버)
-      for (const tier of ["UR", "SSR", "SR"]) {
+      // 작은 박스(SR) 부터 소진 — UR 같은 고급 박스는 나중에 사용 (사용자 요청)
+      for (const tier of ["SR", "SSR", "UR"]) {
         const v = _tierVal[tier];
         if (v <= 0) continue;
         while (need > 0 && _remainCustom[tier] > 0) {
@@ -1042,8 +1042,9 @@ function renderResult(r) {
     const ca = (r.customAlloc && r.customAlloc[k]) || { SR: 0, SSR: 0, UR: 0 };
     const cTotal = (ca.UR || 0) + (ca.SSR || 0) + (ca.SR || 0);
     if (cTotal > 0) {
+      const resName = { gold: "골드", wood: "목재", steel: "강철" }[k] || k;
       customRowsBuilt.push(`<tr class="custom-alloc-row" style="background:rgba(251,191,36,0.04);">
-        <td class="label" style="color:var(--amber);font-weight:600;">📦 커스텀 (${RESOURCE_LABELS[k].replace(/^[\W_]+/u, "")})</td>
+        <td class="label" style="color:var(--amber);font-weight:600;">📦 커스텀 (${resName})</td>
         <td class="value tier-sr">${fmtN(ca.SR || 0)}</td>
         <td class="value tier-ssr">${fmtN(ca.SSR || 0)}</td>
         <td class="value tier-ur">${fmtN(ca.UR || 0)}</td>
@@ -1062,7 +1063,7 @@ function renderResult(r) {
       <div class="tbl-wrap"><table class="tbl">${boxRows}${customSection}</table></div>
       <p style="font-size:12.5px;margin:10px 0 0;padding:8px 10px;background:rgba(251,191,36,0.08);border-left:3px solid var(--amber);border-radius:4px;color:var(--amber);">
         ※ 위 3행 = 일반 자원상자 추천 + 박스 열었을 때 <b>초과 자원</b><br>
-        ※ 아래 <b>📦 커스텀</b> 행 = 커스텀상자(만능) 분배. SR/SSR/UR 갯수가 분배 방법 (UR → SSR → SR 순)
+        ※ 아래 <b>📦 커스텀</b> 행 = 커스텀상자(만능) 분배. SR/SSR/UR 갯수가 분배 방법 (SR → SSR → UR 순으로 소진)
       </p>
     </div>`;
 
