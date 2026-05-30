@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515ax" />
+  <link rel="stylesheet" href="style.css?v=20260515ay" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -408,7 +408,7 @@
             <label>목표 Lv</label>
             <select id="exp-target"></select>
           </div>
-          <div class="hint" style="margin-top:14px;">예) 현재 Lv 280 → 목표 Lv 290 까지 필요한 경험치 자동 계산 (최대 290)</div>
+          <div class="hint" style="margin-top:14px;">예) 현재 Lv 290 → 목표 Lv 300 까지 필요한 경험치 자동 계산 (최대 300)</div>
         </div>
 
         <div id="exp-result-slot"></div>
@@ -416,13 +416,14 @@
         <div class="group">
           <div class="group-title ref-card-title">기준값</div>
           <div style="font-size:13px;line-height:1.7;">
-            <b>최대 레벨</b>: 290<br><br>
+            <b>최대 레벨</b>: 300<br><br>
             <b>예시 구간 (Lv 1 → N 총합)</b><br>
             • Lv 1 → 10: 4,500<br>
             • Lv 1 → 50: 488,700<br>
             • Lv 1 → 100: 6,033,700<br>
             • Lv 1 → 200: 630,156,700<br>
-            • Lv 1 → 290: 7,910,690,700<br><br>
+            • Lv 1 → 290: 7,910,690,700<br>
+            • Lv 1 → 300: <b class="txt-amber">9,896,157,700</b> <span class="txt-dim">(약 98억 9,615만)</span><br><br>
             <p class="txt-dim" style="font-size:12px;margin:0;">레벨별 비용을 누적 합산하여 계산</p>
           </div>
         </div>
@@ -1158,7 +1159,7 @@
           <h3>🌰 스킬열매 / 경험치 계산하기</h3>
           <p>현재 레벨에서 목표 레벨까지 올리는 데 필요한 경험치 / 스킬 열매 갯수를 자동 계산.</p>
           <ul>
-            <li><b>🌟 경험치 계산기</b> — Lv 1 ~ Lv 290 까지 지원. 현재 Lv + 목표 Lv 드롭다운 선택 → 필요 경험치 즉시 계산</li>
+            <li><b>🌟 경험치 계산기</b> — Lv 1 ~ Lv 300 까지 지원. 현재 Lv + 목표 Lv 드롭다운 선택 → 필요 경험치 즉시 계산</li>
             <li><b>🌰 스킬 레벨업 열매 계산기</b> — Lv 1 ~ Lv 30 까지 지원. 스킬 1개 풀레벨까지 <b>104,200개</b> 필요</li>
             <li>각 레벨별 비용을 합산해서 계산: Lv X → Y 비용 = arr[X] + arr[X+1] + ... + arr[Y−1] (각 단계별 비용의 합)</li>
           </ul>
@@ -1508,6 +1509,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515ax"></script>
+  <script src="app.js?v=20260515ay"></script>
 </body>
 </html>
