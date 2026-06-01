@@ -1823,8 +1823,8 @@ const SUMMON_MODE1_DROPS = [
   { id: "target",   label: "⭐ 원하는 팰몬",       qty: 1,  weight: 13,   pct: 0.13,  intimacy: 0, isTarget: true, color: "var(--green)" },
   { id: "custom",   label: "📦 커스텀상자",        qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
   { id: "power",    label: "⚡ 전력 보물상자",     qty: 2,  weight: 999,  pct: 9.99,  intimacy: 1 },
-  { id: "aurora1",  label: "✨ 오로라 정수",       qty: 1,  weight: 1498, pct: 14.98, intimacy: 1, color: "var(--purple)" },
-  { id: "aurora2",  label: "✨ 오로라 정수",       qty: 2,  weight: 499,  pct: 4.99,  intimacy: 2, color: "var(--purple)" },
+  { id: "frag1",    label: "🟡 팰몬조각 ×1",       qty: 1,  weight: 1498, pct: 14.98, intimacy: 1, color: "var(--amber)" },
+  { id: "frag2",    label: "🟡 팰몬조각 ×2",       qty: 2,  weight: 499,  pct: 4.99,  intimacy: 2, color: "var(--amber)" },
   { id: "fruit",    label: "🌰 스킬 열매",         qty: 50, weight: 1199, pct: 11.99, intimacy: 2 },
   { id: "wood",     label: "🪵 목판 보물상자",     qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
   { id: "steel",    label: "⚙️ 강철 보물상자",     qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
@@ -1834,11 +1834,11 @@ const SUMMON_MODE1_DROPS = [
 const SUMMON_MODE1_TOTAL_WEIGHT = SUMMON_MODE1_DROPS.reduce((s, d) => s + d.weight, 0);  // 10001
 
 const SUMMON_MODE2_DROPS = [
-  { id: "aurora5",  label: "✨ 오로라 정수",       qty: 5,  weight: 5,    pct: 0.5,  color: "var(--purple)" },
+  { id: "aurora5",  label: "✨ 오로라 정수 ×5",    qty: 5,  weight: 5,    pct: 0.5,  color: "var(--purple)" },
   { id: "custom",   label: "📦 커스텀상자",        qty: 2,  weight: 100,  pct: 10.0 },
   { id: "power",    label: "⚡ 전력 보물상자",     qty: 2,  weight: 100,  pct: 10.0 },
-  { id: "aurora1",  label: "✨ 오로라 정수",       qty: 1,  weight: 165,  pct: 16.5, color: "var(--purple)" },
-  { id: "aurora2",  label: "✨ 오로라 정수",       qty: 2,  weight: 30,   pct: 3.0,  color: "var(--purple)" },
+  { id: "aurora1",  label: "✨ 오로라 정수 ×1",    qty: 1,  weight: 165,  pct: 16.5, color: "var(--purple)" },
+  { id: "aurora2",  label: "✨ 오로라 정수 ×2",    qty: 2,  weight: 30,   pct: 3.0,  color: "var(--purple)" },
   { id: "fruit",    label: "🌰 스킬 열매",         qty: 50, weight: 120,  pct: 12.0 },
   { id: "wood",     label: "🪵 목판 보물상자",     qty: 1,  weight: 120,  pct: 12.0 },
   { id: "steel",    label: "⚙️ 강철 보물상자",     qty: 1,  weight: 120,  pct: 12.0 },
