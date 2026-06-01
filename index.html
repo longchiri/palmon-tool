@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515ay" />
+  <link rel="stylesheet" href="style.css?v=20260515az" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -61,7 +61,7 @@
       <button class="tab tab-group" data-group="g-construction">🏗️ 건설 관련</button>
       <button class="tab tab-group" data-group="g-resource">💰 자원 관련</button>
       <button class="tab tab-group" data-group="g-palmon">💎 팰몬 관련</button>
-      <button class="tab tab-group" data-group="g-boxsim">📦 상자시뮬레이터</button>
+      <button class="tab tab-group" data-group="g-boxsim">📦 시뮬레이터</button>
       <button class="tab" data-tab="t-map">🗺️ 자리배치도</button>
       <button class="tab" data-tab="t-changelog">📰 업데이트 현황</button>
     </div>
@@ -495,6 +495,116 @@
       </div>
 
       <div id="palmon-result"></div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- TAB: 🌟 오로라 소환 시뮬레이터                          -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="t-summon">
+
+      <div class="group menu-intro">
+        <div class="group-title">📝 메뉴 설명글</div>
+        <p>
+          🌟 <b>오로라 소환 시뮬레이터</b> — 오로라 구슬을 사용해 원하는 팰몬을 뽑을 때까지 자동 시뮬레이션합니다.<br>
+          📍 <b>팰몬 미보유</b>: 친밀도 시스템 활성 (1200 도달 시 자동 획득, 0.13% 직접 획득)<br>
+          📍 <b>팰몬 보유</b>: 친밀도 없음, 아이템만 100% 분배
+        </p>
+        <div style="margin-top:10px;">
+          <button type="button" id="summon-prob-toggle" class="btn">📊 확률표 보기</button>
+        </div>
+        <div id="summon-prob-table" style="display:none;margin-top:14px;">
+          <h4 style="color:var(--blue);font-size:13px;margin:0 0 6px;">🎯 팰몬 미보유 (친밀도 활성)</h4>
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="text-align:left;">아이템</th>
+              <th>수량</th>
+              <th>확률</th>
+              <th>친밀도</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><b style="color:var(--green);">⭐ 원하는 팰몬</b></td><td class="value">1마리</td><td class="value">0.13%</td><td class="value green">즉시 획득</td></tr>
+              <tr><td>📦 커스텀상자</td><td class="value">2개</td><td class="value">9.99%</td><td class="value">+2</td></tr>
+              <tr><td>🥚 경험치 상자</td><td class="value">2개</td><td class="value">9.99%</td><td class="value">+2</td></tr>
+              <tr><td>🟡 팰몬조각</td><td class="value">1개</td><td class="value">14.98%</td><td class="value">+1</td></tr>
+              <tr><td>🟡 팰몬조각</td><td class="value">2개</td><td class="value">4.99%</td><td class="value">+2</td></tr>
+              <tr><td>🌰 스킬 열매</td><td class="value">50개</td><td class="value">11.99%</td><td class="value">+2</td></tr>
+              <tr><td>🪵 목판 보물상자</td><td class="value">1개</td><td class="value">11.99%</td><td class="value">+2</td></tr>
+              <tr><td>⚙️ 강철 보물상자</td><td class="value">1개</td><td class="value">11.99%</td><td class="value">+2</td></tr>
+              <tr><td>🪙 골드 보물상자</td><td class="value">1개</td><td class="value">11.99%</td><td class="value">+2</td></tr>
+              <tr><td>💎 다이아 보물상자</td><td class="value">1개</td><td class="value">11.99%</td><td class="value">+2</td></tr>
+              <tr style="border-top:2px solid var(--border);"><td colspan="3"><b>총합</b></td><td class="value amber"><b>100%</b></td></tr>
+            </tbody>
+          </table></div>
+          <h4 style="color:var(--amber);font-size:13px;margin:14px 0 6px;">✅ 팰몬 보유 (친밀도 비활성)</h4>
+          <div class="tbl-wrap"><table class="tbl">
+            <thead><tr>
+              <th style="text-align:left;">아이템</th>
+              <th>수량</th>
+              <th>확률</th>
+            </tr></thead>
+            <tbody>
+              <tr><td><b style="color:var(--purple);">💎 보석</b></td><td class="value">5개</td><td class="value">0.5%</td></tr>
+              <tr><td>📦 커스텀상자</td><td class="value">2개</td><td class="value">10.0%</td></tr>
+              <tr><td>🥚 경험치 상자</td><td class="value">2개</td><td class="value">10.0%</td></tr>
+              <tr><td>🟡 팰몬조각</td><td class="value">1개</td><td class="value">16.5%</td></tr>
+              <tr><td>🟡 팰몬조각</td><td class="value">2개</td><td class="value">3.0%</td></tr>
+              <tr><td>🌰 스킬 열매</td><td class="value">50개</td><td class="value">12.0%</td></tr>
+              <tr><td>🪵 목판 보물상자</td><td class="value">1개</td><td class="value">12.0%</td></tr>
+              <tr><td>⚙️ 강철 보물상자</td><td class="value">1개</td><td class="value">12.0%</td></tr>
+              <tr><td>🪙 골드 보물상자</td><td class="value">1개</td><td class="value">12.0%</td></tr>
+              <tr><td>💎 다이아 보물상자</td><td class="value">1개</td><td class="value">12.0%</td></tr>
+              <tr style="border-top:2px solid var(--border);"><td colspan="2"><b>총합</b></td><td class="value amber"><b>100%</b></td></tr>
+            </tbody>
+          </table></div>
+        </div>
+        <p style="margin-top:14px;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:13px;line-height:1.6;color:var(--red);">
+          ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+        </p>
+      </div>
+
+      <!-- Row 1: 입력 + 결과 -->
+      <div class="grid-3">
+        <div class="group essence-img-card">
+          <div class="group-title">🌟 오로라 소환</div>
+          <img src="aurora.png" alt="오로라 구슬" class="bead-img" onerror="this.style.display='none'">
+
+          <div class="form-row">
+            <label>보유 오로라 구슬</label>
+            <input type="number" id="summon-count" min="0" value="100" inputmode="numeric">
+          </div>
+          <div class="form-row">
+            <label>현재 친밀도</label>
+            <input type="number" id="summon-intimacy" min="0" max="1200" value="0" inputmode="numeric">
+          </div>
+          <div style="margin:10px 0 4px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
+              <input type="checkbox" id="summon-has-target" style="margin:0;">
+              <span>✅ 이미 팰몬 보유 (친밀도 비활성)</span>
+            </label>
+          </div>
+          <button type="button" id="summon-roll" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 시뮬레이션 시작</button>
+          <div class="hint" style="margin-top:14px;">예) 구슬 1000개 → 팰몬 뽑을 때까지 자동 시뮬</div>
+        </div>
+
+        <div id="summon-result-slot"></div>
+
+        <div class="group">
+          <div class="group-title ref-card-title">기준값</div>
+          <div style="font-size:13px;line-height:1.7;">
+            <b class="txt-blue">🎯 팰몬 미보유 모드</b><br>
+            • 친밀도 1200 = 자동 획득<br>
+            • 직접 획득: <b>0.13%</b><br>
+            • 친밀도 평균: <b>~1.85/소환</b><br>
+            • 평균 친밀도 소비: <b>900~1100</b><br><br>
+            <b class="txt-amber">✅ 팰몬 보유 모드</b><br>
+            • 친밀도 없음<br>
+            • 100% 아이템만 분배<br>
+            • 그냥 평균 보상량 확인용<br><br>
+            <p class="txt-dim" style="font-size:12px;margin:0;">⚠️ 매 시뮬마다 결과 다름 (랜덤)</p>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
@@ -1509,6 +1619,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515ay"></script>
+  <script src="app.js?v=20260515az"></script>
 </body>
 </html>

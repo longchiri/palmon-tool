@@ -1813,6 +1813,219 @@ const FRUITBOX_DROPS = [
 ];
 const FRUITBOX_TOTAL_WEIGHT = FRUITBOX_DROPS.reduce((s, d) => s + d.weight, 0);
 
+// ════════════════════════════════════════════════════════════════
+// 🌟 오로라 소환 시뮬레이터
+// ════════════════════════════════════════════════════════════════
+// Mode 1: 팰몬 미보유 — 친밀도 시스템 (1200 도달 자동 획득, 0.13% 직접)
+// Mode 2: 팰몬 보유 — 친밀도 없음, 아이템만 분배
+// 가중치: 1만분율 기준
+const SUMMON_MODE1_DROPS = [
+  { id: "target",   label: "⭐ 원하는 팰몬",     qty: 1,  weight: 13,   pct: 0.13,  intimacy: 0, isTarget: true, color: "var(--green)" },
+  { id: "custom",   label: "📦 커스텀상자",      qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
+  { id: "expbox",   label: "🥚 경험치 상자",     qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
+  { id: "frag1",    label: "🟡 팰몬조각",        qty: 1,  weight: 1498, pct: 14.98, intimacy: 1 },
+  { id: "frag2",    label: "🟡 팰몬조각",        qty: 2,  weight: 499,  pct: 4.99,  intimacy: 2 },
+  { id: "fruit",    label: "🌰 스킬 열매",       qty: 50, weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "wood",     label: "🪵 목판 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "steel",    label: "⚙️ 강철 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "gold",     label: "🪙 골드 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "diamond",  label: "💎 다이아 보물상자", qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
+];
+const SUMMON_MODE1_TOTAL_WEIGHT = SUMMON_MODE1_DROPS.reduce((s, d) => s + d.weight, 0);  // 10001
+
+const SUMMON_MODE2_DROPS = [
+  { id: "gem",      label: "💎 보석",            qty: 5,  weight: 5,    pct: 0.5,  color: "var(--purple)" },
+  { id: "custom",   label: "📦 커스텀상자",      qty: 2,  weight: 100,  pct: 10.0 },
+  { id: "expbox",   label: "🥚 경험치 상자",     qty: 2,  weight: 100,  pct: 10.0 },
+  { id: "frag1",    label: "🟡 팰몬조각",        qty: 1,  weight: 165,  pct: 16.5 },
+  { id: "frag2",    label: "🟡 팰몬조각",        qty: 2,  weight: 30,   pct: 3.0 },
+  { id: "fruit",    label: "🌰 스킬 열매",       qty: 50, weight: 120,  pct: 12.0 },
+  { id: "wood",     label: "🪵 목판 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "steel",    label: "⚙️ 강철 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "gold",     label: "🪙 골드 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "diamond",  label: "💎 다이아 보물상자", qty: 1,  weight: 120,  pct: 12.0 },
+];
+const SUMMON_MODE2_TOTAL_WEIGHT = SUMMON_MODE2_DROPS.reduce((s, d) => s + d.weight, 0);  // 1000
+
+function buildSummonTab() {
+  if (!$("summon-count")) return;
+  renderSummonIdle();
+
+  $("summon-roll").addEventListener("click", () => {
+    const count = Math.max(0, parseInt($("summon-count").value || 0));
+    const startIntimacy = Math.min(1200, Math.max(0, parseInt($("summon-intimacy").value || 0)));
+    const hasTarget = $("summon-has-target").checked;
+    if (count <= 0) { renderSummonIdle(); return; }
+    const result = simulateSummon(count, startIntimacy, hasTarget);
+    renderSummonResult(result, hasTarget, startIntimacy);
+  });
+
+  if ($("summon-prob-toggle")) {
+    $("summon-prob-toggle").addEventListener("click", () => {
+      const tbl = $("summon-prob-table");
+      const btn = $("summon-prob-toggle");
+      if (!tbl) return;
+      const isHidden = tbl.style.display === "none";
+      tbl.style.display = isHidden ? "block" : "none";
+      btn.textContent = isHidden ? "📊 확률표 숨기기" : "📊 확률표 보기";
+    });
+  }
+}
+
+function rollSummonOne(drops, totalWeight) {
+  let r = Math.floor(Math.random() * totalWeight);
+  for (let i = 0; i < drops.length; i++) {
+    r -= drops[i].weight;
+    if (r < 0) return drops[i];
+  }
+  return drops[drops.length - 1];
+}
+
+function simulateSummon(currency, startIntimacy, hasTarget) {
+  const itemCounts = {};   // id → count
+  let summonsUsed = 0;
+  let intimacy = startIntimacy;
+  let gotTarget = false;
+  let gotBy = "";  // "direct" | "intimacy" | "none"
+
+  const drops = hasTarget ? SUMMON_MODE2_DROPS : SUMMON_MODE1_DROPS;
+  const totalWeight = hasTarget ? SUMMON_MODE2_TOTAL_WEIGHT : SUMMON_MODE1_TOTAL_WEIGHT;
+
+  while (summonsUsed < currency) {
+    summonsUsed++;
+    const item = rollSummonOne(drops, totalWeight);
+
+    if (item.isTarget) {
+      // Mode 1 직접 획득
+      gotTarget = true;
+      gotBy = "direct";
+      itemCounts[item.id] = (itemCounts[item.id] || 0) + 1;
+      break;
+    }
+
+    // 아이템 카운트 증가
+    itemCounts[item.id] = (itemCounts[item.id] || 0) + 1;
+
+    if (!hasTarget) {
+      // 친밀도 증가
+      intimacy += (item.intimacy || 0);
+      if (intimacy >= 1200) {
+        gotTarget = true;
+        gotBy = "intimacy";
+        break;
+      }
+    }
+  }
+
+  return {
+    summonsUsed,
+    finalIntimacy: intimacy,
+    gotTarget,
+    gotBy,
+    itemCounts,
+    hasTarget,
+    currencyRemain: currency - summonsUsed,
+  };
+}
+
+function renderSummonIdle() {
+  const slot = $("summon-result-slot");
+  if (!slot) return;
+  slot.innerHTML = `
+    <div class="result-card" style="text-align:center;">
+      <div class="card-title" style="color:var(--text-dim);">◆ 시뮬레이션 결과</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:140px;">
+        <p class="txt-dim" style="margin:0;font-size:13.5px;line-height:1.9;">
+          🌟 보유 오로라 구슬 + 현재 친밀도 입력 후<br>
+          ✅ <b>시뮬레이션 시작</b> 버튼을 눌러주세요.
+        </p>
+      </div>
+    </div>`;
+}
+
+function renderSummonResult(result, hasTarget, startIntimacy) {
+  const slot = $("summon-result-slot");
+  if (!slot) return;
+
+  const drops = hasTarget ? SUMMON_MODE2_DROPS : SUMMON_MODE1_DROPS;
+
+  // 받은 아이템 목록 (등급별)
+  const itemRows = [];
+  for (const d of drops) {
+    const cnt = result.itemCounts[d.id] || 0;
+    if (cnt > 0) {
+      const total = cnt * d.qty;
+      const c = d.color || "var(--text)";
+      itemRows.push(`<tr>
+        <td><b style="color:${c};">${d.label}</b></td>
+        <td class="value">${fmt(cnt)}회</td>
+        <td class="value amber"><b>${fmt(total)}개</b></td>
+      </tr>`);
+    }
+  }
+
+  // 결과 색상 & 메시지
+  let color, headlineMsg, subMsg;
+  if (result.gotTarget) {
+    color = "var(--green)";
+    if (result.gotBy === "direct") {
+      headlineMsg = `🎉 직접 획득!`;
+      subMsg = `0.13% 확률을 뚫고 ${result.summonsUsed}회 만에 획득!`;
+    } else {
+      headlineMsg = `✅ 친밀도 만피로 획득!`;
+      subMsg = `친밀도 1200 도달로 ${result.summonsUsed}회 만에 획득`;
+    }
+  } else if (hasTarget) {
+    color = "var(--amber)";
+    headlineMsg = `📦 ${fmt(result.summonsUsed)}회 소환`;
+    subMsg = `보유 모드 — 아이템 ${result.summonsUsed}개 분배 결과`;
+  } else {
+    color = "var(--red)";
+    headlineMsg = `😢 미획득`;
+    subMsg = `구슬 ${fmt(result.summonsUsed)}개 모두 소진 — 친밀도 ${fmt(result.finalIntimacy)}/1200 에서 멈춤`;
+  }
+
+  // 친밀도 게이지 (Mode 1 only)
+  let intimacyBar = "";
+  if (!hasTarget) {
+    const pct = Math.min(100, (result.finalIntimacy / 1200) * 100);
+    intimacyBar = `
+      <div style="margin:10px 0 6px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px;">
+          <span>친밀도 (${fmt(startIntimacy)} → ${fmt(result.finalIntimacy)})</span>
+          <span><b style="color:${result.finalIntimacy >= 1200 ? 'var(--green)' : 'var(--amber)'};">${fmt(result.finalIntimacy)} / 1200</b></span>
+        </div>
+        <div style="background:#2a3441;border-radius:4px;height:8px;overflow:hidden;">
+          <div style="background:${result.finalIntimacy >= 1200 ? 'var(--green)' : 'var(--amber)'};height:100%;width:${pct}%;transition:width 0.3s;"></div>
+        </div>
+      </div>`;
+  }
+
+  slot.innerHTML = `
+    <div class="result-card strong" style="border-color:${color};">
+      <div class="card-title" style="color:${color};text-align:center;">◆ 시뮬레이션 결과</div>
+      <div class="big-number" style="color:${color};font-size:24px;">${headlineMsg}</div>
+      <p class="txt-dim" style="font-size:12.5px;text-align:center;margin:0 0 8px;">${subMsg}</p>
+      ${intimacyBar}
+      <div class="tbl-wrap" style="margin-top:8px;"><table class="tbl">
+        <tr><td class="label">소환 횟수</td><td class="value amber"><b>${fmt(result.summonsUsed)}회</b></td></tr>
+        <tr><td class="label">남은 구슬</td><td class="value">${fmt(result.currencyRemain)}개</td></tr>
+      </table></div>
+      <h4 style="font-size:12.5px;margin:12px 0 4px;color:var(--text-dim);">📋 받은 아이템</h4>
+      <div class="tbl-wrap"><table class="tbl">
+        <thead><tr>
+          <th style="text-align:left;">아이템</th>
+          <th>횟수</th>
+          <th>총 갯수</th>
+        </tr></thead>
+        <tbody>${itemRows.length > 0 ? itemRows.join("") : `<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:18px 0;">아무 것도 못 받았습니다 🥲</td></tr>`}</tbody>
+      </table></div>
+      <p style="margin:14px 0 0;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--red);text-align:left;">
+        ⚠️ <b>항상 랜덤한 결과입니다. 너무 믿지 마세요.</b>
+      </p>
+    </div>`;
+}
+
 function buildFruitBoxTab() {
   if (!$("fruitbox-count")) return;
   // 초기 결과창 (안내)
@@ -2579,8 +2792,9 @@ const TAB_GROUPS = {
   },
   "g-boxsim": {
     icon: "📦",
-    label: "상자시뮬레이터",
+    label: "시뮬레이터",
     tabs: [
+      { id: "t-summon",     icon: "🌟", label: "오로라 소환" },
       { id: "t-fruitbox",   icon: "🌰", label: "열매상자" },
       { id: "t-supply",     icon: "🪖", label: "개선장군 보급" },
       { id: "t-mysterybox", icon: "🎁", label: "미스테리박스" },
@@ -2845,6 +3059,7 @@ function applySettingsPayload(p) {
   updatePalmon();
   buildSkillExpTab();
   buildEnergyTab();
+  buildSummonTab();
   buildFruitBoxTab();
   buildSupplyTab();
   buildMysteryBoxTab();
@@ -4011,6 +4226,7 @@ async function bootstrap() {
     updatePalmon();
     buildSkillExpTab();
     buildEnergyTab();
+    buildSummonTab();
     buildFruitBoxTab();
     buildSupplyTab();
     buildMysteryBoxTab();
