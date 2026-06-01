@@ -1820,30 +1820,30 @@ const FRUITBOX_TOTAL_WEIGHT = FRUITBOX_DROPS.reduce((s, d) => s + d.weight, 0);
 // Mode 2: 팰몬 보유 — 친밀도 없음, 아이템만 분배
 // 가중치: 1만분율 기준
 const SUMMON_MODE1_DROPS = [
-  { id: "target",   label: "⭐ 원하는 팰몬",     qty: 1,  weight: 13,   pct: 0.13,  intimacy: 0, isTarget: true, color: "var(--green)" },
-  { id: "custom",   label: "📦 커스텀상자",      qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
-  { id: "expbox",   label: "🥚 경험치 상자",     qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
-  { id: "frag1",    label: "🟡 팰몬조각",        qty: 1,  weight: 1498, pct: 14.98, intimacy: 1 },
-  { id: "frag2",    label: "🟡 팰몬조각",        qty: 2,  weight: 499,  pct: 4.99,  intimacy: 2 },
-  { id: "fruit",    label: "🌰 스킬 열매",       qty: 50, weight: 1199, pct: 11.99, intimacy: 2 },
-  { id: "wood",     label: "🪵 목판 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
-  { id: "steel",    label: "⚙️ 강철 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
-  { id: "gold",     label: "🪙 골드 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
-  { id: "diamond",  label: "💎 다이아 보물상자", qty: 1,  weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "target",   label: "⭐ 원하는 팰몬",       qty: 1,  weight: 13,   pct: 0.13,  intimacy: 0, isTarget: true, color: "var(--green)" },
+  { id: "custom",   label: "📦 커스텀상자",        qty: 2,  weight: 999,  pct: 9.99,  intimacy: 2 },
+  { id: "power",    label: "⚡ 전력 보물상자",     qty: 2,  weight: 999,  pct: 9.99,  intimacy: 1 },
+  { id: "frag1",    label: "🟡 팰몬조각",          qty: 1,  weight: 1498, pct: 14.98, intimacy: 1 },
+  { id: "frag2",    label: "🟡 팰몬조각",          qty: 2,  weight: 499,  pct: 4.99,  intimacy: 2 },
+  { id: "fruit",    label: "🌰 스킬 열매",         qty: 50, weight: 1199, pct: 11.99, intimacy: 2 },
+  { id: "wood",     label: "🪵 목판 보물상자",     qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
+  { id: "steel",    label: "⚙️ 강철 보물상자",     qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
+  { id: "gold",     label: "🪙 골드 보물상자",     qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
+  { id: "expbox",   label: "🥚 경험치 보물상자",   qty: 1,  weight: 1199, pct: 11.99, intimacy: 1 },
 ];
 const SUMMON_MODE1_TOTAL_WEIGHT = SUMMON_MODE1_DROPS.reduce((s, d) => s + d.weight, 0);  // 10001
 
 const SUMMON_MODE2_DROPS = [
-  { id: "gem",      label: "💎 보석",            qty: 5,  weight: 5,    pct: 0.5,  color: "var(--purple)" },
-  { id: "custom",   label: "📦 커스텀상자",      qty: 2,  weight: 100,  pct: 10.0 },
-  { id: "expbox",   label: "🥚 경험치 상자",     qty: 2,  weight: 100,  pct: 10.0 },
-  { id: "frag1",    label: "🟡 팰몬조각",        qty: 1,  weight: 165,  pct: 16.5 },
-  { id: "frag2",    label: "🟡 팰몬조각",        qty: 2,  weight: 30,   pct: 3.0 },
-  { id: "fruit",    label: "🌰 스킬 열매",       qty: 50, weight: 120,  pct: 12.0 },
-  { id: "wood",     label: "🪵 목판 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
-  { id: "steel",    label: "⚙️ 강철 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
-  { id: "gold",     label: "🪙 골드 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
-  { id: "diamond",  label: "💎 다이아 보물상자", qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "gem",      label: "✨ 오로라 정수",       qty: 5,  weight: 5,    pct: 0.5,  color: "var(--purple)" },
+  { id: "custom",   label: "📦 커스텀상자",        qty: 2,  weight: 100,  pct: 10.0 },
+  { id: "power",    label: "⚡ 전력 보물상자",     qty: 2,  weight: 100,  pct: 10.0 },
+  { id: "frag1",    label: "🟡 팰몬조각",          qty: 1,  weight: 165,  pct: 16.5 },
+  { id: "frag2",    label: "🟡 팰몬조각",          qty: 2,  weight: 30,   pct: 3.0 },
+  { id: "fruit",    label: "🌰 스킬 열매",         qty: 50, weight: 120,  pct: 12.0 },
+  { id: "wood",     label: "🪵 목판 보물상자",     qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "steel",    label: "⚙️ 강철 보물상자",     qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "gold",     label: "🪙 골드 보물상자",     qty: 1,  weight: 120,  pct: 12.0 },
+  { id: "expbox",   label: "🥚 경험치 보물상자",   qty: 1,  weight: 120,  pct: 12.0 },
 ];
 const SUMMON_MODE2_TOTAL_WEIGHT = SUMMON_MODE2_DROPS.reduce((s, d) => s + d.weight, 0);  // 1000
 
@@ -1854,15 +1854,29 @@ const SUMMON_AVG_INTIMACY_PER_PULL = SUMMON_MODE1_DROPS
   .reduce((s, d) => s + (d.intimacy || 0) * (d.weight / SUMMON_MODE1_TOTAL_WEIGHT), 0);
 // ≈ 1.848
 
+// 신화 팰몬 보유 여부 상태 (토글)
+let __summonHasTarget = false;
+
+function applySummonToggleToDOM() {
+  // 토글 버튼 active 상태
+  document.querySelectorAll("#summon-card .ptype-btn").forEach((b) => {
+    const isOwned = b.dataset.summonType === "owned";
+    b.classList.toggle("active", isOwned === __summonHasTarget);
+  });
+  // 친밀도 입력칸 표시/숨김 (보유면 숨김)
+  const intRow = $("summon-intimacy-row");
+  if (intRow) intRow.style.display = __summonHasTarget ? "none" : "";
+}
+
 function updateSummonNeedInfo() {
   const box = $("summon-need-info");
   if (!box) return;
   const intimacy = Math.min(1200, Math.max(0, parseInt($("summon-intimacy")?.value || 0)));
-  const hasTarget = $("summon-has-target")?.checked;
+  const hasTarget = __summonHasTarget;
 
   if (hasTarget) {
     box.innerHTML = `
-      <div>✅ <b>팰몬 보유 모드</b></div>
+      <div>✨ <b>신화 팰몬 보유 모드</b></div>
       <div style="font-size:13px;font-weight:600;margin-top:3px;color:var(--amber);">친밀도 무관 — 그냥 아이템만 뽑힘</div>`;
     box.style.background = "rgba(251,191,36,0.08)";
     box.style.borderColor = "rgba(251,191,36,0.3)";
@@ -1903,17 +1917,26 @@ function buildSummonTab() {
   $("summon-roll").addEventListener("click", () => {
     const count = Math.max(0, parseInt($("summon-count").value || 0));
     const startIntimacy = Math.min(1200, Math.max(0, parseInt($("summon-intimacy").value || 0)));
-    const hasTarget = $("summon-has-target").checked;
+    const hasTarget = __summonHasTarget;
     if (count <= 0) { renderSummonIdle(); return; }
     const result = simulateSummon(count, startIntimacy, hasTarget);
     renderSummonResult(result, hasTarget, startIntimacy);
   });
 
-  // 실시간 필요 구슬 계산 (친밀도 / 보유여부 변경 시)
-  ["summon-intimacy", "summon-has-target"].forEach((id) => {
+  // 신화 팰몬 보유/미보유 토글
+  document.querySelectorAll("#summon-card .ptype-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      __summonHasTarget = btn.dataset.summonType === "owned";
+      applySummonToggleToDOM();
+      updateSummonNeedInfo();
+    });
+  });
+  applySummonToggleToDOM();
+
+  // 실시간 필요 구슬 계산 (친밀도 변경 시)
+  ["summon-intimacy"].forEach((id) => {
     const el = $(id);
     if (el) el.addEventListener("input", updateSummonNeedInfo);
-    if (el) el.addEventListener("change", updateSummonNeedInfo);
   });
   updateSummonNeedInfo();
 
@@ -2035,7 +2058,7 @@ function renderSummonResult(result, hasTarget, startIntimacy) {
   } else if (hasTarget) {
     color = "var(--amber)";
     headlineMsg = `📦 ${fmt(result.summonsUsed)}회 소환`;
-    subMsg = `보유 모드 — 아이템 ${result.summonsUsed}개 분배 결과`;
+    subMsg = `신화 팰몬 보유 모드 — 아이템 ${result.summonsUsed}개 분배 결과`;
   } else {
     color = "var(--red)";
     headlineMsg = `😢 미획득`;
