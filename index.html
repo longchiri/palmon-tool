@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515az" />
+  <link rel="stylesheet" href="style.css?v=20260515bd" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -566,7 +566,7 @@
       <div class="grid-3">
         <div class="group essence-img-card">
           <div class="group-title">🌟 오로라 소환</div>
-          <img src="aurora.png" alt="오로라 구슬" class="bead-img" onerror="this.style.display='none'">
+          <img src="aurora-orb.png" alt="오로라 구슬" class="bead-img" onerror="this.style.display='none'">
 
           <div class="form-row">
             <label>보유 오로라 구슬</label>
@@ -575,6 +575,11 @@
           <div class="form-row">
             <label>현재 친밀도</label>
             <input type="number" id="summon-intimacy" min="0" max="1200" value="0" inputmode="numeric">
+          </div>
+          <!-- 예상 필요 구슬 (실시간 계산) -->
+          <div id="summon-need-info" style="margin:6px 0 4px;padding:8px 10px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:6px;font-size:12.5px;line-height:1.5;color:var(--blue);">
+            <div>📊 예상 필요 구슬 (친밀도 1200까지)</div>
+            <div style="font-size:14px;font-weight:700;margin-top:3px;">계산 중...</div>
           </div>
           <div style="margin:10px 0 4px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:6px;">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;">
@@ -1619,6 +1624,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515az"></script>
+  <script src="app.js?v=20260515bd"></script>
 </body>
 </html>

@@ -1847,6 +1847,55 @@ const SUMMON_MODE2_DROPS = [
 ];
 const SUMMON_MODE2_TOTAL_WEIGHT = SUMMON_MODE2_DROPS.reduce((s, d) => s + d.weight, 0);  // 1000
 
+// 평균 친밀도 획득 per 소환 (Mode 1, 직접 획득 포함 안 함)
+// = sum(intimacy * pct) for all non-target items
+const SUMMON_AVG_INTIMACY_PER_PULL = SUMMON_MODE1_DROPS
+  .filter((d) => !d.isTarget)
+  .reduce((s, d) => s + (d.intimacy || 0) * (d.weight / SUMMON_MODE1_TOTAL_WEIGHT), 0);
+// ≈ 1.848
+
+function updateSummonNeedInfo() {
+  const box = $("summon-need-info");
+  if (!box) return;
+  const intimacy = Math.min(1200, Math.max(0, parseInt($("summon-intimacy")?.value || 0)));
+  const hasTarget = $("summon-has-target")?.checked;
+
+  if (hasTarget) {
+    box.innerHTML = `
+      <div>✅ <b>팰몬 보유 모드</b></div>
+      <div style="font-size:13px;font-weight:600;margin-top:3px;color:var(--amber);">친밀도 무관 — 그냥 아이템만 뽑힘</div>`;
+    box.style.background = "rgba(251,191,36,0.08)";
+    box.style.borderColor = "rgba(251,191,36,0.3)";
+    box.style.color = "var(--amber)";
+    return;
+  }
+
+  if (intimacy >= 1200) {
+    box.innerHTML = `
+      <div>🎉 <b>친밀도 만피!</b></div>
+      <div style="font-size:14px;font-weight:700;margin-top:3px;color:var(--green);">1회 소환 시 즉시 획득 가능</div>`;
+    box.style.background = "rgba(34,197,94,0.08)";
+    box.style.borderColor = "rgba(34,197,94,0.4)";
+    box.style.color = "var(--green)";
+    return;
+  }
+
+  const remain = 1200 - intimacy;
+  const expected = Math.ceil(remain / SUMMON_AVG_INTIMACY_PER_PULL);  // 예상값 (평균)
+  const ceiling = remain;  // 천장 (최악: 모든 풀 +1만 받아도 도달)
+
+  box.innerHTML = `
+    <div>📊 <b>예상 필요 구슬</b> (친밀도 ${fmt(intimacy)} → 1200, 남은 ${fmt(remain)})</div>
+    <div style="font-size:14px;font-weight:700;margin-top:3px;color:var(--blue);">
+      예상값: <b>${fmt(expected)}개</b>
+      <span style="margin:0 10px;color:var(--text-dim);">·</span>
+      천장: <b style="color:var(--amber);">${fmt(ceiling)}개</b>
+    </div>`;
+  box.style.background = "rgba(96,165,250,0.08)";
+  box.style.borderColor = "rgba(96,165,250,0.3)";
+  box.style.color = "var(--blue)";
+}
+
 function buildSummonTab() {
   if (!$("summon-count")) return;
   renderSummonIdle();
@@ -1859,6 +1908,14 @@ function buildSummonTab() {
     const result = simulateSummon(count, startIntimacy, hasTarget);
     renderSummonResult(result, hasTarget, startIntimacy);
   });
+
+  // 실시간 필요 구슬 계산 (친밀도 / 보유여부 변경 시)
+  ["summon-intimacy", "summon-has-target"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("input", updateSummonNeedInfo);
+    if (el) el.addEventListener("change", updateSummonNeedInfo);
+  });
+  updateSummonNeedInfo();
 
   if ($("summon-prob-toggle")) {
     $("summon-prob-toggle").addEventListener("click", () => {
