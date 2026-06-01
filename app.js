@@ -1866,6 +1866,40 @@ function applySummonToggleToDOM() {
   // 친밀도 입력칸 표시/숨김 (보유면 숨김)
   const intRow = $("summon-intimacy-row");
   if (intRow) intRow.style.display = __summonHasTarget ? "none" : "";
+  // 정수 계산기 섹션 표시/숨김 (보유 모드 전용)
+  const calcSection = $("summon-aurora-calc-section");
+  if (calcSection) calcSection.style.display = __summonHasTarget ? "block" : "none";
+  // 보유 모드 진입 시 계산 즉시 갱신
+  if (__summonHasTarget) updateAuroraCalc();
+}
+
+// 🎯 원하는 오로라 정수 → 필요 구슬 계산
+// Mode 2 평균: 0.005×5 + 0.165×1 + 0.030×2 = 0.025 + 0.165 + 0.060 = 0.25 정수/구슬
+const AURORA_AVG_PER_PULL = SUMMON_MODE2_DROPS
+  .filter((d) => d.id === "aurora1" || d.id === "aurora2" || d.id === "aurora5")
+  .reduce((s, d) => s + (d.qty * d.weight / SUMMON_MODE2_TOTAL_WEIGHT), 0);
+
+function updateAuroraCalc() {
+  const out = $("summon-aurora-result");
+  if (!out) return;
+  const target = Math.max(0, parseInt($("summon-aurora-target")?.value || 0));
+  if (target <= 0) {
+    out.innerHTML = `
+      <div style="font-size:11px;color:var(--text-dim);">필요 오로라 구슬</div>
+      <div style="font-size:22px;font-weight:700;color:var(--purple);margin-top:4px;">0개</div>`;
+    return;
+  }
+  const avgNeeded = Math.ceil(target / AURORA_AVG_PER_PULL);     // 평균
+  const luckyNeeded = Math.ceil(avgNeeded * 0.8);                 // 운 좋으면 (-20%)
+  const safeNeeded = Math.ceil(avgNeeded * 1.25);                 // 안전 (+25%)
+  out.innerHTML = `
+    <div style="font-size:11px;color:var(--text-dim);">필요 오로라 구슬 (평균)</div>
+    <div style="font-size:22px;font-weight:700;color:var(--purple);margin-top:4px;">${fmt(avgNeeded)}개</div>
+    <div style="font-size:11px;color:var(--text-dim);margin-top:6px;">
+      운 좋으면 <b style="color:var(--green);">~${fmt(luckyNeeded)}</b>
+      <span style="margin:0 6px;">·</span>
+      안전선 <b style="color:var(--amber);">~${fmt(safeNeeded)}</b>
+    </div>`;
 }
 
 function updateSummonNeedInfo() {
@@ -1939,6 +1973,11 @@ function buildSummonTab() {
     if (el) el.addEventListener("input", updateSummonNeedInfo);
   });
   updateSummonNeedInfo();
+
+  // 🎯 오로라 정수 계산기 실시간 갱신
+  const auroraInput = $("summon-aurora-target");
+  if (auroraInput) auroraInput.addEventListener("input", updateAuroraCalc);
+  updateAuroraCalc();
 
   if ($("summon-prob-toggle")) {
     $("summon-prob-toggle").addEventListener("click", () => {
