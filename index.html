@@ -18,7 +18,7 @@
   <link rel="shortcut icon" type="image/jpeg" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon" href="favicon.jpg?v=2" />
   <link rel="apple-touch-icon-precomposed" href="favicon.jpg?v=2" />
-  <link rel="stylesheet" href="style.css?v=20260515bl" />
+  <link rel="stylesheet" href="style.css?v=20260601a" />
   <!-- 새로고침 시 사용법 탭이 깜빡이는 현상 방지 — 첫 페인트 전에 마지막 탭으로 미리 전환 -->
   <script>
     (function () {
@@ -1048,6 +1048,82 @@
         </p>
       </div>
 
+      <!-- v1.6 (2026-06-01) -->
+      <div class="group changelog-entry">
+        <div class="group-title">v1.6 · 2026-06-01</div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🎯 오로라 정수 → 필요 구슬 계산기</b> — 신화 팰몬 보유 모드에서만 표시. 원하는 오로라 정수 수량 입력하면 필요한 오로라 구슬 갯수가 실시간 계산 (평균 0.25 정수/구슬 기준 ×4 배). 평균 / 운 좋으면(-20%) / 안전선(+25%) 3종 표시</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🌟 오로라 소환 시뮬레이터 추가</b> — 📦 시뮬레이터 그룹 맨 앞. 🔮 신화 팰몬 미보유 / ✨ 신화 팰몬 보유 토글로 두 모드 지원. 미보유 모드 = 친밀도 1200 도달 자동 획득 + 0.13% 직접 획득. 보유 모드 = 친밀도 없이 아이템 분배. 친밀도 입력 시 예상값 / 천장 실시간 계산. 10종 아이템 확률표 (커스텀상자, 전력 보물상자, 팰몬조각, 스킬 열매, 보물상자 4종 등)</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🌌 메가 팰몬 뽑기 시뮬레이터 추가 (Placeholder)</b> — 📦 시뮬레이터 그룹 오로라 소환 옆. 친밀도 800 도달 자동 획득 시스템, 오로라 구슬 공용 사용. 상세 확률표 + 친밀도 분배 데이터 확인 중 ("준비 중" 표시)</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>📦 시뮬레이터 그룹명 변경</b> — "상자시뮬레이터" → "시뮬레이터" 로 단순화 (열매상자/개선장군/미스테리/이글아이뿐 아니라 오로라 소환 / 메가 팰몬 뽑기까지 포괄)</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🌟 경험치 만렙 290 → 300 확장</b> — Lv 291~300 데이터 10개 추가 (Lv 1→300 누적 = 9,896,157,700 ≈ 약 98억 9,615만). 드롭다운 / 기준값 카드 / 사용법 모두 300으로 업데이트</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>📦 자원상자 + 커스텀상자 추천 통합</b> — 별도 카드였던 "커스텀상자 추천"을 자원상자 추천 표에 통합. 자원별 행 아래에 <b>└ 커스텀 분배</b> sub-row로 표시. 커스텀상자 SR→SSR→UR 순서로 소진. 자원이 충분해서 박스 추천이 필요 없으면 카드 자체 숨김</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>📊 한글 자릿수 표기 추가</b> — 큰 숫자 옆에 "(3억)", "(151억 5,780만)" 식으로 작게 표시. 보유자원 요약 / 캠프별 비교 / 총 필요 자원 표 + 입력칸 옆 힌트로도 자동 표시 (1만 이상부터)</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🎯 결과 카드 타겟 뱃지</b> — 6개 결과 카드 (걸작구슬/팰몬진화/경험치/스킬열매/에너지구슬) 에 🎯 타겟 정보 큰 황금 알약 뱃지 추가. ◆ 제목과 빅 숫자 사이 위치, 한눈에 띔</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>🔄 양방향 이동 버튼</b> — 목표캠프계산기 ↔ 보유자원/가속 계산하기 양방향 즉시 이동 버튼 추가. 데이터 자동 import 후 탭 전환</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>🗺️ 자리배치도 사이드바 sticky + 접기/펼치기</b> — 우측 "건물 배치" 패널을 스크롤해도 따라오게 sticky 설정. 기본 접힌 상태 + ⚙️ 건물 배치하기 버튼으로 펼치기 가능</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-new">✨ 신규</span>
+          <div class="cl-text"><b>📊 헤더 방문자 카운터 추가</b> — hits.sh 서비스로 헤더에 황금색 배지 표시 (Today / Total). 같은 IP 24시간 중복 카운트 안 됨</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>📖 사용법 안내 박스 추가</b> — 메뉴 설명글에 📋 게시판 → 업데이트 요청 안내 + 💻 권장 사용 환경 (PC 권장) 박스 추가</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>📑 메인 탭 순서 변경</b> — 자원 관련 ↔ 팰몬 관련 순서 변경 (건설 → 자원 → 팰몬 → 시뮬레이터). 사용법 페이지 안내도 동일하게 정렬</div>
+        </div>
+
+        <div class="cl-item">
+          <span class="cl-tag cl-imp">🔧 개선</span>
+          <div class="cl-text"><b>🔮 메가진화 단계명 통일</b> — 진화 정수 카드의 5~8단계를 "메가진화 5~8단계" 로 명칭 통일. 에너지 구슬 단계도 "메가 진화 X단계 Y번" → "메가진화 5~8단계 N번" 으로 변경</div>
+        </div>
+
+      </div>
+
       <!-- v1.5 (2026-05-15) -->
       <div class="group changelog-entry">
         <div class="group-title">v1.5 · 2026-05-15</div>
@@ -1724,6 +1800,6 @@
   <div id="event-banner" class="event-banner" role="status" aria-live="polite"></div>
   <button id="event-banner-reopen" class="event-banner-reopen" type="button" title="모험가대회 보기" style="display:none;">🏆</button>
 
-  <script src="app.js?v=20260515bl"></script>
+  <script src="app.js?v=20260601a"></script>
 </body>
 </html>
