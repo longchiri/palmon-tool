@@ -835,6 +835,7 @@ body { overflow-x: hidden; }
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
 #t-summon .grid-3,
+#t-megasummon .grid-3,
 #t-supply .grid-3,
 #t-mysterybox .grid-3,
 #t-eaglebox .grid-3 {
@@ -847,6 +848,7 @@ body { overflow-x: hidden; }
 #t-skillexp .grid-3 > *,
 #t-fruitbox .grid-3 > *,
 #t-summon .grid-3 > *,
+#t-megasummon .grid-3 > *,
 #t-supply .grid-3 > *,
 #t-mysterybox .grid-3 > *,
 #t-eaglebox .grid-3 > * {
@@ -863,6 +865,7 @@ body { overflow-x: hidden; }
 #energy-result-slot,
 #fruitbox-result-slot,
 #summon-result-slot,
+#megasummon-result-slot,
 #supply-result-slot,
 #mysterybox-result-slot,
 #eaglebox-result-slot {
@@ -877,6 +880,7 @@ body { overflow-x: hidden; }
 #energy-result-slot > .result-card,
 #fruitbox-result-slot > .result-card,
 #summon-result-slot > .result-card,
+#megasummon-result-slot > .result-card,
 #supply-result-slot > .result-card,
 #mysterybox-result-slot > .result-card,
 #eaglebox-result-slot > .result-card {
@@ -893,6 +897,7 @@ body { overflow-x: hidden; }
 #t-skillexp .grid-3 > .group:last-child,
 #t-fruitbox .grid-3 > .group:last-child,
 #t-summon .grid-3 > .group:last-child,
+#t-megasummon .grid-3 > .group:last-child,
 #t-supply .grid-3 > .group:last-child,
 #t-mysterybox .grid-3 > .group:last-child,
 #t-eaglebox .grid-3 > .group:last-child {
@@ -906,6 +911,7 @@ body { overflow-x: hidden; }
 #t-skillexp .grid-3,
 #t-fruitbox .grid-3,
 #t-summon .grid-3,
+#t-megasummon .grid-3,
 #t-supply .grid-3,
 #t-mysterybox .grid-3,
 #t-eaglebox .grid-3 {
@@ -917,6 +923,7 @@ body { overflow-x: hidden; }
 #t-skillexp > .grid-3:not(:last-child),
 #t-fruitbox > .grid-3:not(:last-child),
 #t-summon > .grid-3:not(:last-child),
+#t-megasummon > .grid-3:not(:last-child),
 #t-supply > .grid-3:not(:last-child),
 #t-mysterybox > .grid-3:not(:last-child),
 #t-eaglebox > .grid-3:not(:last-child) {

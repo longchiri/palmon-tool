@@ -2874,11 +2874,12 @@ const TAB_GROUPS = {
     icon: "📦",
     label: "시뮬레이터",
     tabs: [
-      { id: "t-summon",     icon: "🌟", label: "오로라 소환" },
-      { id: "t-fruitbox",   icon: "🌰", label: "열매상자" },
-      { id: "t-supply",     icon: "🪖", label: "개선장군 보급" },
-      { id: "t-mysterybox", icon: "🎁", label: "미스테리박스" },
-      { id: "t-eaglebox",   icon: "🦅", label: "이글아이 보물상자" },
+      { id: "t-summon",      icon: "🌟", label: "오로라 소환" },
+      { id: "t-megasummon",  icon: "🌌", label: "메가 팰몬 뽑기" },
+      { id: "t-fruitbox",    icon: "🌰", label: "열매상자" },
+      { id: "t-supply",      icon: "🪖", label: "개선장군 보급" },
+      { id: "t-mysterybox",  icon: "🎁", label: "미스테리박스" },
+      { id: "t-eaglebox",    icon: "🦅", label: "이글아이 보물상자" },
     ],
   },
 };
