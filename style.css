@@ -537,6 +537,40 @@ body { overflow-x: hidden; }
   font-weight: 700;
 }
 
+/* ───── 신화 팰몬 미보유/보유 토글 (#summon-card 전용 색상 오버라이드) ───── */
+/* 비활성 상태: 흐릿하게 (선택 안된 게 명확히 보이도록) */
+#summon-card .palmon-type-toggle .ptype-btn {
+  background: rgba(255,255,255,0.02);
+  border-color: #232b36;
+  color: #6b7280;
+  opacity: 0.78;
+}
+#summon-card .palmon-type-toggle .ptype-btn:hover:not(.active) {
+  opacity: 1;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* 활성: 미보유 = 파란색(🔮) */
+#summon-card .palmon-type-toggle .ptype-btn[data-summon-type="not-owned"].active {
+  background: rgba(96,165,250,0.18);
+  border-color: var(--blue);
+  color: #bfdbfe;
+  font-weight: 700;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(96,165,250,0.35), 0 0 14px rgba(96,165,250,0.18);
+}
+
+/* 활성: 보유 = 앰버(✨) */
+#summon-card .palmon-type-toggle .ptype-btn[data-summon-type="owned"].active {
+  background: rgba(251,191,36,0.16);
+  border-color: var(--amber);
+  color: #fde68a;
+  font-weight: 700;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.35), 0 0 14px rgba(251,191,36,0.18);
+}
+
 /* 메가진화 지원 토글 */
 .mega-support-row {
   margin: 0 0 10px;
