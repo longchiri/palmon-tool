@@ -4797,125 +4797,9 @@ function setupBlackjackMode() {
       document.querySelectorAll("#blackjack-mode-toggle .ptype-btn").forEach((b) => {
         b.classList.toggle("active", b.dataset.bjMode === _bjMode);
       });
-      runBjTargetCalc(true);
-      runBjRangeCalc(true);
       bjRenderStrategy();
     });
   });
-}
-
-// ───── 기능 1: 목표 포인트 → 필요 골드카드 ─────
-function runBjTargetCalc(silent = false) {
-  const out = document.getElementById("bj-target-result");
-  if (!out) return;
-  const target = Math.max(0, parseInt(document.getElementById("bj-target-point")?.value || 0));
-  const owned  = Math.max(0, parseInt(document.getElementById("bj-owned-card")?.value || 0));
-  if (target <= 0) {
-    if (silent) { out.innerHTML = ""; return; }
-    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">목표 포인트를 입력해주세요.</div>`;
-    return;
-  }
-  const per = bjPerGold();
-  const gpd = bjGoldPerDraw(_bjMode); // 10배면 카드는 10의 배수
-  const minRoundCost = 3 * gpd;       // 최소 1라운드 비용 (3 또는 30)
-  const roundUp = (g) => gpd === 10 ? Math.ceil(g / 10) * 10 : g;
-
-  const minGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.max)));   // 운 좋으면
-  const avgGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.avg)));   // 최적 평균
-  const maxGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.min)));   // 운 나쁘면
-
-  const shortMin = Math.max(0, minGold - owned);
-  const shortAvg = Math.max(0, avgGold - owned);
-  const shortMax = Math.max(0, maxGold - owned);
-
-  // 보유 골드카드로 얻을 수 있는 범위
-  const mul = bjModeMul(_bjMode);
-  const ownedDraws = Math.floor(owned / gpd); // 가능한 총 카드 뽑기 수
-  const ownedMinR = Math.floor(ownedDraws / 3); // 3장씩 채우면 최대 라운드 수
-  const ownedMaxR = Math.floor(ownedDraws / 5); // 5장씩 채우면 최소 라운드 수
-  const ownedMin = ownedMinR * 200 * mul; // 모든 라운드 3장 × ×1
-  const ownedMax = ownedMaxR * 1000 * mul; // 모든 라운드 5장 × ×5
-  const ownedAvgClean = Math.round(owned * per.avg); // owned × per_gold_avg (모드 무관)
-
-  const badge = (n) =>
-    n === 0
-      ? `<span style="display:inline-block;padding:1px 7px;background:rgba(52,211,153,0.18);color:var(--green);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">충분 ✓</span>`
-      : `<span style="display:inline-block;padding:1px 7px;background:rgba(248,113,113,0.18);color:var(--red);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">-${bjFmt(n)}개 부족</span>`;
-
-  out.innerHTML = `
-    <div style="padding:12px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;">
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎯 목표 ${bjFmt(target)} 코인 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
-      <div style="font-size:13px;line-height:1.7;">
-        <b>📈 운 좋으면 (5장 + ×5):</b>
-        <span class="txt-amber"><b>${bjFmt(minGold)}개</b></span>
-        ${badge(shortMin)}<br>
-        <b>🎯 예상 (최적 평균):</b>
-        <span style="color:#34d399;"><b>${bjFmt(avgGold)}개</b></span>
-        ${badge(shortAvg)}<br>
-        <b>📉 운 나쁘면 (3장 + ×1):</b>
-        <span class="txt-blue"><b>${bjFmt(maxGold)}개</b></span>
-        ${badge(shortMax)}
-      </div>
-    </div>
-    ${owned > 0 ? `
-      <div style="margin-top:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;font-size:12.5px;line-height:1.7;">
-        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}개 사용 시 가능:</span><br>
-        ${ownedDraws < 3
-          ? `<span class="txt-red">한 라운드도 못 돌림 (최소 ${3 * gpd}개 필요)</span>`
-          : `<b class="txt-blue">최소 ${bjFmt(ownedMin)}</b> · <b style="color:#34d399;">예상 ${bjFmt(ownedAvgClean)}</b> · <b class="txt-amber">최대 ${bjFmt(ownedMax)}</b> 코인`
-        }
-      </div>
-    ` : ""}
-  `;
-}
-
-// ───── 기능 2: 사용할 골드카드 → 예상 코인 범위 ─────
-function runBjRangeCalc(silent = false) {
-  const out = document.getElementById("bj-range-result");
-  if (!out) return;
-  const cards = Math.max(0, parseInt(document.getElementById("bj-use-card")?.value || 0));
-  if (cards <= 0) {
-    if (silent) { out.innerHTML = ""; return; }
-    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">사용할 골드카드 수를 입력해주세요.</div>`;
-    return;
-  }
-  const gpd = bjGoldPerDraw(_bjMode);
-  const mul = bjModeMul(_bjMode);
-  const totalDraws = Math.floor(cards / gpd);  // 총 카드 뽑기 가능 수
-  const wasteGold = cards - totalDraws * gpd;
-
-  if (totalDraws < 3) {
-    out.innerHTML = `
-      <div style="padding:12px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;color:var(--red);font-size:13px;">
-        ⚠️ 최소 1라운드 (3장) 필요. ${_bjMode === "x10" ? "10배 모드는" : "일반 모드는"} <b>최소 ${3 * gpd}개</b> 필요해요.
-      </div>
-    `;
-    return;
-  }
-
-  const minR = Math.floor(totalDraws / 3); // 최대 라운드 수 (3장씩)
-  const maxR = Math.floor(totalDraws / 5); // 최소 라운드 수 (5장씩)
-  const minCoin = minR * 200 * mul;        // 모든 라운드 3장 + ×1
-  const maxCoin = maxR * 1000 * mul;       // 모든 라운드 5장 + ×5
-  const per = bjPerGold();
-  const avgCoinSimple = Math.round(cards * per.avg); // 골드 × per-gold (모드 무관)
-
-  const warning = wasteGold > 0
-    ? `<div class="hint" style="color:var(--amber);margin-bottom:8px;">⚠️ ${cards}개 중 <b>${cards - wasteGold}개만 사용</b> 가능 (남은 ${wasteGold}개는 카드 1장 못 채움)</div>`
-    : "";
-
-  out.innerHTML = `
-    ${warning}
-    <div style="padding:12px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${bjFmt(cards)}개 → 총 ${bjFmt(totalDraws)}장 뽑기 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
-      <div style="font-size:13px;line-height:1.8;">
-        <b class="txt-blue">📉 최소 (3장+×1 매번):</b> <b style="font-size:15px;">${bjFmt(minCoin)}</b> 코인<br>
-        <b style="color:#34d399;">🎯 예상 (최적 평균):</b> <b style="font-size:16px;color:#34d399;">${bjFmt(avgCoinSimple)}</b> 코인<br>
-        <b class="txt-amber">📈 최대 (5장+×5 매번):</b> <b style="font-size:15px;">${bjFmt(maxCoin)}</b> 코인<br>
-        <span class="txt-dim" style="font-size:11.5px;">예상값은 최적 플레이(전략 도우미 기준) 평균이에요.</span>
-      </div>
-    </div>
-  `;
 }
 
 // ─────────────────────────────────────────────────────
@@ -5103,16 +4987,6 @@ function bjRenderStrategy() {
 function setupBlackjack() {
   if (!document.getElementById("t-blackjack")) return;
   setupBlackjackMode();
-  document.getElementById("bj-calc-target-btn")?.addEventListener("click", () => runBjTargetCalc(false));
-  document.getElementById("bj-calc-range-btn")?.addEventListener("click", () => runBjRangeCalc(false));
-  ["bj-target-point", "bj-owned-card"].forEach((id) => {
-    document.getElementById(id)?.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") runBjTargetCalc(false);
-    });
-  });
-  document.getElementById("bj-use-card")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") runBjRangeCalc(false);
-  });
   const toggle = document.getElementById("blackjack-info-toggle");
   const table = document.getElementById("blackjack-info-table");
   if (toggle && table) {
