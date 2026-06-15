@@ -2919,6 +2919,7 @@ const TAB_GROUPS = {
       { id: "t-supply",      icon: "🪖", label: "개선장군 보급" },
       { id: "t-mysterybox",  icon: "🎁", label: "미스테리박스" },
       { id: "t-eaglebox",    icon: "🦅", label: "이글아이 보물상자" },
+      { id: "t-blackjack",   icon: "🃏", label: "블랙잭" },
     ],
   },
 };
@@ -4648,6 +4649,182 @@ function startAdvBanner() {
   }
 }
 startAdvBanner();
+
+// =====================================================
+// 🃏 블랙잭 계산기
+// =====================================================
+// 베팅 200 고정, 점수 구간별 배수
+//  0-20점 → ×1 (200), 21-35점 → ×2 (400), 36-45점 → ×3 (600), 46-54점 → ×5 (1000)
+//  10배 모드는 모든 획득이 정확히 10배 (2000/4000/6000/10000) + 카드 비용 10배
+const BJ_BET_BASE = 200;
+const BJ_MULTI_MIN = 1;   // 매번 ×1 가정 (최악)
+const BJ_MULTI_MAX = 5;   // 매번 ×5 가정 (최선)
+let _bjMode = "x1";       // "x1" or "x10"
+
+function bjPayoutPerRound(multiplier, mode) {
+  const base = BJ_BET_BASE * multiplier;
+  return mode === "x10" ? base * 10 : base;
+}
+function bjCardsPerRound(mode) {
+  return mode === "x10" ? 10 : 1;
+}
+function bjFmt(n) {
+  return Number(n).toLocaleString("ko-KR");
+}
+
+// 모드 토글
+function setupBlackjackMode() {
+  document.querySelectorAll("#blackjack-mode-toggle .ptype-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      _bjMode = btn.dataset.bjMode || "x1";
+      document.querySelectorAll("#blackjack-mode-toggle .ptype-btn").forEach((b) => {
+        b.classList.toggle("active", b.dataset.bjMode === _bjMode);
+      });
+      // 모드 바뀌면 자동 재계산
+      runBjTargetCalc(true);
+      runBjRangeCalc(true);
+    });
+  });
+}
+
+// 기능 1: 목표 포인트 → 필요 블랙카드
+function runBjTargetCalc(silent = false) {
+  const out = document.getElementById("bj-target-result");
+  if (!out) return;
+  const target = Math.max(0, parseInt(document.getElementById("bj-target-point")?.value || 0));
+  const owned  = Math.max(0, parseInt(document.getElementById("bj-owned-card")?.value || 0));
+  if (target <= 0) {
+    if (silent) { out.innerHTML = ""; return; }
+    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">목표 포인트를 입력해주세요.</div>`;
+    return;
+  }
+  const cardsPerRd = bjCardsPerRound(_bjMode);
+  const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode); // 한 라운드 최소 획득
+  const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode); // 한 라운드 최대 획득
+
+  // 최소 라운드 = 최대 획득 가정 (좋게 가정)
+  const minRounds = Math.ceil(target / payMax);
+  // 최대 라운드 = 최소 획득 가정 (나쁘게 가정)
+  const maxRounds = Math.ceil(target / payMin);
+
+  const minCards = minRounds * cardsPerRd;
+  const maxCards = maxRounds * cardsPerRd;
+
+  const shortMin = Math.max(0, minCards - owned);
+  const shortMax = Math.max(0, maxCards - owned);
+
+  // 가능한 획득(보유 카드 다 쓰면)
+  const ownedRounds = Math.floor(owned / cardsPerRd);
+  const ownedMin = ownedRounds * payMin;
+  const ownedMax = ownedRounds * payMax;
+
+  const enoughBadge = (n) =>
+    n === 0
+      ? `<span style="display:inline-block;padding:1px 7px;background:rgba(52,211,153,0.18);color:var(--green);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">충분 ✓</span>`
+      : `<span style="display:inline-block;padding:1px 7px;background:rgba(248,113,113,0.18);color:var(--red);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">-${bjFmt(n)}장 부족</span>`;
+
+  out.innerHTML = `
+    <div style="padding:12px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎯 목표 ${bjFmt(target)} 포인트 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
+      <div style="font-size:13px;line-height:1.7;">
+        <b>📈 운 좋으면 (매번 ×5):</b>
+        <span class="txt-amber"><b>${bjFmt(minRounds)}라운드 = ${bjFmt(minCards)}장</b></span>
+        ${enoughBadge(shortMin)}<br>
+        <b>📉 운 나쁘면 (매번 ×1):</b>
+        <span class="txt-blue"><b>${bjFmt(maxRounds)}라운드 = ${bjFmt(maxCards)}장</b></span>
+        ${enoughBadge(shortMax)}
+      </div>
+    </div>
+    ${owned > 0 ? `
+      <div style="margin-top:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;font-size:12.5px;">
+        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}장 사용 시 가능:</span>
+        ${ownedRounds === 0
+          ? `<span class="txt-red">한 라운드도 못 돌림 (${_bjMode === "x10" ? "10장 필요" : "1장 필요"})</span>`
+          : `<b class="txt-amber">${bjFmt(ownedMin)} ~ ${bjFmt(ownedMax)} 포인트</b> (${bjFmt(ownedRounds)}라운드)`
+        }
+      </div>
+    ` : ""}
+  `;
+}
+
+// 기능 2: 사용할 카드 → 예상 포인트 범위
+function runBjRangeCalc(silent = false) {
+  const out = document.getElementById("bj-range-result");
+  if (!out) return;
+  const cards = Math.max(0, parseInt(document.getElementById("bj-use-card")?.value || 0));
+  if (cards <= 0) {
+    if (silent) { out.innerHTML = ""; return; }
+    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">사용할 카드 수를 입력해주세요.</div>`;
+    return;
+  }
+  const cardsPerRd = bjCardsPerRound(_bjMode);
+
+  // 10배 모드면 10의 배수가 아니면 경고
+  if (_bjMode === "x10" && cards % 10 !== 0) {
+    const usable = Math.floor(cards / 10) * 10;
+    const waste = cards - usable;
+    if (usable === 0) {
+      out.innerHTML = `
+        <div style="padding:12px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;color:var(--red);font-size:13px;">
+          ⚠️ 10배 모드는 <b>최소 10장</b>이 필요합니다. (${cards}장 → 0라운드)
+        </div>
+      `;
+      return;
+    }
+    runBjRangeWithCards(usable, cardsPerRd, `⚠️ <b>${cards}장 중 ${usable}장만 사용</b> 가능 (${waste}장은 라운드 못 채움)`);
+    return;
+  }
+
+  runBjRangeWithCards(cards, cardsPerRd);
+}
+function runBjRangeWithCards(cards, cardsPerRd, warning = "") {
+  const out = document.getElementById("bj-range-result");
+  if (!out) return;
+  const rounds = Math.floor(cards / cardsPerRd);
+  const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode);
+  const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode);
+  const totalMin = rounds * payMin;
+  const totalMax = rounds * payMax;
+
+  out.innerHTML = `
+    ${warning ? `<div class="hint" style="color:var(--amber);margin-bottom:8px;">${warning}</div>` : ""}
+    <div style="padding:12px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${bjFmt(cards)}장 × ${bjFmt(rounds)}라운드 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
+      <div style="font-size:13px;line-height:1.8;">
+        <b class="txt-blue">📉 최소 (매번 ×1):</b> <b style="font-size:15px;">${bjFmt(totalMin)}</b> 포인트<br>
+        <b class="txt-amber">📈 최대 (매번 ×5):</b> <b style="font-size:15px;">${bjFmt(totalMax)}</b> 포인트<br>
+        <span class="txt-dim" style="font-size:11.5px;">실제 결과는 이 사이 어딘가에서 나옵니다.</span>
+      </div>
+    </div>
+  `;
+}
+
+function setupBlackjack() {
+  if (!document.getElementById("t-blackjack")) return;
+  setupBlackjackMode();
+  document.getElementById("bj-calc-target-btn")?.addEventListener("click", () => runBjTargetCalc(false));
+  document.getElementById("bj-calc-range-btn")?.addEventListener("click", () => runBjRangeCalc(false));
+  // Enter 키로도 계산
+  ["bj-target-point", "bj-owned-card"].forEach((id) => {
+    document.getElementById(id)?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runBjTargetCalc(false);
+    });
+  });
+  document.getElementById("bj-use-card")?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") runBjRangeCalc(false);
+  });
+  // 점수 배수표 토글
+  const toggle = document.getElementById("blackjack-info-toggle");
+  const table = document.getElementById("blackjack-info-table");
+  if (toggle && table) {
+    toggle.addEventListener("click", () => {
+      const show = table.style.display === "none";
+      table.style.display = show ? "" : "none";
+      toggle.textContent = show ? "📊 점수 배수표 숨기기" : "📊 점수 배수표 보기";
+    });
+  }
+}
+setupBlackjack();
 
 // 서버명 표시 헬퍼 — 입력 시 # 안 써도 자동으로 # 붙이고, 이미 있으면 그대로
 function formatServer(s) {
