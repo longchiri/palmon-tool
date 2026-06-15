@@ -571,6 +571,37 @@ body { overflow-x: hidden; }
   box-shadow: 0 0 0 1px rgba(251,191,36,0.55), 0 0 18px rgba(251,191,36,0.35);
 }
 
+/* ───── 블랙잭 모드 토글 ───── */
+#blackjack-mode-toggle .ptype-btn {
+  background: rgba(255,255,255,0.02);
+  border-color: #232b36;
+  color: #6b7280;
+  opacity: 0.78;
+}
+#blackjack-mode-toggle .ptype-btn:hover:not(.active) {
+  opacity: 1;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+/* 활성: 일반 모드 = 그린 */
+#blackjack-mode-toggle .ptype-btn[data-bj-mode="x1"].active {
+  background: linear-gradient(180deg, #065f46 0%, #047857 100%);
+  border-color: #34d399;
+  color: #ffffff;
+  font-weight: 700;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(52,211,153,0.55), 0 0 18px rgba(52,211,153,0.35);
+}
+/* 활성: 10배 모드 = 앰버 (프리미엄 느낌) */
+#blackjack-mode-toggle .ptype-btn[data-bj-mode="x10"].active {
+  background: linear-gradient(180deg, #92400e 0%, #b45309 100%);
+  border-color: #fbbf24;
+  color: #ffffff;
+  font-weight: 700;
+  opacity: 1;
+  box-shadow: 0 0 0 1px rgba(251,191,36,0.55), 0 0 18px rgba(251,191,36,0.35);
+}
+
 /* 메가진화 지원 토글 */
 .mega-support-row {
   margin: 0 0 10px;

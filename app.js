@@ -4657,9 +4657,10 @@ startAdvBanner();
 //  0-20점 → ×1 (200), 21-35점 → ×2 (400), 36-45점 → ×3 (600), 46-54점 → ×5 (1000)
 //  10배 모드는 모든 획득이 정확히 10배 (2000/4000/6000/10000) + 카드 비용 10배
 const BJ_BET_BASE = 200;
-const BJ_MULTI_MIN = 1;   // 매번 ×1 가정 (최악)
-const BJ_MULTI_MAX = 5;   // 매번 ×5 가정 (최선)
-let _bjMode = "x1";       // "x1" or "x10"
+const BJ_MULTI_MIN = 1;     // 매번 ×1 가정 (최악)
+const BJ_MULTI_MAX = 5;     // 매번 ×5 가정 (최선)
+const BJ_MULTI_AVG = 2.75;  // 4개 배수(×1/×2/×3/×5) 동등 확률 가정 평균
+let _bjMode = "x1";         // "x1" or "x10"
 
 function bjPayoutPerRound(multiplier, mode) {
   const base = BJ_BET_BASE * multiplier;
@@ -4701,21 +4702,27 @@ function runBjTargetCalc(silent = false) {
   const cardsPerRd = bjCardsPerRound(_bjMode);
   const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode); // 한 라운드 최소 획득
   const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode); // 한 라운드 최대 획득
+  const payAvg = bjPayoutPerRound(BJ_MULTI_AVG, _bjMode); // 한 라운드 평균 획득
 
   // 최소 라운드 = 최대 획득 가정 (좋게 가정)
   const minRounds = Math.ceil(target / payMax);
+  // 예상 라운드 = 평균 획득 가정
+  const avgRounds = Math.ceil(target / payAvg);
   // 최대 라운드 = 최소 획득 가정 (나쁘게 가정)
   const maxRounds = Math.ceil(target / payMin);
 
   const minCards = minRounds * cardsPerRd;
+  const avgCards = avgRounds * cardsPerRd;
   const maxCards = maxRounds * cardsPerRd;
 
   const shortMin = Math.max(0, minCards - owned);
+  const shortAvg = Math.max(0, avgCards - owned);
   const shortMax = Math.max(0, maxCards - owned);
 
   // 가능한 획득(보유 카드 다 쓰면)
   const ownedRounds = Math.floor(owned / cardsPerRd);
   const ownedMin = ownedRounds * payMin;
+  const ownedAvg = ownedRounds * payAvg;
   const ownedMax = ownedRounds * payMax;
 
   const enoughBadge = (n) =>
@@ -4730,17 +4737,20 @@ function runBjTargetCalc(silent = false) {
         <b>📈 운 좋으면 (매번 ×5):</b>
         <span class="txt-amber"><b>${bjFmt(minRounds)}라운드 = ${bjFmt(minCards)}장</b></span>
         ${enoughBadge(shortMin)}<br>
+        <b>🎯 예상 (평균 ×2.75):</b>
+        <span style="color:#34d399;"><b>${bjFmt(avgRounds)}라운드 = ${bjFmt(avgCards)}장</b></span>
+        ${enoughBadge(shortAvg)}<br>
         <b>📉 운 나쁘면 (매번 ×1):</b>
         <span class="txt-blue"><b>${bjFmt(maxRounds)}라운드 = ${bjFmt(maxCards)}장</b></span>
         ${enoughBadge(shortMax)}
       </div>
     </div>
     ${owned > 0 ? `
-      <div style="margin-top:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;font-size:12.5px;">
-        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}장 사용 시 가능:</span>
+      <div style="margin-top:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;font-size:12.5px;line-height:1.7;">
+        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}장 사용 시 가능:</span><br>
         ${ownedRounds === 0
           ? `<span class="txt-red">한 라운드도 못 돌림 (${_bjMode === "x10" ? "10장 필요" : "1장 필요"})</span>`
-          : `<b class="txt-amber">${bjFmt(ownedMin)} ~ ${bjFmt(ownedMax)} 포인트</b> (${bjFmt(ownedRounds)}라운드)`
+          : `<b class="txt-blue">최소 ${bjFmt(ownedMin)}</b> · <b style="color:#34d399;">예상 ${bjFmt(Math.round(ownedAvg))}</b> · <b class="txt-amber">최대 ${bjFmt(ownedMax)}</b> 포인트 (${bjFmt(ownedRounds)}라운드)`
         }
       </div>
     ` : ""}
@@ -4783,8 +4793,10 @@ function runBjRangeWithCards(cards, cardsPerRd, warning = "") {
   const rounds = Math.floor(cards / cardsPerRd);
   const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode);
   const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode);
+  const payAvg = bjPayoutPerRound(BJ_MULTI_AVG, _bjMode);
   const totalMin = rounds * payMin;
   const totalMax = rounds * payMax;
+  const totalAvg = rounds * payAvg;
 
   out.innerHTML = `
     ${warning ? `<div class="hint" style="color:var(--amber);margin-bottom:8px;">${warning}</div>` : ""}
@@ -4792,8 +4804,9 @@ function runBjRangeWithCards(cards, cardsPerRd, warning = "") {
       <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${bjFmt(cards)}장 × ${bjFmt(rounds)}라운드 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
       <div style="font-size:13px;line-height:1.8;">
         <b class="txt-blue">📉 최소 (매번 ×1):</b> <b style="font-size:15px;">${bjFmt(totalMin)}</b> 포인트<br>
+        <b style="color:#34d399;">🎯 예상 (평균 ×2.75):</b> <b style="font-size:16px;color:#34d399;">${bjFmt(Math.round(totalAvg))}</b> 포인트<br>
         <b class="txt-amber">📈 최대 (매번 ×5):</b> <b style="font-size:15px;">${bjFmt(totalMax)}</b> 포인트<br>
-        <span class="txt-dim" style="font-size:11.5px;">실제 결과는 이 사이 어딘가에서 나옵니다.</span>
+        <span class="txt-dim" style="font-size:11.5px;">예상값은 4개 배수가 동등 확률일 때 기준이라 실제와 다를 수 있어요.</span>
       </div>
     </div>
   `;
