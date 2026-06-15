@@ -4651,29 +4651,145 @@ function startAdvBanner() {
 startAdvBanner();
 
 // =====================================================
-// 🃏 블랙잭 계산기
+// 🃏 블랙잭 계산기 (v2 — 카드 1장당 골드카드 1개 소모 모델)
 // =====================================================
-// 베팅 200 고정, 점수 구간별 배수
-//  0-20점 → ×1 (200), 21-35점 → ×2 (400), 36-45점 → ×3 (600), 46-54점 → ×5 (1000)
-//  10배 모드는 모든 획득이 정확히 10배 (2000/4000/6000/10000) + 카드 비용 10배
-const BJ_BET_BASE = 200;
-const BJ_MULTI_MIN = 1;     // 매번 ×1 가정 (최악)
-const BJ_MULTI_MAX = 5;     // 매번 ×5 가정 (최선)
-const BJ_MULTI_AVG = 2.75;  // 4개 배수(×1/×2/×3/×5) 동등 확률 가정 평균
-let _bjMode = "x1";         // "x1" or "x10"
+// 라운드당 3~5장, 점수 구간별 배수
+//   0-20점 → ×1 (200코인), 21-35점 → ×2 (400), 36-45점 → ×3 (600), 46-54점 → ×5 (1000)
+// 일반 모드: 카드 1장 = 골드카드 1개
+// 10배 모드: 카드 1장 = 골드카드 10개, 결산 ×10 배
 
-function bjPayoutPerRound(multiplier, mode) {
-  const base = BJ_BET_BASE * multiplier;
-  return mode === "x10" ? base * 10 : base;
+let _bjMode = "x1"; // "x1" or "x10"
+
+function bjFmt(n) { return Number(n).toLocaleString("ko-KR"); }
+function bjGoldPerDraw(mode) { return mode === "x10" ? 10 : 1; }
+function bjModeMul(mode) { return mode === "x10" ? 10 : 1; }
+
+// 점수 → 결산 코인 (일반 모드 기준; 10배는 ×10)
+function bjScorePayout(score) {
+  if (score <= 0) return 0;
+  if (score <= 20) return 200;
+  if (score <= 35) return 400;
+  if (score <= 45) return 600;
+  if (score <= 54) return 1000;
+  return 0; // 게임 룰상 불가능 (5장 max & 중복 없음)
 }
-function bjCardsPerRound(mode) {
-  return mode === "x10" ? 10 : 1;
-}
-function bjFmt(n) {
-  return Number(n).toLocaleString("ko-KR");
+// 모드 반영한 결산 코인
+function bjPayoutWithMode(score, mode) {
+  return bjScorePayout(score) * bjModeMul(mode);
 }
 
-// 모드 토글
+// ───── 카드 값별 확률 (52장 풀덱 가정) ─────
+const BJ_VAL_PROBS = [
+  [2,  4/52], [3,  4/52], [4,  4/52], [5,  4/52], [6,  4/52],
+  [7,  4/52], [8,  4/52], [9,  4/52], [10, 16/52], [11, 4/52]
+];
+
+// ───── 덱 카운트 ─────
+function bjFullDeck() {
+  return { 2:4, 3:4, 4:4, 5:4, 6:4, 7:4, 8:4, 9:4, 10:16, 11:4 };
+}
+function bjDeckSize(d) {
+  let n = 0; for (const k in d) n += d[k]; return n;
+}
+function bjDeckRemove(d, v) { if (d[v] > 0) d[v]--; }
+function bjDeckCopy(d) { return { ...d }; }
+function bjHandToDeck(hand) {
+  const d = bjFullDeck();
+  for (const c of hand) bjDeckRemove(d, c.value);
+  return d;
+}
+
+// ───── 백워드 인덕션 ─────
+// 4장 상태: stop(4장 결산) vs draw(5장 강제결산) — per-card 비교
+function bjEvalAt4(score, deck) {
+  const stopPay = bjScorePayout(score);
+  const stopPC = stopPay / 4;
+  const n = bjDeckSize(deck);
+  let drawPay = 0;
+  if (n > 0) {
+    for (const v in deck) {
+      const c = deck[v];
+      if (c === 0) continue;
+      drawPay += (c / n) * bjScorePayout(score + Number(v));
+    }
+  }
+  const drawPC = drawPay / 5;
+  return {
+    stopPay, stopPC, drawPay, drawPC,
+    action: drawPC > stopPC ? "draw" : "stop"
+  };
+}
+// 3장 상태: stop(3장 결산) vs draw(4장 진입 후 최적)
+function bjEvalAt3(score, deck) {
+  const stopPay = bjScorePayout(score);
+  const stopPC = stopPay / 3;
+  const n = bjDeckSize(deck);
+  let drawPC = 0;     // E[ optimal per-card at 4 ]
+  let drawPay = 0;    // E[ optimal payout at 4 ]
+  let drawCards = 0;  // E[ 사용 카드 수 ]
+  if (n > 0) {
+    for (const v in deck) {
+      const c = deck[v];
+      if (c === 0) continue;
+      const p = c / n;
+      const newScore = score + Number(v);
+      const newDeck = bjDeckCopy(deck); newDeck[v]--;
+      const sub = bjEvalAt4(newScore, newDeck);
+      if (sub.action === "draw") {
+        drawPC += p * sub.drawPC;
+        drawPay += p * sub.drawPay;
+        drawCards += p * 5;
+      } else {
+        drawPC += p * sub.stopPC;
+        drawPay += p * sub.stopPay;
+        drawCards += p * 4;
+      }
+    }
+  }
+  return {
+    stopPay, stopPC, drawPay, drawPC, drawCards,
+    action: drawPC > stopPC ? "draw" : "stop"
+  };
+}
+
+// ───── 이론 평균 (전체 가능한 시작 패에 대한 최적 플레이) ─────
+let BJ_THEORY = { avgPayPerRound: 0, avgCardsPerRound: 0, avgCoinPerGold: 0 };
+function bjComputeTheory() {
+  let avgPay = 0, avgCards = 0;
+  for (const [v1, p1] of BJ_VAL_PROBS) {
+    for (const [v2, p2] of BJ_VAL_PROBS) {
+      for (const [v3, p3] of BJ_VAL_PROBS) {
+        const w = p1 * p2 * p3;
+        const deck = bjFullDeck();
+        bjDeckRemove(deck, v1); bjDeckRemove(deck, v2); bjDeckRemove(deck, v3);
+        const score = v1 + v2 + v3;
+        const r = bjEvalAt3(score, deck);
+        if (r.action === "stop") {
+          avgPay += w * r.stopPay;
+          avgCards += w * 3;
+        } else {
+          avgPay += w * r.drawPay;
+          avgCards += w * r.drawCards;
+        }
+      }
+    }
+  }
+  BJ_THEORY.avgPayPerRound = avgPay;
+  BJ_THEORY.avgCardsPerRound = avgCards;
+  BJ_THEORY.avgCoinPerGold = avgPay / avgCards;
+}
+bjComputeTheory();
+
+// 골드카드 1개당 코인 (모드 무관 — 10배는 모든 게 10배라 비율 동일)
+function bjPerGold() {
+  return {
+    min: 200 / 3,                        // ≈ 66.67 (3장 ×1)
+    max: 1000 / 5,                       // 200 (5장 ×5)
+    avg: BJ_THEORY.avgCoinPerGold,       // ≈ 119.85 (최적 평균)
+  };
+}
+
+// ───── 모드 토글 ─────
 function setupBlackjackMode() {
   document.querySelectorAll("#blackjack-mode-toggle .ptype-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -4681,14 +4797,14 @@ function setupBlackjackMode() {
       document.querySelectorAll("#blackjack-mode-toggle .ptype-btn").forEach((b) => {
         b.classList.toggle("active", b.dataset.bjMode === _bjMode);
       });
-      // 모드 바뀌면 자동 재계산
       runBjTargetCalc(true);
       runBjRangeCalc(true);
+      bjRenderStrategy();
     });
   });
 }
 
-// 기능 1: 목표 포인트 → 필요 블랙카드
+// ───── 기능 1: 목표 포인트 → 필요 골드카드 ─────
 function runBjTargetCalc(silent = false) {
   const out = document.getElementById("bj-target-result");
   if (!out) return;
@@ -4699,114 +4815,286 @@ function runBjTargetCalc(silent = false) {
     out.innerHTML = `<div class="hint" style="color:var(--text-dim);">목표 포인트를 입력해주세요.</div>`;
     return;
   }
-  const cardsPerRd = bjCardsPerRound(_bjMode);
-  const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode); // 한 라운드 최소 획득
-  const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode); // 한 라운드 최대 획득
-  const payAvg = bjPayoutPerRound(BJ_MULTI_AVG, _bjMode); // 한 라운드 평균 획득
+  const per = bjPerGold();
+  const gpd = bjGoldPerDraw(_bjMode); // 10배면 카드는 10의 배수
+  const minRoundCost = 3 * gpd;       // 최소 1라운드 비용 (3 또는 30)
+  const roundUp = (g) => gpd === 10 ? Math.ceil(g / 10) * 10 : g;
 
-  // 최소 라운드 = 최대 획득 가정 (좋게 가정)
-  const minRounds = Math.ceil(target / payMax);
-  // 예상 라운드 = 평균 획득 가정
-  const avgRounds = Math.ceil(target / payAvg);
-  // 최대 라운드 = 최소 획득 가정 (나쁘게 가정)
-  const maxRounds = Math.ceil(target / payMin);
+  const minGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.max)));   // 운 좋으면
+  const avgGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.avg)));   // 최적 평균
+  const maxGold = Math.max(minRoundCost, roundUp(Math.ceil(target / per.min)));   // 운 나쁘면
 
-  const minCards = minRounds * cardsPerRd;
-  const avgCards = avgRounds * cardsPerRd;
-  const maxCards = maxRounds * cardsPerRd;
+  const shortMin = Math.max(0, minGold - owned);
+  const shortAvg = Math.max(0, avgGold - owned);
+  const shortMax = Math.max(0, maxGold - owned);
 
-  const shortMin = Math.max(0, minCards - owned);
-  const shortAvg = Math.max(0, avgCards - owned);
-  const shortMax = Math.max(0, maxCards - owned);
+  // 보유 골드카드로 얻을 수 있는 범위
+  const mul = bjModeMul(_bjMode);
+  const ownedDraws = Math.floor(owned / gpd); // 가능한 총 카드 뽑기 수
+  const ownedMinR = Math.floor(ownedDraws / 3); // 3장씩 채우면 최대 라운드 수
+  const ownedMaxR = Math.floor(ownedDraws / 5); // 5장씩 채우면 최소 라운드 수
+  const ownedMin = ownedMinR * 200 * mul; // 모든 라운드 3장 × ×1
+  const ownedMax = ownedMaxR * 1000 * mul; // 모든 라운드 5장 × ×5
+  const ownedAvgClean = Math.round(owned * per.avg); // owned × per_gold_avg (모드 무관)
 
-  // 가능한 획득(보유 카드 다 쓰면)
-  const ownedRounds = Math.floor(owned / cardsPerRd);
-  const ownedMin = ownedRounds * payMin;
-  const ownedAvg = ownedRounds * payAvg;
-  const ownedMax = ownedRounds * payMax;
-
-  const enoughBadge = (n) =>
+  const badge = (n) =>
     n === 0
       ? `<span style="display:inline-block;padding:1px 7px;background:rgba(52,211,153,0.18);color:var(--green);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">충분 ✓</span>`
-      : `<span style="display:inline-block;padding:1px 7px;background:rgba(248,113,113,0.18);color:var(--red);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">-${bjFmt(n)}장 부족</span>`;
+      : `<span style="display:inline-block;padding:1px 7px;background:rgba(248,113,113,0.18);color:var(--red);border-radius:5px;font-size:11px;font-weight:800;margin-left:6px;">-${bjFmt(n)}개 부족</span>`;
 
   out.innerHTML = `
     <div style="padding:12px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;">
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎯 목표 ${bjFmt(target)} 포인트 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎯 목표 ${bjFmt(target)} 코인 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
       <div style="font-size:13px;line-height:1.7;">
-        <b>📈 운 좋으면 (매번 ×5):</b>
-        <span class="txt-amber"><b>${bjFmt(minRounds)}라운드 = ${bjFmt(minCards)}장</b></span>
-        ${enoughBadge(shortMin)}<br>
-        <b>🎯 예상 (평균 ×2.75):</b>
-        <span style="color:#34d399;"><b>${bjFmt(avgRounds)}라운드 = ${bjFmt(avgCards)}장</b></span>
-        ${enoughBadge(shortAvg)}<br>
-        <b>📉 운 나쁘면 (매번 ×1):</b>
-        <span class="txt-blue"><b>${bjFmt(maxRounds)}라운드 = ${bjFmt(maxCards)}장</b></span>
-        ${enoughBadge(shortMax)}
+        <b>📈 운 좋으면 (5장 + ×5):</b>
+        <span class="txt-amber"><b>${bjFmt(minGold)}개</b></span>
+        ${badge(shortMin)}<br>
+        <b>🎯 예상 (최적 평균):</b>
+        <span style="color:#34d399;"><b>${bjFmt(avgGold)}개</b></span>
+        ${badge(shortAvg)}<br>
+        <b>📉 운 나쁘면 (3장 + ×1):</b>
+        <span class="txt-blue"><b>${bjFmt(maxGold)}개</b></span>
+        ${badge(shortMax)}
       </div>
     </div>
     ${owned > 0 ? `
       <div style="margin-top:8px;padding:10px 12px;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.25);border-radius:8px;font-size:12.5px;line-height:1.7;">
-        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}장 사용 시 가능:</span><br>
-        ${ownedRounds === 0
-          ? `<span class="txt-red">한 라운드도 못 돌림 (${_bjMode === "x10" ? "10장 필요" : "1장 필요"})</span>`
-          : `<b class="txt-blue">최소 ${bjFmt(ownedMin)}</b> · <b style="color:#34d399;">예상 ${bjFmt(Math.round(ownedAvg))}</b> · <b class="txt-amber">최대 ${bjFmt(ownedMax)}</b> 포인트 (${bjFmt(ownedRounds)}라운드)`
+        <span style="color:var(--text-dim);">📦 보유 ${bjFmt(owned)}개 사용 시 가능:</span><br>
+        ${ownedDraws < 3
+          ? `<span class="txt-red">한 라운드도 못 돌림 (최소 ${3 * gpd}개 필요)</span>`
+          : `<b class="txt-blue">최소 ${bjFmt(ownedMin)}</b> · <b style="color:#34d399;">예상 ${bjFmt(ownedAvgClean)}</b> · <b class="txt-amber">최대 ${bjFmt(ownedMax)}</b> 코인`
         }
       </div>
     ` : ""}
   `;
 }
 
-// 기능 2: 사용할 카드 → 예상 포인트 범위
+// ───── 기능 2: 사용할 골드카드 → 예상 코인 범위 ─────
 function runBjRangeCalc(silent = false) {
   const out = document.getElementById("bj-range-result");
   if (!out) return;
   const cards = Math.max(0, parseInt(document.getElementById("bj-use-card")?.value || 0));
   if (cards <= 0) {
     if (silent) { out.innerHTML = ""; return; }
-    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">사용할 카드 수를 입력해주세요.</div>`;
+    out.innerHTML = `<div class="hint" style="color:var(--text-dim);">사용할 골드카드 수를 입력해주세요.</div>`;
     return;
   }
-  const cardsPerRd = bjCardsPerRound(_bjMode);
+  const gpd = bjGoldPerDraw(_bjMode);
+  const mul = bjModeMul(_bjMode);
+  const totalDraws = Math.floor(cards / gpd);  // 총 카드 뽑기 가능 수
+  const wasteGold = cards - totalDraws * gpd;
 
-  // 10배 모드면 10의 배수가 아니면 경고
-  if (_bjMode === "x10" && cards % 10 !== 0) {
-    const usable = Math.floor(cards / 10) * 10;
-    const waste = cards - usable;
-    if (usable === 0) {
-      out.innerHTML = `
-        <div style="padding:12px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;color:var(--red);font-size:13px;">
-          ⚠️ 10배 모드는 <b>최소 10장</b>이 필요합니다. (${cards}장 → 0라운드)
-        </div>
-      `;
-      return;
-    }
-    runBjRangeWithCards(usable, cardsPerRd, `⚠️ <b>${cards}장 중 ${usable}장만 사용</b> 가능 (${waste}장은 라운드 못 채움)`);
+  if (totalDraws < 3) {
+    out.innerHTML = `
+      <div style="padding:12px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.4);border-radius:8px;color:var(--red);font-size:13px;">
+        ⚠️ 최소 1라운드 (3장) 필요. ${_bjMode === "x10" ? "10배 모드는" : "일반 모드는"} <b>최소 ${3 * gpd}개</b> 필요해요.
+      </div>
+    `;
     return;
   }
 
-  runBjRangeWithCards(cards, cardsPerRd);
-}
-function runBjRangeWithCards(cards, cardsPerRd, warning = "") {
-  const out = document.getElementById("bj-range-result");
-  if (!out) return;
-  const rounds = Math.floor(cards / cardsPerRd);
-  const payMin = bjPayoutPerRound(BJ_MULTI_MIN, _bjMode);
-  const payMax = bjPayoutPerRound(BJ_MULTI_MAX, _bjMode);
-  const payAvg = bjPayoutPerRound(BJ_MULTI_AVG, _bjMode);
-  const totalMin = rounds * payMin;
-  const totalMax = rounds * payMax;
-  const totalAvg = rounds * payAvg;
+  const minR = Math.floor(totalDraws / 3); // 최대 라운드 수 (3장씩)
+  const maxR = Math.floor(totalDraws / 5); // 최소 라운드 수 (5장씩)
+  const minCoin = minR * 200 * mul;        // 모든 라운드 3장 + ×1
+  const maxCoin = maxR * 1000 * mul;       // 모든 라운드 5장 + ×5
+  const per = bjPerGold();
+  const avgCoinSimple = Math.round(cards * per.avg); // 골드 × per-gold (모드 무관)
+
+  const warning = wasteGold > 0
+    ? `<div class="hint" style="color:var(--amber);margin-bottom:8px;">⚠️ ${cards}개 중 <b>${cards - wasteGold}개만 사용</b> 가능 (남은 ${wasteGold}개는 카드 1장 못 채움)</div>`
+    : "";
 
   out.innerHTML = `
-    ${warning ? `<div class="hint" style="color:var(--amber);margin-bottom:8px;">${warning}</div>` : ""}
+    ${warning}
     <div style="padding:12px 14px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${bjFmt(cards)}장 × ${bjFmt(rounds)}라운드 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${bjFmt(cards)}개 → 총 ${bjFmt(totalDraws)}장 뽑기 (${_bjMode === "x10" ? "10배" : "일반"} 모드)</div>
       <div style="font-size:13px;line-height:1.8;">
-        <b class="txt-blue">📉 최소 (매번 ×1):</b> <b style="font-size:15px;">${bjFmt(totalMin)}</b> 포인트<br>
-        <b style="color:#34d399;">🎯 예상 (평균 ×2.75):</b> <b style="font-size:16px;color:#34d399;">${bjFmt(Math.round(totalAvg))}</b> 포인트<br>
-        <b class="txt-amber">📈 최대 (매번 ×5):</b> <b style="font-size:15px;">${bjFmt(totalMax)}</b> 포인트<br>
-        <span class="txt-dim" style="font-size:11.5px;">예상값은 4개 배수가 동등 확률일 때 기준이라 실제와 다를 수 있어요.</span>
+        <b class="txt-blue">📉 최소 (3장+×1 매번):</b> <b style="font-size:15px;">${bjFmt(minCoin)}</b> 코인<br>
+        <b style="color:#34d399;">🎯 예상 (최적 평균):</b> <b style="font-size:16px;color:#34d399;">${bjFmt(avgCoinSimple)}</b> 코인<br>
+        <b class="txt-amber">📈 최대 (5장+×5 매번):</b> <b style="font-size:15px;">${bjFmt(maxCoin)}</b> 코인<br>
+        <span class="txt-dim" style="font-size:11.5px;">예상값은 최적 플레이(전략 도우미 기준) 평균이에요.</span>
+      </div>
+    </div>
+  `;
+}
+
+// ─────────────────────────────────────────────────────
+// 🎯 매판 전략 도우미
+// ─────────────────────────────────────────────────────
+let _bjHand = []; // {face, value}[]
+
+function bjAddCard(face, value) {
+  if (_bjHand.length >= 5) return;
+  // 같은 face 4장 초과 방지
+  const sameFace = _bjHand.filter((c) => c.face === face).length;
+  if (sameFace >= 4) return;
+  _bjHand.push({ face, value });
+  bjRenderStrategy();
+  bjUpdateCardPickerState();
+}
+
+function bjRemoveCard(idx) {
+  _bjHand.splice(idx, 1);
+  bjRenderStrategy();
+  bjUpdateCardPickerState();
+}
+
+function bjResetHand() {
+  _bjHand = [];
+  bjRenderStrategy();
+  bjUpdateCardPickerState();
+}
+
+function bjUpdateCardPickerState() {
+  // 5장 도달 또는 face별 4장 도달 시 비활성화
+  const faceCount = {};
+  for (const c of _bjHand) faceCount[c.face] = (faceCount[c.face] || 0) + 1;
+  document.querySelectorAll("#bj-card-picker .bj-card-btn").forEach((btn) => {
+    const face = btn.dataset.bjFace;
+    const disabled = _bjHand.length >= 5 || (faceCount[face] || 0) >= 4;
+    btn.disabled = disabled;
+  });
+}
+
+function bjRenderStrategy() {
+  const handEl = document.getElementById("bj-hand-display");
+  const resEl = document.getElementById("bj-decision-result");
+  if (!handEl || !resEl) return;
+
+  // 손 표시
+  if (_bjHand.length === 0) {
+    handEl.innerHTML = `<div style="padding:11px 14px;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-dim);font-size:13px;">👆 위 카드 버튼을 눌러 현재 패를 입력해주세요 (최소 3장)</div>`;
+  } else {
+    const score = _bjHand.reduce((s, c) => s + c.value, 0);
+    const chips = _bjHand.map((c, i) =>
+      `<button type="button" class="bj-hand-chip" data-bj-idx="${i}" title="클릭하면 삭제">${c.face}</button>`
+    ).join("");
+    handEl.innerHTML = `
+      <div style="padding:10px 12px;background:rgba(96,165,250,0.06);border:1px solid var(--border);border-radius:8px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:11.5px;color:var(--text-dim);">
+          <span>현재 패 (${_bjHand.length}장)</span>
+          <span>점수: <b style="color:var(--text);font-size:14px;">${score}</b></span>
+        </div>
+        <div>${chips}</div>
+      </div>
+    `;
+    handEl.querySelectorAll(".bj-hand-chip").forEach((btn) => {
+      btn.addEventListener("click", () => bjRemoveCard(+btn.dataset.bjIdx));
+    });
+  }
+
+  // 결과
+  const mul = bjModeMul(_bjMode);
+  const gpd = bjGoldPerDraw(_bjMode);
+
+  // 이론 평균 — 골드카드 1개당은 모드 무관, 라운드 코인은 모드별 ×mul
+  const theoryAvgCoinPerGold = BJ_THEORY.avgCoinPerGold; // 모드 무관
+  const theoryRoundCoin = BJ_THEORY.avgPayPerRound * mul; // 모드별
+  const theoryHeader = `
+    <div style="padding:10px 12px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.25);border-radius:8px;font-size:12px;line-height:1.6;color:var(--text);">
+      <b style="color:#34d399;">📊 최적 플레이 이론값 (${_bjMode === "x10" ? "10배" : "일반"} 모드):</b><br>
+      1라운드 평균 <b>${bjFmt(Math.round(theoryRoundCoin))}코인</b> · 평균 <b>${BJ_THEORY.avgCardsPerRound.toFixed(2)}장</b> · 골드카드 1개당 <b style="color:#34d399;font-size:13px;">${theoryAvgCoinPerGold.toFixed(2)} 코인</b>
+    </div>
+  `;
+
+  if (_bjHand.length === 0) {
+    resEl.innerHTML = theoryHeader;
+    return;
+  }
+
+  const score = _bjHand.reduce((s, c) => s + c.value, 0);
+  const n = _bjHand.length;
+  const deck = bjHandToDeck(_bjHand);
+
+  // 점수 → 배수 표기
+  const multi = score <= 20 ? 1 : score <= 35 ? 2 : score <= 45 ? 3 : score <= 54 ? 5 : 0;
+
+  // < 3장
+  if (n < 3) {
+    resEl.innerHTML = `
+      ${theoryHeader}
+      <div style="margin-top:10px;padding:12px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;font-size:13px;">
+        ${3 - n}장 더 뽑아야 합니다 <span class="txt-dim">(최소 3장 이상이어야 결산 가능)</span><br>
+        <span class="txt-dim" style="font-size:12px;">현재 점수: ${score}</span>
+      </div>
+    `;
+    return;
+  }
+
+  // 5장 (강제 결산)
+  if (n >= 5) {
+    const pay = bjScorePayout(score) * mul;
+    const goldUsed = 5 * gpd;
+    const perGold = pay / goldUsed;
+    resEl.innerHTML = `
+      ${theoryHeader}
+      <div style="margin-top:10px;padding:14px 16px;background:rgba(251,191,36,0.1);border:2px solid var(--amber);border-radius:10px;">
+        <div style="font-size:11px;color:var(--text-dim);font-weight:800;letter-spacing:0.4px;margin-bottom:4px;">📌 강제 결산</div>
+        <div style="font-size:16px;font-weight:800;color:var(--amber);">5장 도달 — 결산 (×${multi}) <b>${bjFmt(pay)}코인</b></div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">골드카드 ${goldUsed}개 사용 · 1개당 <b>${perGold.toFixed(2)}</b> 코인</div>
+      </div>
+    `;
+    return;
+  }
+
+  // 3장 또는 4장 — 결정점
+  const evalFn = n === 3 ? bjEvalAt3 : bjEvalAt4;
+  const r = evalFn(score, deck);
+
+  // 코인 (모드 반영)
+  const stopCoin = r.stopPay * mul;
+  const drawCoin = r.drawPay * mul;
+  // 골드카드 비용
+  const stopGold = n * gpd;
+  // 뽑는 경우 평균 골드카드:
+  // 4장 결정: 뽑으면 5장 강제 = 5*gpd
+  // 3장 결정: 뽑으면 r.drawCards * gpd (사용할 카드 평균)
+  const drawGold = n === 4 ? 5 * gpd : r.drawCards * gpd;
+  const stopPerGold = stopCoin / stopGold;
+  const drawPerGold = drawCoin / drawGold;
+  const isDraw = drawPerGold > stopPerGold;
+
+  // 비교 vs 이론평균
+  const stopVsTheory = stopPerGold - theoryAvgCoinPerGold;
+  const drawVsTheory = drawPerGold - theoryAvgCoinPerGold;
+
+  const arrowColor = isDraw ? "#34d399" : "#f87171";
+  const arrowText = isDraw ? "↑ 상승" : "↓ 하락";
+
+  resEl.innerHTML = `
+    ${theoryHeader}
+
+    <!-- 현재 상태 -->
+    <div style="margin-top:10px;padding:12px 14px;background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.3);border-radius:8px;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">📊 지금 결산하면 (${n}장)</div>
+      <div style="font-size:13.5px;line-height:1.7;">
+        점수 <b>${score}</b> · 배수 <b>×${multi}</b><br>
+        코인: <b class="txt-amber">${bjFmt(stopCoin)}</b> · 골드카드 ${stopGold}개 사용<br>
+        <b style="color:${stopVsTheory >= 0 ? '#34d399' : '#f87171'};">1개당 ${stopPerGold.toFixed(2)} 코인</b>
+        <span class="txt-dim" style="font-size:11.5px;">(이론평균 대비 ${stopVsTheory >= 0 ? '+' : ''}${stopVsTheory.toFixed(2)})</span>
+      </div>
+    </div>
+
+    <!-- 뽑기 분석 -->
+    <div style="margin-top:8px;padding:12px 14px;background:rgba(167,139,250,0.06);border:1px solid var(--border);border-radius:8px;">
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">🎲 ${n === 3 ? '한 장 더 뽑고 최적 결정' : '한 장 더 뽑아 5장 결산'}</div>
+      <div style="font-size:13.5px;line-height:1.7;">
+        예상 코인: <b>${bjFmt(Math.round(drawCoin))}</b> · 평균 사용 ${drawGold.toFixed(2)}개<br>
+        <b style="color:${arrowColor};">1개당 ${drawPerGold.toFixed(2)} 코인 ${arrowText}</b>
+        <span class="txt-dim" style="font-size:11.5px;">(이론평균 대비 ${drawVsTheory >= 0 ? '+' : ''}${drawVsTheory.toFixed(2)})</span>
+      </div>
+    </div>
+
+    <!-- 추천 -->
+    <div style="margin-top:10px;padding:14px 16px;background:${isDraw ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)'};border:2px solid ${isDraw ? '#34d399' : 'var(--red)'};border-radius:10px;">
+      <div style="font-size:11px;color:var(--text-dim);font-weight:800;letter-spacing:0.4px;margin-bottom:4px;">📌 추천</div>
+      <div style="font-size:17px;font-weight:800;color:${isDraw ? '#34d399' : 'var(--red)'};">
+        ${isDraw ? '🎴 계속 뽑기' : '🛑 결산 (멈추기)'}
+      </div>
+      <div style="font-size:12px;color:var(--text-dim);margin-top:4px;line-height:1.55;">
+        ${isDraw
+          ? `다음 카드 뽑으면 1개당 가치 ${stopPerGold.toFixed(2)} → ${drawPerGold.toFixed(2)} 로 <b style="color:#34d399;">상승 예상</b>`
+          : `다음 카드 뽑으면 1개당 가치 ${stopPerGold.toFixed(2)} → ${drawPerGold.toFixed(2)} 로 <b style="color:var(--red);">하락 예상</b>. 지금 결산하세요.`}
       </div>
     </div>
   `;
@@ -4817,7 +5105,6 @@ function setupBlackjack() {
   setupBlackjackMode();
   document.getElementById("bj-calc-target-btn")?.addEventListener("click", () => runBjTargetCalc(false));
   document.getElementById("bj-calc-range-btn")?.addEventListener("click", () => runBjRangeCalc(false));
-  // Enter 키로도 계산
   ["bj-target-point", "bj-owned-card"].forEach((id) => {
     document.getElementById(id)?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") runBjTargetCalc(false);
@@ -4826,7 +5113,6 @@ function setupBlackjack() {
   document.getElementById("bj-use-card")?.addEventListener("keydown", (e) => {
     if (e.key === "Enter") runBjRangeCalc(false);
   });
-  // 점수 배수표 토글
   const toggle = document.getElementById("blackjack-info-toggle");
   const table = document.getElementById("blackjack-info-table");
   if (toggle && table) {
@@ -4836,6 +5122,17 @@ function setupBlackjack() {
       toggle.textContent = show ? "📊 점수 배수표 숨기기" : "📊 점수 배수표 보기";
     });
   }
+  // 전략 도우미 — 카드 픽커
+  document.querySelectorAll("#bj-card-picker .bj-card-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const face = btn.dataset.bjFace;
+      const val = parseInt(btn.dataset.bjVal);
+      bjAddCard(face, val);
+    });
+  });
+  document.getElementById("bj-reset-hand")?.addEventListener("click", bjResetHand);
+  bjRenderStrategy();
+  bjUpdateCardPickerState();
 }
 setupBlackjack();
 

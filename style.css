@@ -602,6 +602,69 @@ body { overflow-x: hidden; }
   box-shadow: 0 0 0 1px rgba(251,191,36,0.55), 0 0 18px rgba(251,191,36,0.35);
 }
 
+/* ───── 블랙잭 전략 도우미: 카드 그리드 ───── */
+.bj-card-grid {
+  display: grid;
+  grid-template-columns: repeat(13, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+@media (max-width: 639px) {
+  .bj-card-grid { grid-template-columns: repeat(7, 1fr); }
+}
+.bj-card-btn {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 10px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s ease;
+}
+.bj-card-btn:hover {
+  background: rgba(167,139,250,0.18);
+  border-color: var(--purple);
+  transform: translateY(-1px);
+}
+.bj-card-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+.bj-card-btn[data-face="A"] { color: #fbbf24; }
+.bj-card-btn[data-face="K"],
+.bj-card-btn[data-face="Q"],
+.bj-card-btn[data-face="J"] { color: #c4b5fd; }
+
+.bj-hand-chip {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(96,165,250,0.16);
+  border: 1px solid var(--blue);
+  color: var(--text);
+  padding: 5px 11px;
+  margin: 0 5px 5px 0;
+  border-radius: 7px;
+  font-weight: 800;
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.12s;
+}
+.bj-hand-chip:hover {
+  background: rgba(248,113,113,0.22);
+  border-color: var(--red);
+}
+.bj-hand-chip::after {
+  content: " ×";
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 /* 메가진화 지원 토글 */
 .mega-support-row {
   margin: 0 0 10px;

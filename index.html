@@ -1026,9 +1026,11 @@
       <div class="group menu-intro">
         <div class="group-title">📝 메뉴 설명글</div>
         <p>
-          🃏 <b>블랙잭 계산기</b> — 블랙카드를 사용해 포인트를 얻는 미니게임 계산기입니다.<br>
-          📌 카드값: <b>J=10, Q=10, K=10, A=11</b>, 숫자카드는 숫자 그대로.<br>
-          📌 베팅 비용 — <b>일반 모드</b>: 1라운드당 블랙카드 <b>1장</b> / <b>10배 모드</b>: 1라운드당 블랙카드 <b>10장</b>
+          🃏 <b>블랙잭 계산기</b> — 골드카드를 사용해 카드를 뽑고 점수에 따른 코인을 획득하는 미니게임 계산기입니다.<br>
+          📌 점수: <b>A=11, 2~10=숫자값, J/Q/K=10</b><br>
+          📌 라운드당 카드 <b>3~5장</b> (3장 이상이어야 결산 가능, 한 판 내 중복 카드 없음)<br>
+          📌 비용 — <b>일반 모드</b>: 카드 1장 뽑을 때마다 <b>골드카드 1개</b> 소모 (기본 배율 ×1)<br>
+          📌 비용 — <b>10배 모드</b>: 카드 1장 뽑을 때마다 <b>골드카드 10개</b> 소모 (기본 배율 ×10)
         </p>
         <div style="margin-top:10px;">
           <button type="button" id="blackjack-info-toggle" class="btn">📊 점수 배수표 보기</button>
@@ -1038,8 +1040,8 @@
             <thead><tr>
               <th style="text-align:left;">점수 구간</th>
               <th>배수</th>
-              <th>일반 획득</th>
-              <th>10배 획득</th>
+              <th>일반 결산</th>
+              <th>10배 결산</th>
             </tr></thead>
             <tbody>
               <tr><td><b>0 ~ 20점</b></td><td class="value">×1</td><td class="value blue">200</td><td class="value blue">2,000</td></tr>
@@ -1049,11 +1051,11 @@
             </tbody>
           </table></div>
           <p class="txt-dim" style="font-size:12px;margin-top:10px;">
-            📌 베팅은 <b>200 고정</b>이며, 점수 구간에 따른 배수가 적용됩니다. 10배 모드는 일반 모드의 정확히 10배 획득.
+            📌 베팅 기본값 200 × 점수 구간 배수 = 결산 코인. 10배 모드는 모든 값이 정확히 10배.
           </p>
         </div>
-        <p style="margin-top:14px;padding:10px 12px;background:rgba(248,113,113,0.1);border-left:4px solid var(--red);border-radius:6px;font-size:13px;line-height:1.6;color:var(--red);">
-          ⚠️ <b>점수는 매번 랜덤입니다.</b> 계산기는 최소(매번 ×1) / 최대(매번 ×5) 범위로 알려드려요.
+        <p style="margin-top:14px;padding:10px 12px;background:rgba(52,211,153,0.08);border-left:4px solid var(--green);border-radius:6px;font-size:13px;line-height:1.6;color:#a7f3d0;">
+          📊 <b>최적 플레이 이론값</b>: 골드카드 1개당 평균 ≈ <b style="color:var(--green);">119 코인</b> · 최저 66.67(3장 ×1) / 최고 200(5장 ×5)
         </p>
       </div>
 
@@ -1061,43 +1063,75 @@
       <div class="group">
         <div class="group-title">🎴 모드 선택</div>
         <div class="palmon-type-toggle" id="blackjack-mode-toggle">
-          <button type="button" class="ptype-btn active" data-bj-mode="x1">🎯 일반 (1라운드=1장)</button>
-          <button type="button" class="ptype-btn" data-bj-mode="x10">💎 10배 (1라운드=10장)</button>
+          <button type="button" class="ptype-btn active" data-bj-mode="x1">🎯 일반 (장당 골드카드 1개)</button>
+          <button type="button" class="ptype-btn" data-bj-mode="x10">💎 10배 (장당 골드카드 10개)</button>
         </div>
       </div>
 
       <!-- 🎯 기능 1 + 🎲 기능 2 -->
       <div class="grid-2">
 
-        <!-- 🎯 목표 포인트 → 필요 카드 -->
+        <!-- 🎯 목표 포인트 → 필요 골드카드 -->
         <div class="group">
-          <div class="group-title">🎯 목표 포인트 → 필요 블랙카드</div>
-          <img src="blackcard.png" alt="블랙카드" class="bead-img" style="max-width:120px;" onerror="this.style.display='none'">
+          <div class="group-title">🎯 목표 포인트 → 필요 골드카드</div>
+          <img src="blackcard.png" alt="골드카드" class="bead-img" style="max-width:120px;" onerror="this.style.display='none'">
           <div class="form-row">
             <label>목표 포인트</label>
             <input type="number" id="bj-target-point" min="0" value="0" inputmode="numeric" placeholder="예) 10000">
           </div>
           <div class="form-row">
-            <label>보유 블랙카드</label>
+            <label>보유 골드카드</label>
             <input type="number" id="bj-owned-card" min="0" value="0" inputmode="numeric">
           </div>
           <button type="button" id="bj-calc-target-btn" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 계산하기</button>
           <div id="bj-target-result" style="margin-top:14px;"></div>
         </div>
 
-        <!-- 🎲 카드 사용 → 예상 포인트 -->
+        <!-- 🎲 골드카드 사용 → 예상 포인트 -->
         <div class="group">
-          <div class="group-title">🎲 사용할 카드 → 예상 포인트</div>
-          <img src="blackcard.png" alt="블랙카드" class="bead-img" style="max-width:120px;" onerror="this.style.display='none'">
+          <div class="group-title">🎲 사용할 골드카드 → 예상 포인트</div>
+          <img src="blackcard.png" alt="골드카드" class="bead-img" style="max-width:120px;" onerror="this.style.display='none'">
           <div class="form-row">
-            <label>사용할 블랙카드</label>
+            <label>사용할 골드카드</label>
             <input type="number" id="bj-use-card" min="0" value="0" inputmode="numeric">
           </div>
           <button type="button" id="bj-calc-range-btn" class="btn btn-primary" style="margin-top:14px;width:100%;">✅ 범위 계산</button>
           <div id="bj-range-result" style="margin-top:14px;"></div>
-          <div class="hint" style="margin-top:10px;">10배 모드는 카드 수가 <b>10의 배수</b>여야 합니다 (10장당 1라운드).</div>
         </div>
 
+      </div>
+
+      <!-- 🎯 매판 전략 도우미 — 실제 플레이 중 카드 뽑기 결정 -->
+      <div class="group">
+        <div class="group-title">🎯 매판 전략 도우미 (실시간 뽑기 판단)</div>
+        <p style="font-size:12.5px;color:var(--text-dim);margin-bottom:12px;line-height:1.6;">
+          실제 게임 중 <b>지금까지 뽑은 카드</b>를 입력하면, 다음 카드를 뽑아야 할지(<b class="txt-amber">계속</b>) 멈춰야 할지(<b style="color:#34d399;">결산</b>) 추천해드려요.<br>
+          📌 기준: <b>골드카드 1장당 코인</b>이 올라가면 뽑기, 내려가면 결산.
+        </p>
+
+        <div style="margin-bottom:8px;font-size:11.5px;color:var(--text-dim);">📝 뽑은 카드 추가 (눌러서 선택)</div>
+        <div class="bj-card-grid" id="bj-card-picker">
+          <button type="button" class="bj-card-btn" data-bj-face="2"  data-bj-val="2">2</button>
+          <button type="button" class="bj-card-btn" data-bj-face="3"  data-bj-val="3">3</button>
+          <button type="button" class="bj-card-btn" data-bj-face="4"  data-bj-val="4">4</button>
+          <button type="button" class="bj-card-btn" data-bj-face="5"  data-bj-val="5">5</button>
+          <button type="button" class="bj-card-btn" data-bj-face="6"  data-bj-val="6">6</button>
+          <button type="button" class="bj-card-btn" data-bj-face="7"  data-bj-val="7">7</button>
+          <button type="button" class="bj-card-btn" data-bj-face="8"  data-bj-val="8">8</button>
+          <button type="button" class="bj-card-btn" data-bj-face="9"  data-bj-val="9">9</button>
+          <button type="button" class="bj-card-btn" data-bj-face="10" data-bj-val="10">10</button>
+          <button type="button" class="bj-card-btn" data-bj-face="J"  data-bj-val="10">J</button>
+          <button type="button" class="bj-card-btn" data-bj-face="Q"  data-bj-val="10">Q</button>
+          <button type="button" class="bj-card-btn" data-bj-face="K"  data-bj-val="10">K</button>
+          <button type="button" class="bj-card-btn" data-bj-face="A"  data-bj-val="11">A</button>
+        </div>
+
+        <div id="bj-hand-display" style="margin-top:10px;"></div>
+        <div id="bj-decision-result" style="margin-top:12px;"></div>
+
+        <div style="margin-top:12px;display:flex;gap:8px;">
+          <button type="button" id="bj-reset-hand" class="btn" style="flex:1;">🔄 새 판 시작 (초기화)</button>
+        </div>
       </div>
 
     </div>
