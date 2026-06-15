@@ -4706,16 +4706,21 @@ function bjEvalAt4(score, deck) {
   const stopPC = stopPay / 4;
   const n = bjDeckSize(deck);
   let drawPay = 0;
+  // 한 장 더 뽑고 5장 결산 시의 payout 분포
+  const drawDist = { 200: 0, 400: 0, 600: 0, 1000: 0 };
   if (n > 0) {
     for (const v in deck) {
       const c = deck[v];
       if (c === 0) continue;
-      drawPay += (c / n) * bjScorePayout(score + Number(v));
+      const p = c / n;
+      const pay = bjScorePayout(score + Number(v));
+      drawPay += p * pay;
+      if (drawDist[pay] != null) drawDist[pay] += p;
     }
   }
   const drawPC = drawPay / 5;
   return {
-    stopPay, stopPC, drawPay, drawPC,
+    stopPay, stopPC, drawPay, drawPC, drawDist,
     action: drawPC > stopPC ? "draw" : "stop"
   };
 }
@@ -4727,6 +4732,7 @@ function bjEvalAt3(score, deck) {
   let drawPC = 0;     // E[ optimal per-card at 4 ]
   let drawPay = 0;    // E[ optimal payout at 4 ]
   let drawCards = 0;  // E[ 사용 카드 수 ]
+  const drawDist = { 200: 0, 400: 0, 600: 0, 1000: 0 };
   if (n > 0) {
     for (const v in deck) {
       const c = deck[v];
@@ -4739,15 +4745,17 @@ function bjEvalAt3(score, deck) {
         drawPC += p * sub.drawPC;
         drawPay += p * sub.drawPay;
         drawCards += p * 5;
+        for (const k in sub.drawDist) drawDist[k] += p * sub.drawDist[k];
       } else {
         drawPC += p * sub.stopPC;
         drawPay += p * sub.stopPay;
         drawCards += p * 4;
+        if (drawDist[sub.stopPay] != null) drawDist[sub.stopPay] += p;
       }
     }
   }
   return {
-    stopPay, stopPC, drawPay, drawPC, drawCards,
+    stopPay, stopPC, drawPay, drawPC, drawCards, drawDist,
     action: drawPC > stopPC ? "draw" : "stop"
   };
 }
@@ -4927,20 +4935,37 @@ function bjRenderStrategy() {
 
   // 코인 (모드 반영)
   const stopCoin = r.stopPay * mul;
-  const drawCoin = r.drawPay * mul;
   // 골드카드 비용
   const stopGold = n * gpd;
-  // 뽑는 경우 평균 골드카드:
-  // 4장 결정: 뽑으면 5장 강제 = 5*gpd
-  // 3장 결정: 뽑으면 r.drawCards * gpd (사용할 카드 평균)
   const drawGold = n === 4 ? 5 * gpd : r.drawCards * gpd;
   const stopPerGold = stopCoin / stopGold;
-  const drawPerGold = drawCoin / drawGold;
+  const drawPerGold = (r.drawPay * mul) / drawGold;
   const isDraw = drawPerGold > stopPerGold;
 
-  // 비교 vs 이론평균
-  const stopVsTheory = stopPerGold - theoryAvgCoinPerGold;
-  const drawVsTheory = drawPerGold - theoryAvgCoinPerGold;
+  // 가장 가능성 높은(=확률 최대) 결과 찾기
+  const bands = [200, 400, 600, 1000];
+  let mostLikelyPay = 200, mostLikelyProb = 0;
+  for (const b of bands) {
+    if ((r.drawDist[b] || 0) > mostLikelyProb) {
+      mostLikelyProb = r.drawDist[b];
+      mostLikelyPay = b;
+    }
+  }
+  const mostLikelyCoin = mostLikelyPay * mul;
+
+  // 분포 바
+  const distHtml = bands.map((b) => {
+    const p = (r.drawDist[b] || 0) * 100;
+    if (p < 0.5) return ""; // 0.5% 미만은 숨김
+    const coin = b * mul;
+    return `<div style="display:flex;align-items:center;gap:6px;font-size:11.5px;margin-top:3px;">
+      <span style="min-width:60px;color:var(--text-dim);">${bjFmt(coin)}코인</span>
+      <div style="flex:1;height:14px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;">
+        <div style="height:100%;width:${p.toFixed(1)}%;background:${b === mostLikelyPay ? '#34d399' : 'rgba(96,165,250,0.6)'};"></div>
+      </div>
+      <span style="min-width:42px;text-align:right;font-weight:700;color:${b === mostLikelyPay ? '#34d399' : 'var(--text)'};">${p.toFixed(1)}%</span>
+    </div>`;
+  }).filter(Boolean).join("");
 
   const arrowColor = isDraw ? "#34d399" : "#f87171";
   const arrowText = isDraw ? "↑ 상승" : "↓ 하락";
@@ -4954,18 +4979,20 @@ function bjRenderStrategy() {
       <div style="font-size:13.5px;line-height:1.7;">
         점수 <b>${score}</b> · 배수 <b>×${multi}</b><br>
         코인: <b class="txt-amber">${bjFmt(stopCoin)}</b> · 골드카드 ${stopGold}개 사용<br>
-        <b style="color:${stopVsTheory >= 0 ? '#34d399' : '#f87171'};">1개당 ${stopPerGold.toFixed(2)} 코인</b>
-        <span class="txt-dim" style="font-size:11.5px;">(이론평균 대비 ${stopVsTheory >= 0 ? '+' : ''}${stopVsTheory.toFixed(2)})</span>
+        <b>1개당 ${stopPerGold.toFixed(2)} 코인</b>
       </div>
     </div>
 
     <!-- 뽑기 분석 -->
     <div style="margin-top:8px;padding:12px 14px;background:rgba(167,139,250,0.06);border:1px solid var(--border);border-radius:8px;">
-      <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;">🎲 ${n === 3 ? '한 장 더 뽑고 최적 결정' : '한 장 더 뽑아 5장 결산'}</div>
+      <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;">🎲 ${n === 3 ? '한 장 더 뽑고 최적 결정 시' : '한 장 더 뽑아 5장 결산 시'}</div>
       <div style="font-size:13.5px;line-height:1.7;">
-        예상 코인: <b>${bjFmt(Math.round(drawCoin))}</b> · 평균 사용 ${drawGold.toFixed(2)}개<br>
-        <b style="color:${arrowColor};">1개당 ${drawPerGold.toFixed(2)} 코인 ${arrowText}</b>
-        <span class="txt-dim" style="font-size:11.5px;">(이론평균 대비 ${drawVsTheory >= 0 ? '+' : ''}${drawVsTheory.toFixed(2)})</span>
+        가장 가능성 높음: <b style="color:#34d399;font-size:15px;">${bjFmt(mostLikelyCoin)}코인</b> <span style="color:var(--text-dim);font-size:12px;">(확률 ${(mostLikelyProb*100).toFixed(1)}%)</span><br>
+        <b style="color:${arrowColor};">1개당 ${drawPerGold.toFixed(2)} 코인 ${arrowText}</b> <span class="txt-dim" style="font-size:11px;">(여러 번 평균)</span>
+      </div>
+      <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:2px;">📊 결과 분포</div>
+        ${distHtml}
       </div>
     </div>
 
