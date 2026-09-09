@@ -274,13 +274,69 @@ svg.pixel-grid .axis-tick {
   font-size: 12px;
 }
 
-/* 정보 패널 */
+/* 정보 패널 — 스크롤해도 따라오게 sticky + 접기/펼치기 */
 .info-panel {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 14px;
-  padding: 18px;
+  padding: 12px;
   align-self: start;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+/* <details> 접기/펼치기 토글 — 기본 접힌 상태 */
+.info-panel-details summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.45);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--amber);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.info-panel-details summary::-webkit-details-marker { display: none; }
+.info-panel-details summary:hover {
+  background: rgba(251,191,36,0.14);
+  border-color: rgba(251,191,36,0.65);
+}
+.info-panel-details summary::after {
+  content: "▼";
+  font-size: 11px;
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+  opacity: 0.85;
+}
+.info-panel-details[open] summary::after { transform: rotate(180deg); }
+.info-panel-details[open] summary {
+  background: rgba(251,191,36,0.15);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.info-panel-body {
+  padding: 14px 6px 6px;
+  border: 1px solid rgba(251,191,36,0.25);
+  border-top: none;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin-top: -1px;
+}
+.info-panel-body > h3:first-child { margin-top: 4px; }
+.info-panel::-webkit-scrollbar { width: 6px; }
+.info-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+.info-panel::-webkit-scrollbar-track { background: transparent; }
+/* 모바일에서는 1컬럼이므로 sticky 비활성 (자연스러운 흐름) */
+@media (max-width: 900px) {
+  .info-panel { position: static; max-height: none; overflow-y: visible; }
 }
 .info-panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--amber); }
 .info-panel h3 { margin: 16px 0 8px; font-size: 13px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -1171,27 +1227,30 @@ svg.pixel-grid .axis-tick {
     <a href="index.html" class="back-link">← Palmon Tool 메인으로</a>
   </div>
 
-  <!-- 정보 패널 -->
+  <!-- 정보 패널 — 접기/펼치기 가능 -->
   <div class="info-panel">
-    <h2>⚙️ 건물 배치</h2>
+    <details class="info-panel-details" id="info-panel-details">
+      <summary>⚙️ 건물 배치하기</summary>
+      <div class="info-panel-body">
+        <h3>건물 종류 선택</h3>
+        <div class="obj-types" id="obj-types"></div>
 
-    <h3>건물 종류 선택</h3>
-    <div class="obj-types" id="obj-types"></div>
+        <h3>배치된 건물 <span id="placed-count" style="color:var(--text-mute);font-weight:600;font-size:11px;"></span></h3>
+        <div class="placed-list" id="placed-list"></div>
+        <button class="clear-all-btn" id="btn-clear-all" style="display:none;">🗑️ 전체 제거</button>
 
-    <h3>배치된 건물 <span id="placed-count" style="color:var(--text-mute);font-weight:600;font-size:11px;"></span></h3>
-    <div class="placed-list" id="placed-list"></div>
-    <button class="clear-all-btn" id="btn-clear-all" style="display:none;">🗑️ 전체 제거</button>
+        <div class="coord-display" id="coord-display">
+          <div class="small">호버 위치</div>
+          <div class="big" id="coord-text">— 셀 위에 마우스를 올려보세요 —</div>
+          <div class="small" id="coord-sub" style="margin-top:4px;"></div>
+        </div>
 
-    <div class="coord-display" id="coord-display">
-      <div class="small">호버 위치</div>
-      <div class="big" id="coord-text">— 셀 위에 마우스를 올려보세요 —</div>
-      <div class="small" id="coord-sub" style="margin-top:4px;"></div>
-    </div>
-
-    <div class="note">
-      <b>💡 사용법은 메인 지도와 상세 화면에 안내되어 있습니다.</b><br>
-      상세 화면 상단의 <b style="color:var(--amber);">📖 상세 설명서</b> 를 펼쳐서 자세한 가이드를 확인하세요.
-    </div>
+        <div class="note">
+          <b>💡 사용법은 메인 지도와 상세 화면에 안내되어 있습니다.</b><br>
+          상세 화면 상단의 <b style="color:var(--amber);">📖 상세 설명서</b> 를 펼쳐서 자세한 가이드를 확인하세요.
+        </div>
+      </div>
+    </details>
   </div>
 
 </div>

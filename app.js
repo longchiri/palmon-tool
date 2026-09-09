@@ -43,6 +43,8 @@ const RESOURCE_LABELS = {
 };
 const RESOURCE_KEYS = ["gold", "wood", "steel"];
 const BOX_TIERS = ["SR", "SSR", "UR"];
+// ⚔️ 전력 상자 고정 값 (SR 4.4만, SSR 35.6만, UR 150만)
+const POWER_BOX_VALUE = { SR: 44000, SSR: 356000, UR: 1500000 };
 const POSITION_NAMES = ["총독", "수석 건축사", "과학자", "왕비"];
 const TEMPLE_ROLE_NAMES = ["LV6 성전 건설 참모", "LV6 성전 건설 지휘관"];
 
@@ -144,7 +146,7 @@ function attachKrHints(ids) {
   });
 }
 function refreshAllKrHints() {
-  ["res-gold","res-wood","res-steel","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-exp"].forEach(updateInputKrHint);
+  ["res-gold","res-wood","res-steel","res-power","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-power","tg-res-exp"].forEach(updateInputKrHint);
 }
 
 // 한글 자릿수 표기 — 1만 이상부터 "3억 5,530만 8천" 식으로
@@ -620,6 +622,8 @@ function buildInventoryTab(opts) {
     for (const rk of RESOURCE_KEYS) {
       ores.appendChild(mkRow(RESOURCE_LABELS[rk], `${prefix}res-${rk}`));
     }
+    // ⚔️ 전력 — 강철 밑, 경험치 위
+    ores.appendChild(mkRow("⚔️ 전력", `${prefix}res-power`));
     // 🥚 경험치 (팰몬 경험치) — RESOURCE_KEYS 외 별도 입력
     ores.appendChild(mkRow("🥚 경험치", `${prefix}res-exp`));
   }
@@ -640,6 +644,14 @@ function buildInventoryTab(opts) {
       }
       boxes.appendChild(row);
     }
+    // ⚔️ 전력 상자 — 강철 밑, 경험치 위 (SR 4.4만 / SSR 35.6만 / UR 150만)
+    const powerBoxRow = el("div", { class: "inv-box-grid" },
+      el("div", { class: "rk-label", style: "color:var(--red);font-weight:700;" }, "⚔️ 전력")
+    );
+    for (const tier of BOX_TIERS) {
+      powerBoxRow.appendChild(el("input", { type: "number", id: `${prefix}box-power-${tier}`, min: "0", value: "0", inputmode: "numeric" }));
+    }
+    boxes.appendChild(powerBoxRow);
     // 🥚 경험치 상자 — RESOURCE_KEYS 외 별도 행
     const expBoxRow = el("div", { class: "inv-box-grid" },
       el("div", { class: "rk-label", style: "color:var(--blue);font-weight:700;" }, "🥚 경험치")
@@ -2836,6 +2848,23 @@ function updateInventorySummary() {
       <td class="value amber">= ${fmtWithKR(after)}</td>
     </tr>`;
   }
+  // ⚔️ 전력 — 고정 상자 값 (SR 44,000 / SSR 356,000 / UR 1,500,000)
+  {
+    const powerCur = parseInt($("res-power")?.value || 0);
+    const powerBoxes = {
+      SR: parseInt($("box-power-SR")?.value || 0),
+      SSR: parseInt($("box-power-SSR")?.value || 0),
+      UR: parseInt($("box-power-UR")?.value || 0),
+    };
+    const powerFromBoxes = powerBoxes.SR * POWER_BOX_VALUE.SR + powerBoxes.SSR * POWER_BOX_VALUE.SSR + powerBoxes.UR * POWER_BOX_VALUE.UR;
+    const powerTotal = powerCur + powerFromBoxes;
+    rows += `<tr>
+      <td class="label" style="color:var(--red);">⚔️ 전력</td>
+      <td class="value">${fmtWithKR(powerCur)}</td>
+      <td class="value">+ ${fmt(powerFromBoxes)}</td>
+      <td class="value" style="color:var(--red);font-weight:800;">= ${fmtWithKR(powerTotal)}</td>
+    </tr>`;
+  }
   // 🥚 경험치 — DB 의 resource_boxes[camp].{SR,SSR,UR}.palmon_xp 사용
   {
     const expCur = parseInt($("res-exp")?.value || 0);
@@ -3040,6 +3069,9 @@ function buildSettingsPayload() {
     // 🥚 경험치 (팰몬 경험치) 및 EXP 상자 (보유자원/가속 계산하기 탭)
     owned_exp: parseInt($("res-exp")?.value || 0),
     owned_exp_boxes: Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`box-exp-${t}`)?.value || 0)])),
+    // ⚔️ 전력 및 전력 상자
+    owned_power: parseInt($("res-power")?.value || 0),
+    owned_power_boxes: Object.fromEntries(BOX_TIERS.map((t) => [t, parseInt($(`box-power-${t}`)?.value || 0)])),
   };
 }
 
@@ -3171,6 +3203,14 @@ function applySettingsPayload(p) {
     for (const t of BOX_TIERS) {
       const v = p.owned_exp_boxes[t];
       if (v != null && $(`box-exp-${t}`)) $(`box-exp-${t}`).value = parseInt(v || 0);
+    }
+  }
+  // ⚔️ 전력 / 전력 상자 복원
+  if (p.owned_power != null && $("res-power")) $("res-power").value = parseInt(p.owned_power || 0);
+  if (p.owned_power_boxes) {
+    for (const t of BOX_TIERS) {
+      const v = p.owned_power_boxes[t];
+      if (v != null && $(`box-power-${t}`)) $(`box-power-${t}`).value = parseInt(v || 0);
     }
   }
 
