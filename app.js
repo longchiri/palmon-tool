@@ -4307,7 +4307,7 @@ async function bootstrap() {
     buildInventoryTab();           // 보유자원/가속 계산하기 탭 (#t-inventory)
     buildInventoryTab({ prefix: "tg-" });  // 목표캠프계산기 탭의 자체 인벤토리 (#t-result)
     // 한글 자릿수 힌트 부착 (보유 자원 입력칸)
-    attachKrHints(["res-gold","res-wood","res-steel","res-power","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-power","tg-res-exp"]);
+    attachKrHints(["res-gold","res-wood","res-steel","res-exp","tg-res-gold","tg-res-wood","tg-res-steel","tg-res-exp"]);
     buildPalmonTab();
     applyTooltips();
 
