@@ -1227,11 +1227,11 @@ function applyPalmonModeToDOM() {
   const lbl = document.getElementById("primary-essence-label");
   if (img && lbl) {
     if (isSeason) {
-      img.src = "aurora.png";
+      img.src = "images/aurora.png";
       img.alt = "오로라의 정수";
       lbl.textContent = "오로라의 정수";
     } else {
-      img.src = "evo.png";
+      img.src = "images/evo.png";
       img.alt = "진화 정수";
       lbl.textContent = "진화 정수";
     }
@@ -2569,9 +2569,9 @@ function renderFruitBoxResult(n, rowCounts) {
   const tierColor = { 레전드: "var(--amber)", 에픽: "var(--purple)", 레어: "var(--blue)" };
   const tierEmoji = { 레전드: "🟡", 에픽: "🟣", 레어: "🔵" };
   const tierImg = {
-    레전드: "fruit_ur.png",
-    에픽:   "fruit_ssr.png",
-    레어:   "fruit_sr.png",
+    레전드: "images/fruit_ur.png",
+    에픽:   "images/fruit_ssr.png",
+    레어:   "images/fruit_sr.png",
   };
 
   // 3행 (UR/SSR/SR) — 이미지 + 갯수
